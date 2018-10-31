@@ -1,0 +1,1 @@
+node maxscript-test-client.js
