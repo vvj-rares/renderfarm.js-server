@@ -8,6 +8,8 @@
   integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
   crossorigin="anonymous"></script>
 
+<script src="js/lz-string-1.4.4.js"></script>
+
 <script>
 
 function createProject() {
@@ -24,12 +26,28 @@ function getProjects() {
     });
 }
 
+function sendSceneData() {
+    var sceneData = {
+        a: 100,
+        b: 200,
+        c: "Hello World!"
+    };
+    var sceneDataStr = JSON.stringify(sceneData);
+    var compressedSceneData = LZString144.compressToBase64(sceneDataStr);
+
+    $.post("http://localhost:8000/job", { api_key: "470197d4b203c399b150f505a02d72c7", compressed_scene_data: compressedSceneData }, function(result){
+        // $("#project_id").html(`(${result.id})`);
+        console.log("Server response: ", result);
+    });
+}
+
 </script>
 </head>
 <body>
 
 <button onclick="createProject()">Create project <span id="project_id"></span></button>
 <button onclick="getProjects()">Get projects <span id="projects_count"></span></button>
+<button onclick="sendSceneData()">Send Scene Data<span id="send_scene_data"></span></button>
 
 </body>
 </html>
