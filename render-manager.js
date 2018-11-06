@@ -56,10 +56,12 @@ app.post('/job', function (req, res) {
         console.log(`Saved: ${sceneFilename}`);
     });
 
+    //todo: insert new job in database
+
     // var compressed = LZString.compressToUint8Array(data);
     // console.log("Response size: " + (data.length) + " bytes, Compressed: " + (compressed.length) + " bytes, Compression: " + (compressed.length / data.length) );
 
-    res.send(JSON.stringify({ url: "/scenes/" + sceneDataGuid }, null, 2));
+    res.send(JSON.stringify({ id: 0, status: "accepted", scene_url: "/scenes/" + sceneDataGuid }, null, 2));
 });
 
 app.get('/scene/:uid', function (req, res) {

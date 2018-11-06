@@ -1,0 +1,312 @@
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <title>three.js - json scene maker</title>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <meta name="robots" content="noindex, nofollow">
+        <meta name="googlebot" content="noindex, nofollow">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script type="text/javascript" src="/js/lib/dummy.js"></script>
+        <link rel="stylesheet" type="text/css" href="/css/result-light.css">
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/91/three.js"></script>
+        <script type="text/javascript" src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script type="text/javascript" src="https://cdn.rawgit.com/nmalex/libRAYYS/master/RayysMouse.js"></script>
+        <script type="text/javascript" src="https://cdn.rawgit.com/nmalex/libRAYYS/40c79760b008efb024ab50209a09c023e95d3bea/RayysWebColors.js"></script>
+        <script type="text/javascript" src="https://cdn.rawgit.com/nmalex/libRAYYS/1654327bdb61ca3c0c026ce7f7fda2b1d1d38e09/RayysMouseMove.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/eligrey/FileSaver.js@cf70d125b048349fb084d8c8395ee790b83c685c/src/FileSaver.js"></script>
+        <script src="js/lz-string-1.4.4.js"></script>
+        <style type="text/css">
+            body {
+                overflow: hidden;
+                padding: 0;
+                margin: 0;
+            }
+            #btn-save {
+                position: fixed;
+            }
+            #btn-request {
+                position: fixed;
+                left: 150px;
+            }
+        </style>
+
+        <script type="text/javascript">
+
+window.onload = function() {
+    class RayysObjectDecorator {
+        constructor() {
+            // many different decorators may apply at this point,
+            // for example decorated obect may be:
+            // 1. set color red,
+            // 2. present own wireframe,
+            // 3. have bounding box wrapper
+            // 4. attached move/rotate/scale gizmo
+            this.decorators = {
+                material: undefined,
+                children: undefined
+            };
+            // collect decorated objects with info how to undecorate them
+            this.decorated = {
+                material: {},
+                children: {}
+            };
+        }
+        decorate(object) {
+            // now apply decorators one by one
+            this.decorated.material[object.id] = {
+                ref: object, // reference on decorated object
+                material: object.material, // backup initial material
+            };
+            object.material = this.decorators.material(object);
+            // attach decorating child geometry
+            var dChildren = this.decorators.children(object);
+            this.decorated.children[object.id] = {
+                ref: object,
+                children: dChildren
+            };
+            for (let i = 0; i < dChildren.length; i++) {
+                object.add(dChildren[i]);
+            }
+        }
+        reset(object) {
+            if (object === undefined) { // reset for all
+                // replace decorated material with initial material
+                for (let id in this.decorated.material) {
+                    this.decorated.material[id].ref.material = this.decorated.material[id].material;
+                    delete this.decorated.material[id];
+                }
+                // now remove all decorating child nodes
+                for (let id in this.decorated.children) {
+                    var decoratedObj = this.decorated.children[id].ref;
+                    for (let i = 0; i < this.decorated.children[id].children.length; i++) {
+                        let dNode = this.decorated.children[id].children[i];
+                        decoratedObj.remove(dNode);
+                    }
+                    delete this.decorated.children[id];
+                }
+            } else { // reset for given object
+                // restore material
+                object.material = this.decorated.material[object.id].material;
+                delete this.decorated.material[object.id];
+                // remove decorate child nodes
+                for (let i = 0; i < this.decorated.children[id].children.length; i++) {
+                    let dNode = this.decorated.children[id].children[i];
+                    object.remove(dNode);
+                }
+                delete this.decorated.children[id];
+            }
+        }
+    }
+    class RayysBBoxGeometry {
+        create(bbox, color) {
+            if (color === undefined) color = 0x000000;
+            var node = new THREE.Object3D();
+            var geom = new THREE.Geometry();
+            var dx = (bbox.max.x - bbox.min.x);
+            var dy = (bbox.max.y - bbox.min.y);
+            var dz = (bbox.max.z - bbox.min.z);
+            var space = 0.75;
+            var sdx = dx * (1 - space);
+            var sdy = dy * (1 - space);
+            var sdz = dz * (1 - space);
+            var slen = Math.min(sdx, sdy, sdz);
+            var offs = 0.05 * (Math.min(dx, dy, dz) + Math.max(dx, dy, dz)) / 2;
+            // make segments along X-axis
+            {
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y - offs, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x + slen, bbox.min.y - offs, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y - offs, bbox.max.z + offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x + slen, bbox.min.y - offs, bbox.max.z + offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y + offs, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x + slen, bbox.max.y + offs, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y + offs, bbox.max.z + offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x + slen, bbox.max.y + offs, bbox.max.z + offs));
+                //
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y - offs, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x - slen, bbox.min.y - offs, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y - offs, bbox.max.z + offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x - slen, bbox.min.y - offs, bbox.max.z + offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y + offs, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x - slen, bbox.max.y + offs, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y + offs, bbox.max.z + offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x - slen, bbox.max.y + offs, bbox.max.z + offs));
+            }
+            // make segments along Y-axis
+            {
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y - offs, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y + slen, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y - offs, bbox.max.z + offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y + slen, bbox.max.z + offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y - offs, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y + slen, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y - offs, bbox.max.z + offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y + slen, bbox.max.z + offs));
+                //
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y + offs, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y - slen, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y + offs, bbox.max.z + offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y - slen, bbox.max.z + offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y + offs, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y - slen, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y + offs, bbox.max.z + offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y - slen, bbox.max.z + offs));
+            }
+            // make segments along Z-axis
+            {
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y - offs, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y - offs, bbox.min.z + slen));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y + offs, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y + offs, bbox.min.z + slen));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y - offs, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y - offs, bbox.min.z + slen));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y + offs, bbox.min.z - offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y + offs, bbox.min.z + slen));
+                //
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y - offs, bbox.max.z + offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y - offs, bbox.max.z - slen));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y + offs, bbox.max.z + offs));
+                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y + offs, bbox.max.z - slen));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y - offs, bbox.max.z + offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y - offs, bbox.max.z - slen));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y + offs, bbox.max.z + offs));
+                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y + offs, bbox.max.z - slen));
+            }
+            var line = new THREE.LineSegments(geom, new THREE.LineBasicMaterial({
+                color: color
+            }));
+            line.name = "bbox";
+            node.add(line);
+            return node;
+        }
+    }
+    var scene = new THREE.Scene();
+    document.saveToJson = function() {
+        console.log("Saving scene to JSON...");
+        var sceneJson = scene.toJSON();
+        if (sceneJson.images) {
+            delete sceneJson.images;
+        }
+        var sceneText = JSON.stringify(sceneJson);
+        var blob = new Blob([sceneText], {
+            type: "text/plain;charset=utf-8"
+        });
+        saveAs(blob, "scene.json");
+    };
+    document.sendRequest = function() {
+        console.log("Sending request...");
+        $("#btn-request").attr("disabled", "disabled");
+
+        var sceneJson = scene.toJSON();
+        if (sceneJson.images) {
+            delete sceneJson.images;
+        }
+
+        var sceneText = JSON.stringify(sceneJson);
+        var compressedSceneData = LZString144.compressToBase64(sceneText);
+
+        $.post("http://localhost:8000/job", { api_key: "470197d4b203c399b150f505a02d72c7", compressed_scene_data: compressedSceneData }, function(result){
+            console.log("Server response: ", result);
+        }).done(function() {
+            // alert( "second success" );
+        }).fail(function() {
+            // alert( "error" );
+        }).always(function() {
+            $("#btn-request").removeAttr("disabled");
+        });
+
+    };
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.x = 5;
+    camera.position.y = 5;
+    camera.position.z = 5;
+    camera.lookAt(0, 0, 0);
+    var renderer = new THREE.WebGLRenderer({
+        antialias: true
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(new THREE.Color(0xc9c9c9));
+    renderer.shadowMap.enabled = true;
+    console.log(renderer.shadowMap);
+    document.body.appendChild(renderer.domElement);
+    var controls = new THREE.OrbitControls(camera);
+    var mouse = new RayysMouse(renderer, camera);
+    mouse.cb.onMouseDown.push(function(pos, sender) {
+        // check if noting under the mouse, then deselect all
+    });
+    var mouseMove = new RayysMouseMove(mouse, controls);
+    // scene.add(mouseMove.translationPlaneHelper);
+    // white spotlight shining from the side, casting a shadow
+    var spotLight = new THREE.SpotLight(0xffffff, 2.5, 25, Math.PI / 6);
+    spotLight.position.set(4, 12, 7);
+    spotLight.castShadow = true;
+    spotLight.shadow.mapSize.width = 1024; // default
+    spotLight.shadow.mapSize.height = 1024; // default
+    scene.add(spotLight);
+    var spotLightHelper = new THREE.SpotLightHelper(spotLight);
+    scene.add(spotLightHelper);
+    var colors = new RayysWebColors();
+    for (let k = 0; k < 5; k++) {
+        var size = 1;
+        var geometry = new THREE.BoxGeometry(1 * size, 1 * size, 1 * size);
+            geometry = new THREE.BufferGeometry().fromGeometry(geometry);
+        
+        var material = new THREE.MeshPhongMaterial({
+            color: colors.pickRandom().hex,
+            map: new THREE.TextureLoader().load('http://mbnsay.com/rayys/render-farm.client/assets/1K_UV_checker.jpg'),
+            transparent: false,
+            opacity: 0.75
+        });
+        material.userData = {
+            map: 'http://mbnsay.com/rayys/render-farm.client/assets/1K_UV_checker.jpg'
+        };
+        var cube = new THREE.Mesh(geometry, material);
+        cube.castShadow = true;
+        cube.receiveShadow = true;
+        cube.applyMatrix(new THREE.Matrix4().makeTranslation(-2 + 8 * Math.random(), size, -2 + 8 * Math.random()));
+        scene.add(cube);
+        mouseMove.objects.push(cube);
+    }
+    var planeGeometry = new THREE.PlaneGeometry(1000, 1000);
+    planeGeometry.rotateX(-Math.PI / 2);
+    var planeMaterial = new THREE.ShadowMaterial();
+    planeMaterial.opacity = 0.2;
+    var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    plane.castShadow = true;
+    plane.receiveShadow = true;
+    scene.add(plane);
+    var bboxFactory = new RayysBBoxGeometry();
+    var decorator = new RayysObjectDecorator();
+    decorator.decorators.material = function(object) {
+        return new THREE.MeshBasicMaterial({
+            color: 0xff0000
+        });
+    };
+    decorator.decorators.children = function(object) {
+        object.geometry.computeBoundingBox();
+        return [
+            bboxFactory.create(object.geometry.boundingBox)
+        ]
+    };
+    mouseMove.cb.onBeforeStart.push(function(obj) {
+        decorator.reset();
+        decorator.decorate(obj);
+    });
+    mouseMove.cb.onVoidClick.push(function() {
+        decorator.reset();
+    });
+    var animate = function() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+    };
+    animate();
+}
+
+        </script>
+    </head>
+    <body>
+        <button id="btn-save" onclick="saveToJson()">Save to JSON</button>
+        <button id="btn-request" onclick="sendRequest()">Send Request</button>
+    </body>
+</html>
