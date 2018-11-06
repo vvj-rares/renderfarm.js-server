@@ -16,7 +16,7 @@
     "https": "^1.0.0",
     "lz-string": "^1.4.4",
     "mixpanel": "^0.8.0",
-    "mongodb": "^3.0.0",
+    "mongodb": "^3.1.9",
     "node-ipc": "^9.1.1",
     "os": "^0.1.1",
     "os-utils": "0.0.14",
