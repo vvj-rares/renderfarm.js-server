@@ -6,14 +6,20 @@ const app = express();
 const port = 8000;
 const base_url = "http://localhost:" + port;
 
-const uuidv4 = require('uuid/v4');
-const LZString = require('lz-string');
+// const uuidv4 = require('uuid/v4');
+// const LZString = require('lz-string');
+// const fs = require('fs');
 
-const fs = require('fs');
-const tempFolder = "C:\\Temp";
+const settings = require("./Settings");
+const database = new (require("./Database"))();
+database.connect(settings.connection_url, function(err) {
+    console.error(err);
+}, function(db) {
+    console.log("Successfully connected to database");
+});
 
-var RenderManager = require('./RenderManager');
-var renderManager = new RenderManager();
+import RenderManager from "./RenderManager"
+const renderManager = new RenderManager();
 
 app.use(express.json());       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({
@@ -26,6 +32,8 @@ app.use(function(req, res, next) {
     res.header('Content-Type', 'application/json');
     next();
 });
+
+var projectEndpoint = new (require("./ProjectEndpoint"))(app);
 
 app.get('/', function (req, res) {
     res.send(JSON.stringify(renderManager.getStatus(), null, 2));
@@ -47,7 +55,7 @@ app.post('/job', function (req, res) {
     var sceneDataGuid = uuidv4();
     var sceneFilename = sceneDataGuid + ".json";
 
-    fs.writeFile(tempFolder + "/" + sceneFilename, sceneDataStr, function(err) {
+    fs.writeFile(settings.scenes_dir + "/" + sceneFilename, sceneDataStr, function(err) {
         if(err) {
             //todo: how to return this error?
             return console.log(err);
@@ -69,26 +77,13 @@ app.get('/scene/:uid', function (req, res) {
     console.log(`GET on /scene/${req.params.uid} with api_key: ${api_key}`);
 
     let sceneFilename = req.params.uid + ".json";
-    fs.readFile(tempFolder + "/" + sceneFilename, function read(err, data) {
+    fs.readFile(settings.scenes_dir + "/" + sceneFilename, function read(err, data) {
         if (err) {
             throw err;
         }
 
         res.send(data);
     });
-});
-
-app.get('/project', function (req, res) {
-    res.send(JSON.stringify(renderManager.getProjects(), null, 2));
-});
-
-app.post('/project', function (req, res) {
-    let api_key = req.body.api_key;
-    console.log(`GET on /project with api_key: ${api_key}`);
-
-    //do: check if given api_key has enough permissions to list projects
-    let p = renderManager.createProject(api_key);
-    res.send(JSON.stringify({ id: p.guid, url: "http://localhost/project/" + p.guid }, null, 2));
 });
 
 app.put('/user', function (req, res) {

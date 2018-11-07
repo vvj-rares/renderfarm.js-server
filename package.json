@@ -3,24 +3,24 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "dependencies": {
+    "express": "^4.16.4",
+    "inversify": "^5.0.1",
+    "reflect-metadata": "^0.1.12"
+  },
+  "devDependencies": {},
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "test": "tsc & jasmine --config=jasmine.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nmalex/threejs.render-farm-api.git"
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "buffer": "^5.0.8",
-    "express": "^4.16.4",
-    "http": "0.0.0",
-    "https": "^1.0.0",
-    "lz-string": "^1.4.4",
-    "mixpanel": "^0.8.0",
-    "mongodb": "^3.1.9",
-    "node-ipc": "^9.1.1",
-    "os": "^0.1.1",
-    "os-utils": "0.0.14",
-    "uuid": "^3.3.2",
-    "ws": "^6.1.0"
-  }
+  "bugs": {
+    "url": "https://github.com/nmalex/threejs.render-farm-api/issues"
+  },
+  "homepage": "https://github.com/nmalex/threejs.render-farm-api#readme"
 }
