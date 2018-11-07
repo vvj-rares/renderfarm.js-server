@@ -16,25 +16,20 @@ class Database implements IDatabase {
         this._db = null;
     }
 
-    connect(url: string, onSuccess: Function, onError: Function): void {
+    async connect(url: string): Promise<any> {
         this._url = url;
         this._client = new MongoClient(url, { useNewUrlParser: true });
 
-        console.log("Connecting...");
-        this._client.connect()
-            .then(this.onConnected.bind(this, onSuccess))
-            .catch(this.onFailedToConnect.bind(this, onError));
+        return new Promise(function(resolve, reject) {
+            this._client.connect()
+                .then(this.onConnected.bind(this))
+                .then(resolve)
+                .catch(reject);
+        }.bind(this));
     }
 
-    onConnected(callback: Function, client: MongoClient) {
-        console.log("Successfully connected to database");
+    onConnected(client: MongoClient) {
         this._db = client.db("rfarmdb");
-        if (callback) callback(this._db);
-    }
-
-    onFailedToConnect(callback: Function, err: any) {
-        console.error("Failed to connect to database");
-        if (callback) callback(err);
     }
 
     async getApiKey(apiKey: string) {

@@ -1,4 +1,6 @@
-import { MongoClient } from "mongodb";
+"use strict";
+
+import * as express from "express";
 
 export interface Warrior {
     fight(): string;
@@ -15,5 +17,13 @@ export interface ThrowableWeapon {
 
 export interface IDatabase {
     getApiKey(arg0: string): any;
-    connect(url: string, onSuccess: Function, onError: Function): void;
+    connect(url: string): Promise<any>;
+}
+
+export interface IApp {
+    express: express.Application;
+}
+
+export interface IEndpoint {
+    bind(express: express.Application);
 }

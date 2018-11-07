@@ -1,38 +1,32 @@
-import app from "./app";
+"use strict";
+
+const settings = require("./settings");
+
 import * as https from "https";
 import * as fs from "fs";
-import { Database } from "./database/database";
-
-const PORT = 3000;
-
-const httpsOptions = {
-    key: fs.readFileSync("../ssl/key.pem"),
-    cert: fs.readFileSync("../ssl/cert.pem")
-}
-
-// let database = new Database();
-const url: string = 'mongodb://rfarmmgr:123456@192.168.0.151:27017/rfarmdb';
-/* 
-database.connect(url, function() {
-    console.log("Connected");
-    database.getApiKey("0");
-}, function() {
-    console.log("Failed to connect");
-}); */
 
 import { myContainer } from "./inversify.config";
 import { TYPES } from "./types";
-import { Warrior, IDatabase } from "./interfaces";
+import { IDatabase, IApp } from "./interfaces";
+
+console.log("Connecting to database...");
 
 const database = myContainer.get<IDatabase>(TYPES.IDatabase);
-database.connect(url, async function() {
-    console.log("Connected");
-    let res = await database.getApiKey("75f5-4d53-b0f4");
-    console.log(res.value);
-}, function() {
-    console.log("Failed to connect");
-});
+database.connect(settings.connectionUrl)
+    .then(function() {
+        console.log("    OK | Database connected");
+        console.log("Starting server...");
 
-https.createServer(httpsOptions, app).listen(PORT, () => {
-    console.log("Express server listening on port " + PORT);
-})
+        const httpsOptions = {
+            key: fs.readFileSync(settings.sslKey),
+            cert: fs.readFileSync(settings.sslCert)
+        };
+
+        const app = myContainer.get<IApp>(TYPES.IApp);
+        https.createServer(httpsOptions, app.express).listen(settings.port, () => {
+            console.log("    OK | Express server listening on port " + settings.port);
+        });
+    })
+    .catch(function(err) {
+        console.log("    FAIL | Failed to connect to the database\n", err);
+    });

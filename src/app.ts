@@ -1,22 +1,57 @@
+"use strict";
+
+const settings = require("./settings");
+
 import * as express from "express";
 import * as bodyParser from "body-parser";
+import { injectable, multiInject } from "inversify";
+import { IApp, IEndpoint } from "./interfaces";
+import { TYPES } from "./types";
 
-class App {
+@injectable()
+class App implements IApp {
 
-    public app: express.Application;
+    private _express: express.Application;
 
-    constructor() {
-        this.app = express();
-        this.config();        
+    constructor(@multiInject(TYPES.IEndpoint) endpoints: IEndpoint[]) {
+        this._express = express();
+        this.config();
+        this.bindEndpoints(endpoints);
+    }
+
+    get express(): express.Application {
+        return this._express;
     }
 
     private config(): void{
-        // support application/json type post data
-        this.app.use(bodyParser.json());
-        //support application/x-www-form-urlencoded post data
-        this.app.use(bodyParser.urlencoded({ extended: false }));
+        // to support JSON-encoded bodies
+        this._express.use(express.json());
+
+        // to support URL-encoded bodies
+        this._express.use(bodyParser.urlencoded({
+          extended: true
+        }));
+        
+        this._express.use(function(req, res, next) {
+            res.header("Access-Control-Allow-Origin", "*");
+            res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+            res.header('Content-Type', 'application/json');
+            next();
+        });
+        
     }
 
+    private bindEndpoints(endpoints: IEndpoint[]) {
+        // report server status
+        this._express.get('/', function (req, res) {
+            console.log(`GET on /`);
+            res.send(JSON.stringify({ version: settings.version }, null, 2));
+        });
+
+        for (let endp of endpoints) {
+            endp.bind(this._express);
+        }
+    }
 }
 
-export default new App().app;
+export { App };
