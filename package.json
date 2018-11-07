@@ -5,10 +5,16 @@
   "main": "index.js",
   "dependencies": {
     "express": "^4.16.4",
+    "https": "^1.0.0",
     "inversify": "^5.0.1",
+    "mongodb": "^3.1.9",
     "reflect-metadata": "^0.1.12"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/mongodb": "^3.1.14",
+    "@types/jasmine": "^2.8.11",
+    "@types/node": "^10.12.2"
+  },
   "scripts": {
     "build": "tsc",
     "test": "tsc & jasmine --config=jasmine.json"

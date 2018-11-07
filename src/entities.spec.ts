@@ -2,16 +2,17 @@ import {} from 'jasmine';
 
 import { myContainer } from "./inversify.config";
 import { TYPES } from "./types";
-import { Warrior } from "./interfaces";
+import { Warrior, IDatabase } from "./interfaces";
 
 const ninja = myContainer.get<Warrior>(TYPES.Warrior);
+const database = myContainer.get<IDatabase>(TYPES.IDatabase);
 
-describe("ninja", function() {
+describe("Database", function() {
   beforeEach(function() {
   });
 
-  it("should fight", function() {
-    expect(ninja.fight()).toEqual("cut!");
+  it("should resolve", function() {
+    expect(database).toBeDefined();
   });
 
   describe("in context", function() {
