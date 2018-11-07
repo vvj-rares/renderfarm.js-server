@@ -16,8 +16,9 @@ export interface ThrowableWeapon {
 }
 
 export interface IDatabase {
-    getApiKey(arg0: string): any;
     connect(url: string): Promise<any>;
+    getApiKey(apiKey: string): Promise<any>;
+    getProjects(apiKey: string): Promise<any>;
 }
 
 export interface IApp {

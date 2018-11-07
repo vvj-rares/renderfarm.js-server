@@ -13,14 +13,14 @@
 <script>
 
 function createProject() {
-    $.post("http://localhost:8000/project", { api_key: "470197d4b203c399b150f505a02d72c7" }, function(result){
+    $.post("http://localhost:8000/project", { api_key: "75f5-4d53-b0f4" }, function(result){
         $("#project_id").html(`(${result.id})`);
         console.log(result);
     });
 }
 
 function getProjects() {
-    $.get("http://localhost:8000/project", undefined, function(result){
+    $.get("https://localhost:8000/project", { api_key: "75f5-4d53-b0f4" }, function(result){
         $("#projects_count").html(`(${result.length})`);
         console.log(result);
     });
@@ -35,7 +35,7 @@ function sendSceneData() {
     var sceneDataStr = JSON.stringify(sceneData);
     var compressedSceneData = LZString144.compressToBase64(sceneDataStr);
 
-    $.post("http://localhost:8000/job", { api_key: "470197d4b203c399b150f505a02d72c7", compressed_scene_data: compressedSceneData }, function(result){
+    $.post("http://localhost:8000/job", { api_key: "75f5-4d53-b0f4", compressed_scene_data: compressedSceneData }, function(result){
         // $("#project_id").html(`(${result.id})`);
         console.log("Server response: ", result);
     });

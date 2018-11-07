@@ -8,12 +8,10 @@ import assert = require("assert");
 
 @injectable()
 class Database implements IDatabase {
-    _db: Db;
     _url: String;
     _client: MongoClient;
 
     constructor() {
-        this._db = null;
     }
 
     async connect(url: string): Promise<any> {
@@ -22,25 +20,45 @@ class Database implements IDatabase {
 
         return new Promise(function(resolve, reject) {
             this._client.connect()
-                .then(this.onConnected.bind(this))
                 .then(resolve)
                 .catch(reject);
         }.bind(this));
     }
 
-    onConnected(client: MongoClient) {
-        this._db = client.db("rfarmdb");
-    }
-
     async getApiKey(apiKey: string) {
-        assert.notEqual(this._db, null);
+        let db = this._client.db("rfarmdb");
+        assert.notEqual(db, null);
 
-        let res = this._db.collection("api-keys").findOneAndUpdate(
-            { key: apiKey }, 
+        return db.collection("api-keys").findOneAndUpdate(
+            { apiKey: apiKey }, 
             { $set: { lastSeen : (new Date()).toISOString() } },
             { returnOriginal: false });
+    }
 
-        return res;
+    async getProjects(apiKey: string) {
+        let db = this._client.db("rfarmdb");
+        assert.notEqual(db, null);
+
+        return new Promise(function (resolve, reject) {
+            let res = db.collection("projects").find({ apiKey: apiKey });
+            res.toArray(function(err,arr) {
+                if (err) 
+                    reject(err);
+                else {
+                    let projects = [];
+                    for (let p in arr) {
+                        // convert data model
+                        projects.push({
+                            guid: arr[p].guid,
+                            name: arr[p].name,
+                            createdAt: arr[p].createdAt,
+                            lastSeen: arr[p].lastSeen
+                        })
+                    }
+                    resolve(projects);
+                }
+            });
+        }.bind(this));
     }
 }
 
