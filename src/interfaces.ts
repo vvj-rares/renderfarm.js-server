@@ -22,6 +22,7 @@ export interface IDatabase {
     getProjects(apiKey: string): Promise<Project[]>;
     getProject(apiKey: string, projectGuid: string): Promise<Project>;
     updateProject(apiKey: string, project: Project): Promise<Project>;
+    deleteProject(apiKey: string, projectGuid: string): Promise<any>;
 }
 
 export interface IApp {

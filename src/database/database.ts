@@ -117,6 +117,29 @@ class Database implements IDatabase {
             });
         }.bind(this));
     }
+
+    async deleteProject(apiKey: string, projectGuid: string): Promise<any> {
+        let db = this._client.db("rfarmdb");
+        assert.notEqual(db, null);
+
+        return new Promise<Project>(function (resolve, reject) {
+
+            db.collection("projects").deleteOne(
+                { apiKey: apiKey, guid: projectGuid }
+            )
+            .then(function(res) {
+                if (res.deletedCount === 1) {
+                    resolve(true);
+                } else {
+                    reject(`deletedCount is returned ${res.deletedCount}, expected =1`);
+                }
+            })
+            .catch(function(err) {
+                reject(err);
+            });
+
+        }.bind(this));
+    }
 }
 
 export { Database };

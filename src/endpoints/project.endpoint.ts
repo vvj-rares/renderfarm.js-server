@@ -11,7 +11,7 @@ async function checkApiKey(res: any, database: IDatabase, apiKey: string) {
         console.log(`    OK | api_key ${apiKey} accepted`);
         return true;
     } else {
-        console.log(`    FAIL | api_key ${apiKey} declined`);
+        console.log(`  FAIL | api_key ${apiKey} declined`);
         res.status(403);
         res.send(JSON.stringify({ error: "api_key declined" }, null, 2));
         return false;
@@ -38,7 +38,7 @@ class ProjectEndpoint implements IEndpoint {
                     res.send(JSON.stringify(arr, null, 2));
                 })
                 .catch(function(err){
-                    console.error(`    FAIL | failed to retrieve projects\n`, err);
+                    console.error(`  FAIL | failed to retrieve projects\n`, err);
                     res.status(500);
                     res.send(JSON.stringify({ error: "failed to retrieve projects" }, null, 2));
                 });
@@ -54,7 +54,7 @@ class ProjectEndpoint implements IEndpoint {
                     res.send(JSON.stringify(project, null, 2));
                 }.bind(this))
                 .catch(function(err) {
-                    console.error(`    FAIL | failed to get project\n`, err);
+                    console.error(`  FAIL | failed to get project\n`, err);
                     res.status(500);
                     res.send(JSON.stringify({ error: "failed to get project" }, null, 2));
                 }.bind(this));
@@ -80,6 +80,7 @@ class ProjectEndpoint implements IEndpoint {
                         password: settings.sftpPassword
                     }).then(function() {
                         let projectPath = "/rfarm/projects/" + project.guid;
+
                         sftp.mkdir(projectPath, true)
                             .then(function(mkdirResult) {
                                 console.log(`    OK | ${mkdirResult}`);
@@ -93,27 +94,28 @@ class ProjectEndpoint implements IEndpoint {
                                         res.send(JSON.stringify(project, null, 2));
                                     })
                                     .catch(err => {
-                                        console.error(`    FAIL | failed to update project directory in database\n`, err);
+                                        console.error(`  FAIL | failed to update project directory in database\n`, err);
                                         res.status(500);
                                         res.send(JSON.stringify({ error: "failed to update project directory in database" }, null, 2));
                                     })
 
                             }.bind(this))
                             .catch (err => {
-                                console.error(`    FAIL | failed to create project directory\n`, err);
+                                console.error(`  FAIL | failed to create project directory\n`, err);
                                 res.status(500);
                                 res.send(JSON.stringify({ error: "failed to create project directory" }, null, 2));
                             });
+
                     }.bind(this))
                     .catch((err) => {
-                        console.error(`    FAIL | failed to access project storage\n`, err);
+                        console.error(`  FAIL | failed to access project storage\n`, err);
                         res.status(500);
                         res.send(JSON.stringify({ error: "failed to access project storage" }, null, 2));
                     });
 
                 }.bind(this))
                 .catch(function(err) {
-                    console.error(`    FAIL | failed to create project\n`, err);
+                    console.error(`  FAIL | failed to create project\n`, err);
                     res.status(500);
                     res.send(JSON.stringify({ error: "failed to create project" }, null, 2));
                 }.bind(this));
@@ -133,16 +135,16 @@ class ProjectEndpoint implements IEndpoint {
                             res.send(JSON.stringify(project, null, 2));
                         })
                         .catch(function(err) {
-                            console.error(`    FAIL | failed to update project ${req.params.uid}\n`, err);
+                            console.error(`  FAIL | failed to update project ${req.params.uid}\n`, err);
                             res.status(500);
                             res.send(JSON.stringify({ error: "failed to update project" }, null, 2));
                         });
 
                 }.bind(this))
                 .catch(function(err) {
-                    console.error(`    FAIL | failed to get project ${req.params.uid}\n`, err);
+                    console.error(`  FAIL | failed to get project from database: ${req.params.uid}\n`, err);
                     res.status(500);
-                    res.send(JSON.stringify({ error: "failed to get project" }, null, 2));
+                    res.send(JSON.stringify({ error: "failed to get project from database" }, null, 2));
                 }.bind(this));
         }.bind(this));
 
@@ -151,7 +153,44 @@ class ProjectEndpoint implements IEndpoint {
             console.log(`DELETE on /project/${req.params.uid} with api_key: ${apiKey}`);
             if (!await checkApiKey(res, this._database, apiKey)) return;
 
-            res.send(JSON.stringify({}, null, 2));
+            let projectGuid = req.params.uid;
+            this._database.deleteProject(apiKey, projectGuid)
+                .then(function() {
+
+                    let Client = require('ssh2-sftp-client');
+                    let sftp = new Client();
+                    sftp.connect({
+                        host: settings.sftpHost,
+                        port: settings.sftpPort,
+                        username: settings.sftpUsername,
+                        password: settings.sftpPassword
+                    }).then(function() {
+                        let projectPath = "/rfarm/projects/" + projectGuid;
+
+                        sftp.rmdir(projectPath, true)
+                            .then(function(mkdirResult) {
+                                console.log(`    OK | ${mkdirResult}`);
+                                res.send(JSON.stringify({ deleted: projectGuid }, null, 2));
+                            }.bind(this))
+                            .catch (err => {
+                                console.error(`  FAIL | failed to delete project directory\n`, err);
+                                res.status(500);
+                                res.send(JSON.stringify({ error: "failed to delete project directory" }, null, 2));
+                            });
+
+                    }.bind(this))
+                    .catch((err) => {
+                        console.error(`  FAIL | failed to access project storage\n`, err);
+                        res.status(500);
+                        res.send(JSON.stringify({ error: "failed to access project storage" }, null, 2));
+                    });
+
+                }.bind(this))
+                .catch(function(err) {
+                    console.error(`  FAIL | failed to delete project from database: ${req.params.uid}\n`, err);
+                    res.status(500);
+                    res.send(JSON.stringify({ error: "failed to delete project from database" }, null, 2));
+                }.bind(this));
         }.bind(this));
     }
 }

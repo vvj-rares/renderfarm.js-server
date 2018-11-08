@@ -44,6 +44,24 @@ function renameProject() {
     });
 }
 
+function deleteProject() {
+    var projGuid = $("#project_guid").val();
+    var projName = $("#project_name").val();
+
+    $.ajax({
+        url: "https://localhost:8000/project/" + projGuid,
+        data: { api_key: "75f5-4d53-b0f4", name: projName },
+        dataType: "json",
+        type: 'DELETE',
+        success: function(result) {
+            console.log(result);
+        },
+        error: function(err) {
+            console.error(err);
+        }
+    });
+}
+
 function sendSceneData() {
     var sceneData = {
         a: 100,
@@ -68,6 +86,7 @@ function sendSceneData() {
 <input id="project_guid" placeholder="project guid">
 <input id="project_name" placeholder="project name">
 <button onclick="renameProject()">Rename project</span></button>
+<button onclick="deleteProject()">Delete project</span></button>
 
 <button onclick="getProjects()">Get projects <span id="projects_count"></span></button>
 
