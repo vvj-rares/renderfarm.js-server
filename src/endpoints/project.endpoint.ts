@@ -36,7 +36,7 @@ class ProjectEndpoint implements IEndpoint {
                     res.send(JSON.stringify(arr, null, 2));
                 })
                 .catch(function(err){
-                    console.error(`    FAIL | failed to retrieve projects`, err);
+                    console.error(`    FAIL | failed to retrieve projects\n`, err);
                     res.status(500);
                     res.send(JSON.stringify({ error: "failed to retrieve projects" }, null, 2));
                 });
@@ -47,24 +47,61 @@ class ProjectEndpoint implements IEndpoint {
             console.log(`GET on /project/${req.params.uid} with api_key: ${apiKey}`);
             if (!checkApiKey(res, this._database, apiKey)) return;
 
-            res.send(JSON.stringify({}, null, 2));
-        });
+            this._database.getProject(apiKey, req.params.uid)
+                .then(function(project) {
+                    res.send(JSON.stringify(project, null, 2));
+                }.bind(this))
+                .catch(function(err) {
+                    console.error(`    FAIL | failed to get project\n`, err);
+                    res.status(500);
+                    res.send(JSON.stringify({ error: "failed to get project" }, null, 2));
+                }.bind(this));
+        }.bind(this));
 
-        express.post('/project', function (req, res) {
+        express.post('/project', async function (req, res) {
             let apiKey = req.body.api_key;
             console.log(`POST on /project with api_key: ${apiKey}`);
             if (!checkApiKey(res, this._database, apiKey)) return;
 
-            res.send(JSON.stringify({}, null, 2));
-        });
+            let name = req.body.name;
+
+            this._database.createProject(apiKey, name)
+                .then(function(project) {
+                    res.send(JSON.stringify(project, null, 2));
+                }.bind(this))
+                .catch(function(err) {
+                    console.error(`    FAIL | failed to create project\n`, err);
+                    res.status(500);
+                    res.send(JSON.stringify({ error: "failed to create project" }, null, 2));
+                }.bind(this));
+        }.bind(this));
 
         express.put('/project/:uid', function (req, res) {
             let apiKey = req.body.api_key;
             console.log(`PUT on /project/${req.params.uid} with api_key: ${apiKey}`);
             if (!checkApiKey(res, this._database, apiKey)) return;
 
-            res.send(JSON.stringify({}, null, 2));
-        });
+            this._database.getProject(apiKey, req.params.uid)
+                .then(function(project) {
+
+                    project.fromJSON(req.body);
+                    this._database.updateProject(apiKey, project)
+                        .then(function() {
+                            res.send(JSON.stringify(project, null, 2));
+                        })
+                        .catch(function(err) {
+                            console.error(`    FAIL | failed to update project ${req.params.uid}\n`, err);
+                            res.status(500);
+                            res.send(JSON.stringify({ error: "failed to update project" }, null, 2));
+                        });
+
+                }.bind(this))
+                .catch(function(err) {
+                    console.error(`    FAIL | failed to get project ${req.params.uid}\n`, err);
+                    res.status(500);
+                    res.send(JSON.stringify({ error: "failed to get project" }, null, 2));
+                }.bind(this));
+        }.bind(this));
 
         express.delete('/project/:uid', function (req, res) {
             let apiKey = req.body.api_key;
@@ -72,7 +109,7 @@ class ProjectEndpoint implements IEndpoint {
             if (!checkApiKey(res, this._database, apiKey)) return;
 
             res.send(JSON.stringify({}, null, 2));
-        });
+        }.bind(this));
     }
 }
 

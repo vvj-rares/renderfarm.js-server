@@ -5,6 +5,7 @@ import { injectable } from "inversify";
 import { IDatabase } from "../interfaces"
 
 import assert = require("assert");
+import { Project } from "../model/project";
 
 @injectable()
 class Database implements IDatabase {
@@ -35,28 +36,84 @@ class Database implements IDatabase {
             { returnOriginal: false });
     }
 
-    async getProjects(apiKey: string) {
+    async getProjects(apiKey: string): Promise<Project[]> {
+        let db = this._client.db("rfarmdb");
+        assert.notEqual(db, null);
+
+        return new Promise<Project[]>(function (resolve, reject) {
+            db.collection("projects").find({ apiKey: apiKey }).toArray(function(err,arr) {
+                if (err) 
+                    reject(err);
+                else {
+                    resolve(arr.map(x => Project.fromJSON(x)));
+                }
+            });
+        }.bind(this));
+    }
+
+    async getProject(apiKey: string, projectGuid: string): Promise<Project> {
+        let db = this._client.db("rfarmdb");
+        assert.notEqual(db, null);
+
+        return new Promise<Project>(function (resolve, reject) {
+            db.collection("projects").findOneAndUpdate(
+                { apiKey: apiKey, guid: projectGuid },
+                { $set: { lastSeen : (new Date()).toISOString() } },
+                { returnOriginal: false })
+                .then(function(obj) {
+                    if (obj.value) {
+                        resolve(Project.fromJSON(obj.value));
+                    } else {
+                        reject(`unable to find project with guid ${projectGuid}`);
+                    }
+                })
+                .catch(function(err) {
+                    reject(err);
+                });
+        }.bind(this));
+    }
+
+    async createProject(apiKey: string, name: string) {
         let db = this._client.db("rfarmdb");
         assert.notEqual(db, null);
 
         return new Promise(function (resolve, reject) {
-            let res = db.collection("projects").find({ apiKey: apiKey });
-            res.toArray(function(err,arr) {
-                if (err) 
-                    reject(err);
-                else {
-                    let projects = [];
-                    for (let p in arr) {
-                        // convert data model
-                        projects.push({
-                            guid: arr[p].guid,
-                            name: arr[p].name,
-                            createdAt: arr[p].createdAt,
-                            lastSeen: arr[p].lastSeen
-                        })
+            let project = new Project(apiKey, name);
+            db.collection("projects").insertOne(project.toJSON())
+                .then(function(res) {
+                    if (res.insertedCount === 1) {
+                        resolve(Project.fromJSON(res.ops[0]));
+                    } else {
+                        reject(`insertedCount is returned ${res.insertedCount}, expected =1`);
                     }
-                    resolve(projects);
+                })
+                .catch(function(err) {
+                    reject(err);
+                });
+        }.bind(this));
+    }
+
+    async updateProject(apiKey: string, project: Project): Promise<Project> {
+        let db = this._client.db("rfarmdb");
+        assert.notEqual(db, null);
+
+        return new Promise<Project>(function (resolve, reject) {
+            project.touch();
+
+            db.collection("projects").updateOne(
+                { apiKey: apiKey, guid: project.guid },
+                { $set: project.toJSON() },
+                { upsert: false }
+            )
+            .then(function(res) {
+                if (res.modifiedCount === 1) {
+                    resolve(true);
+                } else {
+                    reject(`modifiedCount is returned ${res.modifiedCount}, expected =1`);
                 }
+            })
+            .catch(function(err) {
+                reject(err);
             });
         }.bind(this));
     }

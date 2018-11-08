@@ -13,7 +13,7 @@
 <script>
 
 function createProject() {
-    $.post("http://localhost:8000/project", { api_key: "75f5-4d53-b0f4" }, function(result){
+    $.post("https://localhost:8000/project", { api_key: "75f5-4d53-b0f4" }, function(result){
         $("#project_id").html(`(${result.id})`);
         console.log(result);
     });
@@ -23,6 +23,24 @@ function getProjects() {
     $.get("https://localhost:8000/project", { api_key: "75f5-4d53-b0f4" }, function(result){
         $("#projects_count").html(`(${result.length})`);
         console.log(result);
+    });
+}
+
+function renameProject() {
+    var projGuid = $("#project_guid").val();
+    var projName = $("#project_name").val();
+
+    $.ajax({
+        url: "https://localhost:8000/project/" + projGuid,
+        data: { api_key: "75f5-4d53-b0f4", name: projName },
+        dataType: "json",
+        type: 'PUT',
+        success: function(result) {
+            console.log(result);
+        },
+        error: function(err) {
+            console.error(err);
+        }
     });
 }
 
@@ -46,7 +64,13 @@ function sendSceneData() {
 <body>
 
 <button onclick="createProject()">Create project <span id="project_id"></span></button>
+
+<input id="project_guid" placeholder="project guid">
+<input id="project_name" placeholder="project name">
+<button onclick="renameProject()">Rename project</span></button>
+
 <button onclick="getProjects()">Get projects <span id="projects_count"></span></button>
+
 <button onclick="sendSceneData()">Send Scene Data<span id="send_scene_data"></span></button>
 
 </body>

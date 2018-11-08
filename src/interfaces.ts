@@ -1,6 +1,7 @@
 "use strict";
 
 import * as express from "express";
+import { Project } from "./model/project";
 
 export interface Warrior {
     fight(): string;
@@ -18,7 +19,9 @@ export interface ThrowableWeapon {
 export interface IDatabase {
     connect(url: string): Promise<any>;
     getApiKey(apiKey: string): Promise<any>;
-    getProjects(apiKey: string): Promise<any>;
+    getProjects(apiKey: string): Promise<Project[]>;
+    getProject(apiKey: string, projectGuid: string): Promise<Project>;
+    updateProject(apiKey: string, project: Project): Promise<Project>;
 }
 
 export interface IApp {
