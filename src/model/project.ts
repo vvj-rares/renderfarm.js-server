@@ -1,26 +1,20 @@
 import uuidv4 = require('uuid/v4');
 
 class Project {
-    private _apiKey: string;
     private _guid: string;
     private _createdAt: Date;
     private _lastSeen: Date;
     private _name: string;
 
-    constructor(apiKey: string, name: string) {
+    constructor(name: string) {
         this._createdAt = new Date();
         this._lastSeen = new Date();
         this._guid = uuidv4();
-        this._apiKey = apiKey;
         this._name = name || "Project";
     }
 
     public get guid(): string {
         return this._guid;
-    }
-
-    public get apiKey(): string {
-        return this._apiKey;
     }
 
     public get createdAt(): Date {
@@ -40,8 +34,7 @@ class Project {
     }
 
     public static fromJSON(obj: any): Project {
-        if (!obj.apiKey) return null;
-        let res = new Project(obj.apiKey, obj.name || "Project");
+        let res = new Project(obj.name || "Project");
 
         res._guid      = obj.guid;
         res._createdAt = new Date(obj.createdAt);
@@ -57,9 +50,9 @@ class Project {
         }
     }
 
-    public toJSON(): any {
+    public toJSON(apiKey: string): any {
         return {
-            apiKey: this._apiKey,
+            apiKey: apiKey != "" ? apiKey : undefined,
             guid:   this._guid,
             createdAt: this._createdAt.toISOString(),
             lastSeen:  this._lastSeen.toISOString(),

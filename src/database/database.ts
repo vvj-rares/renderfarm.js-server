@@ -78,8 +78,8 @@ class Database implements IDatabase {
         assert.notEqual(db, null);
 
         return new Promise(function (resolve, reject) {
-            let project = new Project(apiKey, name);
-            db.collection("projects").insertOne(project.toJSON())
+            let project = new Project(name);
+            db.collection("projects").insertOne(project.toJSON(apiKey))
                 .then(function(res) {
                     if (res.insertedCount === 1) {
                         resolve(Project.fromJSON(res.ops[0]));
@@ -102,7 +102,7 @@ class Database implements IDatabase {
 
             db.collection("projects").updateOne(
                 { apiKey: apiKey, guid: project.guid },
-                { $set: project.toJSON() },
+                { $set: project.toJSON(apiKey) },
                 { upsert: false }
             )
             .then(function(res) {

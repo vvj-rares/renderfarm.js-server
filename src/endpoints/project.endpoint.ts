@@ -28,7 +28,7 @@ class ProjectEndpoint implements IEndpoint {
         express.get('/project', async function (req, res) {
             let apiKey = req.query.api_key;
             console.log(`GET on /project with api_key: ${apiKey}`);
-            if (!checkApiKey(res, this._database, apiKey)) return;
+            if (!await checkApiKey(res, this._database, apiKey)) return;
 
             this._database.getProjects(apiKey)
                 .then(function(arr){
@@ -42,10 +42,10 @@ class ProjectEndpoint implements IEndpoint {
                 });
         }.bind(this));
 
-        express.get('/project/:uid', function (req, res) {
+        express.get('/project/:uid', async function (req, res) {
             let apiKey = req.query.api_key;
             console.log(`GET on /project/${req.params.uid} with api_key: ${apiKey}`);
-            if (!checkApiKey(res, this._database, apiKey)) return;
+            if (!await checkApiKey(res, this._database, apiKey)) return;
 
             this._database.getProject(apiKey, req.params.uid)
                 .then(function(project) {
@@ -61,7 +61,7 @@ class ProjectEndpoint implements IEndpoint {
         express.post('/project', async function (req, res) {
             let apiKey = req.body.api_key;
             console.log(`POST on /project with api_key: ${apiKey}`);
-            if (!checkApiKey(res, this._database, apiKey)) return;
+            if (!await checkApiKey(res, this._database, apiKey)) return;
 
             let name = req.body.name;
 
@@ -76,10 +76,10 @@ class ProjectEndpoint implements IEndpoint {
                 }.bind(this));
         }.bind(this));
 
-        express.put('/project/:uid', function (req, res) {
+        express.put('/project/:uid', async function (req, res) {
             let apiKey = req.body.api_key;
             console.log(`PUT on /project/${req.params.uid} with api_key: ${apiKey}`);
-            if (!checkApiKey(res, this._database, apiKey)) return;
+            if (!await checkApiKey(res, this._database, apiKey)) return;
 
             this._database.getProject(apiKey, req.params.uid)
                 .then(function(project) {
@@ -103,10 +103,10 @@ class ProjectEndpoint implements IEndpoint {
                 }.bind(this));
         }.bind(this));
 
-        express.delete('/project/:uid', function (req, res) {
+        express.delete('/project/:uid', async function (req, res) {
             let apiKey = req.body.api_key;
             console.log(`DELETE on /project/${req.params.uid} with api_key: ${apiKey}`);
-            if (!checkApiKey(res, this._database, apiKey)) return;
+            if (!await checkApiKey(res, this._database, apiKey)) return;
 
             res.send(JSON.stringify({}, null, 2));
         }.bind(this));
