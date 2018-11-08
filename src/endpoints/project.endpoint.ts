@@ -3,6 +3,8 @@ import * as express from "express";
 import { IEndpoint, IDatabase } from "../interfaces";
 import { TYPES } from "../types";
 
+const settings = require("../settings");
+
 async function checkApiKey(res: any, database: IDatabase, apiKey: string) {
     let apiKeyRec = await database.getApiKey(apiKey);
     if (apiKeyRec.value) {
@@ -67,7 +69,48 @@ class ProjectEndpoint implements IEndpoint {
 
             this._database.createProject(apiKey, name)
                 .then(function(project) {
-                    res.send(JSON.stringify(project, null, 2));
+                    console.log(`    OK | database record created`);
+
+                    let Client = require('ssh2-sftp-client');
+                    let sftp = new Client();
+                    sftp.connect({
+                        host: settings.sftpHost,
+                        port: settings.sftpPort,
+                        username: settings.sftpUsername,
+                        password: settings.sftpPassword
+                    }).then(function() {
+                        let projectPath = "/rfarm/projects/" + project.guid;
+                        sftp.mkdir(projectPath, true)
+                            .then(function(mkdirResult) {
+                                console.log(`    OK | ${mkdirResult}`);
+
+                                project.workDir = projectPath;
+                                project.projectUrl = settings.storageBaseUrl + "/projects/" + project.guid + "/";
+
+                                this._database.updateProject(apiKey, project)
+                                    .then(function() {
+                                        console.log(`    OK | updated project directory in database`);
+                                        res.send(JSON.stringify(project, null, 2));
+                                    })
+                                    .catch(err => {
+                                        console.error(`    FAIL | failed to update project directory in database\n`, err);
+                                        res.status(500);
+                                        res.send(JSON.stringify({ error: "failed to update project directory in database" }, null, 2));
+                                    })
+
+                            }.bind(this))
+                            .catch (err => {
+                                console.error(`    FAIL | failed to create project directory\n`, err);
+                                res.status(500);
+                                res.send(JSON.stringify({ error: "failed to create project directory" }, null, 2));
+                            });
+                    }.bind(this))
+                    .catch((err) => {
+                        console.error(`    FAIL | failed to access project storage\n`, err);
+                        res.status(500);
+                        res.send(JSON.stringify({ error: "failed to access project storage" }, null, 2));
+                    });
+
                 }.bind(this))
                 .catch(function(err) {
                     console.error(`    FAIL | failed to create project\n`, err);
