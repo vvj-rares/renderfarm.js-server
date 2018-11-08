@@ -192,6 +192,22 @@ class ProjectEndpoint implements IEndpoint {
                     res.send(JSON.stringify({ error: "failed to delete project from database" }, null, 2));
                 }.bind(this));
         }.bind(this));
+
+        express.post('/project/:uuid/upload', async function(req, res) {
+            let apiKey = req.body.api_key;
+            let tmpFilename = req.body.tmp_filename;
+            let dstFilename = req.body.dst_filename;
+
+            console.log(`POST on /project/${apiKey}/file with filenames: ${tmpFilename} => ${dstFilename}`);
+            if (!await checkApiKey(res, this._database, apiKey)) return;
+
+            var fs = require('fs');
+            await fs.createReadStream(settings.storageBaseDir + "/uploads/" + tmpFilename)
+                .pipe(fs.createWriteStream(settings.storageBaseDir + "/projects/" + dstFilename));
+
+            res.send(JSON.stringify({}, null, 2));
+
+        }.bind(this));
     }
 }
 
