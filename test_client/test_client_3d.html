@@ -183,10 +183,39 @@ window.onload = function() {
     var scene = new THREE.Scene();
     document.saveToJson = function() {
         console.log("Saving scene to JSON...");
+
         var sceneJson = scene.toJSON();
         if (sceneJson.images) {
             delete sceneJson.images;
         }
+
+        // this bugfix helps to serialize SpotLight with its target
+        for (var c of sceneJson.object.children) {
+            if (c.type === "SpotLight") {
+                var findObjectByUUID = function(root, uuid) {
+                    if (root && root.uuid === uuid) {
+                        return root;
+                    }
+
+                    for (var c of root.children) {
+                        if (c.uuid === uuid) {
+                            return c;
+                        }
+                        var res = findObjectByUUID(c, uuid);
+                        if (res) {
+                            return res;
+                        }
+                    }
+
+                    return undefined;
+                };
+                var spotLight = findObjectByUUID(scene, c.uuid);
+                if (spotLight && spotLight.target) {
+                    c.target = spotLight.target.uuid;
+                }
+            }
+        }
+
         var sceneText = JSON.stringify(sceneJson);
         var blob = new Blob([sceneText], {
             type: "text/plain;charset=utf-8"
@@ -243,8 +272,10 @@ window.onload = function() {
     spotLight.shadow.mapSize.width = 1024; // default
     spotLight.shadow.mapSize.height = 1024; // default
     scene.add(spotLight);
-    var spotLightHelper = new THREE.SpotLightHelper(spotLight);
-    scene.add(spotLightHelper);
+    scene.add(spotLight.target);
+    spotLight.target.position.set(0,1.75,0);
+    // var spotLightHelper = new THREE.SpotLightHelper(spotLight);
+    // scene.add(spotLightHelper);
     var colors = new RayysWebColors();
     for (let k = 0; k < 5; k++) {
         var size = 1;
@@ -263,7 +294,7 @@ window.onload = function() {
         var cube = new THREE.Mesh(geometry, material);
         cube.castShadow = true;
         cube.receiveShadow = true;
-        cube.applyMatrix(new THREE.Matrix4().makeTranslation(-2 + 8 * Math.random(), size, -2 + 8 * Math.random()));
+        cube.applyMatrix(new THREE.Matrix4().makeTranslation(-2 + 8 * Math.random(), size/2, -2 + 8 * Math.random()));
         scene.add(cube);
         mouseMove.objects.push(cube);
     }
