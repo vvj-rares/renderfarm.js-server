@@ -6,338 +6,252 @@
         <meta name="robots" content="noindex, nofollow">
         <meta name="googlebot" content="noindex, nofollow">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <script type="text/javascript" src="/js/lib/dummy.js"></script>
-        <link rel="stylesheet" type="text/css" href="/css/result-light.css">
+
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/91/three.js"></script>
         <script type="text/javascript" src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
         <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-        <script type="text/javascript" src="https://cdn.rawgit.com/nmalex/libRAYYS/master/RayysMouse.js"></script>
-        <script type="text/javascript" src="https://cdn.rawgit.com/nmalex/libRAYYS/40c79760b008efb024ab50209a09c023e95d3bea/RayysWebColors.js"></script>
-        <script type="text/javascript" src="https://cdn.rawgit.com/nmalex/libRAYYS/1654327bdb61ca3c0c026ce7f7fda2b1d1d38e09/RayysMouseMove.js"></script>
+
+        <script>
+            module = {};
+        </script>
         <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/eligrey/FileSaver.js@cf70d125b048349fb084d8c8395ee790b83c685c/src/FileSaver.js"></script>
         <script src="js/lz-string-1.4.4.js"></script>
+
         <style type="text/css">
             body {
                 overflow: hidden;
                 padding: 0;
                 margin: 0;
             }
-            #btn-save {
-                position: fixed;
-            }
-            #btn-request {
-                position: fixed;
-                left: 150px;
-            }
         </style>
 
         <script type="text/javascript">
+            var rfarm = {
 
-window.onload = function() {
-    class RayysObjectDecorator {
-        constructor() {
-            // many different decorators may apply at this point,
-            // for example decorated obect may be:
-            // 1. set color red,
-            // 2. present own wireframe,
-            // 3. have bounding box wrapper
-            // 4. attached move/rotate/scale gizmo
-            this.decorators = {
-                material: undefined,
-                children: undefined
             };
-            // collect decorated objects with info how to undecorate them
-            this.decorated = {
-                material: {},
-                children: {}
-            };
-        }
-        decorate(object) {
-            // now apply decorators one by one
-            this.decorated.material[object.id] = {
-                ref: object, // reference on decorated object
-                material: object.material, // backup initial material
-            };
-            object.material = this.decorators.material(object);
-            // attach decorating child geometry
-            var dChildren = this.decorators.children(object);
-            this.decorated.children[object.id] = {
-                ref: object,
-                children: dChildren
-            };
-            for (let i = 0; i < dChildren.length; i++) {
-                object.add(dChildren[i]);
-            }
-        }
-        reset(object) {
-            if (object === undefined) { // reset for all
-                // replace decorated material with initial material
-                for (let id in this.decorated.material) {
-                    this.decorated.material[id].ref.material = this.decorated.material[id].material;
-                    delete this.decorated.material[id];
-                }
-                // now remove all decorating child nodes
-                for (let id in this.decorated.children) {
-                    var decoratedObj = this.decorated.children[id].ref;
-                    for (let i = 0; i < this.decorated.children[id].children.length; i++) {
-                        let dNode = this.decorated.children[id].children[i];
-                        decoratedObj.remove(dNode);
+
+            rfarm.createSession = function() {
+                console.log("Requesting new session...");
+                //todo: implement it
+
+                $.ajax({
+                    url: "https://localhost:8000/session",
+                    data: { api_key: "75f5-4d53-b0f4" },
+                    dataType: "application/json",
+                    type: 'POST',
+                    success: function(result) {
+                        console.log(result);
+                    },
+                    error: function(err) {
+                        console.error(err);
                     }
-                    delete this.decorated.children[id];
-                }
-            } else { // reset for given object
-                // restore material
-                object.material = this.decorated.material[object.id].material;
-                delete this.decorated.material[object.id];
-                // remove decorate child nodes
-                for (let i = 0; i < this.decorated.children[id].children.length; i++) {
-                    let dNode = this.decorated.children[id].children[i];
-                    object.remove(dNode);
-                }
-                delete this.decorated.children[id];
-            }
-        }
-    }
-    class RayysBBoxGeometry {
-        create(bbox, color) {
-            if (color === undefined) color = 0x000000;
-            var node = new THREE.Object3D();
-            var geom = new THREE.Geometry();
-            var dx = (bbox.max.x - bbox.min.x);
-            var dy = (bbox.max.y - bbox.min.y);
-            var dz = (bbox.max.z - bbox.min.z);
-            var space = 0.75;
-            var sdx = dx * (1 - space);
-            var sdy = dy * (1 - space);
-            var sdz = dz * (1 - space);
-            var slen = Math.min(sdx, sdy, sdz);
-            var offs = 0.05 * (Math.min(dx, dy, dz) + Math.max(dx, dy, dz)) / 2;
-            // make segments along X-axis
-            {
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y - offs, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x + slen, bbox.min.y - offs, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y - offs, bbox.max.z + offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x + slen, bbox.min.y - offs, bbox.max.z + offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y + offs, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x + slen, bbox.max.y + offs, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y + offs, bbox.max.z + offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x + slen, bbox.max.y + offs, bbox.max.z + offs));
-                //
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y - offs, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x - slen, bbox.min.y - offs, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y - offs, bbox.max.z + offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x - slen, bbox.min.y - offs, bbox.max.z + offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y + offs, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x - slen, bbox.max.y + offs, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y + offs, bbox.max.z + offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x - slen, bbox.max.y + offs, bbox.max.z + offs));
-            }
-            // make segments along Y-axis
-            {
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y - offs, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y + slen, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y - offs, bbox.max.z + offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y + slen, bbox.max.z + offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y - offs, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y + slen, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y - offs, bbox.max.z + offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y + slen, bbox.max.z + offs));
-                //
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y + offs, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y - slen, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y + offs, bbox.max.z + offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y - slen, bbox.max.z + offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y + offs, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y - slen, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y + offs, bbox.max.z + offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y - slen, bbox.max.z + offs));
-            }
-            // make segments along Z-axis
-            {
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y - offs, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y - offs, bbox.min.z + slen));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y + offs, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y + offs, bbox.min.z + slen));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y - offs, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y - offs, bbox.min.z + slen));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y + offs, bbox.min.z - offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y + offs, bbox.min.z + slen));
-                //
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y - offs, bbox.max.z + offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.min.y - offs, bbox.max.z - slen));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y + offs, bbox.max.z + offs));
-                geom.vertices.push(new THREE.Vector3(bbox.min.x - offs, bbox.max.y + offs, bbox.max.z - slen));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y - offs, bbox.max.z + offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.min.y - offs, bbox.max.z - slen));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y + offs, bbox.max.z + offs));
-                geom.vertices.push(new THREE.Vector3(bbox.max.x + offs, bbox.max.y + offs, bbox.max.z - slen));
-            }
-            var line = new THREE.LineSegments(geom, new THREE.LineBasicMaterial({
-                color: color
-            }));
-            line.name = "bbox";
-            node.add(line);
-            return node;
-        }
-    }
-    var scene = new THREE.Scene();
-    document.saveToJson = function() {
-        console.log("Saving scene to JSON...");
+                });
 
-        var sceneJson = scene.toJSON();
-        if (sceneJson.images) {
-            delete sceneJson.images;
-        }
+            };
+            rfarm.createScene = function() {
+                console.log("Creating new scene...");
+                //todo: implement it
 
-        // this bugfix helps to serialize SpotLight with its target
-        for (var c of sceneJson.object.children) {
-            if (c.type === "SpotLight") {
-                var findObjectByUUID = function(root, uuid) {
-                    if (root && root.uuid === uuid) {
-                        return root;
+                $.ajax({
+                    url: "https://localhost:8000/scene",
+                    data: { api_key: "75f5-4d53-b0f4" },
+                    dataType: "application/json",
+                    type: 'POST',
+                    success: function(result) {
+                        console.log(result);
+                    },
+                    error: function(err) {
+                        console.error(err);
                     }
+                });
 
-                    for (var c of root.children) {
-                        if (c.uuid === uuid) {
-                            return c;
-                        }
-                        var res = findObjectByUUID(c, uuid);
-                        if (res) {
-                            return res;
-                        }
+            }
+            rfarm.createCamera = function() {
+                console.log("Creating new scene...");
+                //todo: implement it
+
+                $.ajax({
+                    url: "https://localhost:8000/scene/camera",
+                    data: { api_key: "75f5-4d53-b0f4" },
+                    dataType: "application/json",
+                    type: 'POST',
+                    success: function(result) {
+                        console.log(result);
+                    },
+                    error: function(err) {
+                        console.error(err);
                     }
+                });
 
-                    return undefined;
+            }
+            rfarm.createLight = function() {
+                console.log("Creating new light...");
+                //todo: implement it
+
+                $.ajax({
+                    url: "https://localhost:8000/scene/light",
+                    data: { api_key: "75f5-4d53-b0f4" },
+                    dataType: "application/json",
+                    type: 'POST',
+                    success: function(result) {
+                        console.log(result);
+                    },
+                    error: function(err) {
+                        console.error(err);
+                    }
+                });
+
+            }
+            rfarm.createMesh = function() {
+                console.log("Creating new mesh...");
+                //todo: implement it
+
+                $.ajax({
+                    url: "https://localhost:8000/scene/mesh",
+                    data: { api_key: "75f5-4d53-b0f4" },
+                    dataType: "application/json",
+                    type: 'POST',
+                    success: function(result) {
+                        console.log(result);
+                    },
+                    error: function(err) {
+                        console.error(err);
+                    }
+                });
+
+            }
+
+            document.saveSceneAs = function(scene) {
+                var sceneJson = scene.toJSON();
+                if (sceneJson.images) {
+                    delete sceneJson.images;
+                }
+
+                var sceneText = JSON.stringify(sceneJson);
+                var compressedSceneData = LZString144.compressToBase64(sceneText);
+
+                var blob = new Blob([compressedSceneData], {
+                    type: "text/plain;charset=utf-8"
+                });
+                saveAs(blob, "geometry.bson");
+            }
+
+            document.render = function() {
+                console.log("Creating new render job...");
+
+                $.ajax({
+                    url: "https://localhost:8000/job",
+                    data: { api_key: "75f5-4d53-b0f4", session: 123 },
+                    dataType: "application/json",
+                    type: 'POST',
+                    success: function(result) {
+                        console.log(result);
+                    },
+                    error: function(err) {
+                        console.error(err);
+                    }
+                });
+
+            };
+
+            window.onload = function() {
+                var renderer;
+                var camera;
+                var controls;
+
+                rfarm.createSession();
+
+                var scene = new THREE.Scene();
+                //todo: user API_KEY to create new session
+                //todo: POST /session?api_key=123 => returns session guid
+                //todo: create session acquires ownership over one of empty running 3ds max instances, callback => when 3ds max is ready to receive commands
+                rfarm.createScene();
+
+                camera = new THREE.PerspectiveCamera(54, window.innerWidth / window.innerHeight, 0.1, 1000);
+                //todo: POST PerspectiveCamera on scene, callback => camera guid is set back on camera.userData.resourceId = "123"
+
+                renderer = new THREE.WebGLRenderer({
+                    antialias: true
+                });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setClearColor(new THREE.Color(0xfefefe));
+
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
+                //todo: PUT vray settings
+
+                document.body.appendChild(renderer.domElement);
+
+                camera.position.x = 5;
+                camera.position.y = 5;
+                camera.position.z = 5;
+                camera.lookAt(0, 0, 0);
+                //todo: POST camera by resource id
+                rfarm.createCamera(camera);
+
+                controls = new THREE.OrbitControls(camera);
+
+                var spotLight = new THREE.SpotLight( 0xffffff );
+                spotLight.position.set( 10, 40, 10 );
+                spotLight.target.position.set( 0, 0, 0 );
+                spotLight.castShadow = true;
+				spotLight.shadow.bias = 0.0001;
+                spotLight.shadow.mapSize.width  = 1024;
+                spotLight.shadow.mapSize.height = 1024;
+                spotLight.shadow.camera.near = 10;
+                spotLight.shadow.camera.far = 50;
+                spotLight.shadow.camera.fov = 30;
+                scene.add(spotLight);
+                //todo: POST spot light into 3ds max, save light id userData
+                rfarm.createLight(spotLight);
+
+                var helper = new THREE.CameraHelper( spotLight.shadow.camera );
+                scene.add( helper );
+
+                var gridHelper = new THREE.GridHelper(4, 4);
+                scene.add(gridHelper);
+
+                var geometry = new THREE.DodecahedronGeometry(1, 0);
+                    geometry = new THREE.BufferGeometry().fromGeometry(geometry);
+                var material = new THREE.MeshPhongMaterial({
+                    color: 0x40e040,
+                    transparent: false,
+                    opacity: 0.95
+                });
+                var cube = new THREE.Mesh(geometry, material);
+                cube.applyMatrix(new THREE.Matrix4().makeTranslation(0, 1, 0))
+                cube.castShadow = true;
+                cube.receiveShadow = false;
+                scene.add(cube);
+                //todo: POST buffer geometry, save resource id in userData
+                // document.saveToJson(cube);
+                rfarm.createMesh(cube);
+
+                var geometry = new THREE.PlaneGeometry( 5, 5, 1 );
+                var material = new THREE.MeshPhongMaterial( {
+                    color: 0xf0ffff, 
+                    // side: THREE.DoubleSide
+                } );
+                var plane = new THREE.Mesh( geometry, material );
+                plane.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
+                plane.castShadow = false;
+                plane.receiveShadow = true;
+                scene.add(plane);
+                //todo: POST buffer geometry, save resource id in userData
+                rfarm.createMesh(plane)
+
+                var animate = function() {
+                    requestAnimationFrame(animate);
+                    controls.update();
+                    renderer.render(scene, camera);
                 };
-                var spotLight = findObjectByUUID(scene, c.uuid);
-                if (spotLight && spotLight.target) {
-                    c.target = spotLight.target.uuid;
-                }
+
+                animate();
+
             }
-        }
-
-        var sceneText = JSON.stringify(sceneJson);
-        var blob = new Blob([sceneText], {
-            type: "text/plain;charset=utf-8"
-        });
-        saveAs(blob, "scene.json");
-    };
-    document.sendRequest = function() {
-        console.log("Sending request...");
-        $("#btn-request").attr("disabled", "disabled");
-
-        var sceneJson = scene.toJSON();
-        if (sceneJson.images) {
-            delete sceneJson.images;
-        }
-
-        var sceneText = JSON.stringify(sceneJson);
-        var compressedSceneData = LZString144.compressToBase64(sceneText);
-
-        $.post("http://localhost:8000/job", { api_key: "470197d4b203c399b150f505a02d72c7", compressed_scene_data: compressedSceneData }, function(result){
-            console.log("Server response: ", result);
-        }).done(function() {
-            // alert( "second success" );
-        }).fail(function() {
-            // alert( "error" );
-        }).always(function() {
-            $("#btn-request").removeAttr("disabled");
-        });
-
-    };
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.x = 5;
-    camera.position.y = 5;
-    camera.position.z = 5;
-    camera.lookAt(0, 0, 0);
-    var renderer = new THREE.WebGLRenderer({
-        antialias: true
-    });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(new THREE.Color(0xc9c9c9));
-    renderer.shadowMap.enabled = true;
-    console.log(renderer.shadowMap);
-    document.body.appendChild(renderer.domElement);
-    var controls = new THREE.OrbitControls(camera);
-    var mouse = new RayysMouse(renderer, camera);
-    mouse.cb.onMouseDown.push(function(pos, sender) {
-        // check if noting under the mouse, then deselect all
-    });
-    var mouseMove = new RayysMouseMove(mouse, controls);
-    // scene.add(mouseMove.translationPlaneHelper);
-    // white spotlight shining from the side, casting a shadow
-    var spotLight = new THREE.SpotLight(0xffffff, 2.5, 25, Math.PI / 6);
-    spotLight.position.set(4, 12, 7);
-    spotLight.castShadow = true;
-    spotLight.shadow.mapSize.width = 1024; // default
-    spotLight.shadow.mapSize.height = 1024; // default
-    scene.add(spotLight);
-    scene.add(spotLight.target);
-    spotLight.target.position.set(0,1.75,0);
-    // var spotLightHelper = new THREE.SpotLightHelper(spotLight);
-    // scene.add(spotLightHelper);
-    var colors = new RayysWebColors();
-    for (let k = 0; k < 5; k++) {
-        var size = 1;
-        var geometry = new THREE.BoxGeometry(1 * size, 1 * size, 1 * size);
-            geometry = new THREE.BufferGeometry().fromGeometry(geometry);
-        
-        var material = new THREE.MeshPhongMaterial({
-            color: colors.pickRandom().hex,
-            map: new THREE.TextureLoader().load('http://mbnsay.com/rayys/render-farm.client/assets/1K_UV_checker.jpg'),
-            transparent: false,
-            opacity: 0.75
-        });
-        material.userData = {
-            map: 'http://mbnsay.com/rayys/render-farm.client/assets/1K_UV_checker.jpg'
-        };
-        var cube = new THREE.Mesh(geometry, material);
-        cube.castShadow = true;
-        cube.receiveShadow = true;
-        cube.applyMatrix(new THREE.Matrix4().makeTranslation(-2 + 8 * Math.random(), size/2, -2 + 8 * Math.random()));
-        scene.add(cube);
-        mouseMove.objects.push(cube);
-    }
-    var planeGeometry = new THREE.PlaneGeometry(1000, 1000);
-    planeGeometry.rotateX(-Math.PI / 2);
-    var planeMaterial = new THREE.ShadowMaterial();
-    planeMaterial.opacity = 0.2;
-    var plane = new THREE.Mesh(planeGeometry, planeMaterial);
-    plane.castShadow = true;
-    plane.receiveShadow = true;
-    scene.add(plane);
-    var bboxFactory = new RayysBBoxGeometry();
-    var decorator = new RayysObjectDecorator();
-    decorator.decorators.material = function(object) {
-        return new THREE.MeshBasicMaterial({
-            color: 0xff0000
-        });
-    };
-    decorator.decorators.children = function(object) {
-        object.geometry.computeBoundingBox();
-        return [
-            bboxFactory.create(object.geometry.boundingBox)
-        ]
-    };
-    mouseMove.cb.onBeforeStart.push(function(obj) {
-        decorator.reset();
-        decorator.decorate(obj);
-    });
-    mouseMove.cb.onVoidClick.push(function() {
-        decorator.reset();
-    });
-    var animate = function() {
-        requestAnimationFrame(animate);
-        controls.update();
-        renderer.render(scene, camera);
-    };
-    animate();
-}
-
         </script>
     </head>
     <body>
-        <button id="btn-save" onclick="saveToJson()">Save to JSON</button>
-        <button id="btn-request" onclick="sendRequest()">Send Request</button>
+        <button onclick="render()">render</button>
     </body>
 </html>

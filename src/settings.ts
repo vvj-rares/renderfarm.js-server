@@ -9,5 +9,7 @@ module.exports = {
     sftpUsername: "rfarm",
     sftpPassword: "123456",
     storageBaseUrl: "http://192.168.0.151",
-    storageBaseDir: "/var/www/html/rfarm"
+    storageBaseDir: "/var/www/html/rfarm",
+
+    apiKeyCheck: false
 };

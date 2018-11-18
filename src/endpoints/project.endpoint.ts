@@ -1,36 +1,26 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase } from "../interfaces";
+import { IEndpoint, IDatabase, IChecks } from "../interfaces";
 import { TYPES } from "../types";
 
 const settings = require("../settings");
 
-async function checkApiKey(res: any, database: IDatabase, apiKey: string) {
-    let apiKeyRec = await database.getApiKey(apiKey);
-    if (apiKeyRec.value) {
-        console.log(`    OK | api_key ${apiKey} accepted`);
-        return true;
-    } else {
-        console.log(`  FAIL | api_key ${apiKey} declined`);
-        res.status(403);
-        res.send(JSON.stringify({ error: "api_key declined" }, null, 2));
-        return false;
-    }
-}
-
 @injectable()
 class ProjectEndpoint implements IEndpoint {
     private _database: IDatabase;
+    private _checks: IChecks;
 
-    constructor(@inject(TYPES.IDatabase) database: IDatabase) {
+    constructor(@inject(TYPES.IDatabase) database: IDatabase,
+                @inject(TYPES.IChecks) checks: IChecks) {
         this._database = database;
+        this._checks = checks;
     }
 
     bind(express: express.Application) {
         express.get('/project', async function (req, res) {
             let apiKey = req.query.api_key;
             console.log(`GET on /project with api_key: ${apiKey}`);
-            if (!await checkApiKey(res, this._database, apiKey)) return;
+            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
             this._database.getProjects(apiKey)
                 .then(function(arr){
@@ -47,7 +37,7 @@ class ProjectEndpoint implements IEndpoint {
         express.get('/project/:uid', async function (req, res) {
             let apiKey = req.query.api_key;
             console.log(`GET on /project/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await checkApiKey(res, this._database, apiKey)) return;
+            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
             this._database.getProject(apiKey, req.params.uid)
                 .then(function(project) {
@@ -63,7 +53,7 @@ class ProjectEndpoint implements IEndpoint {
         express.post('/project', async function (req, res) {
             let apiKey = req.body.api_key;
             console.log(`POST on /project with api_key: ${apiKey}`);
-            if (!await checkApiKey(res, this._database, apiKey)) return;
+            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
             let name = req.body.name;
 
@@ -124,7 +114,7 @@ class ProjectEndpoint implements IEndpoint {
         express.put('/project/:uid', async function (req, res) {
             let apiKey = req.body.api_key;
             console.log(`PUT on /project/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await checkApiKey(res, this._database, apiKey)) return;
+            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
             this._database.getProject(apiKey, req.params.uid)
                 .then(function(project) {
@@ -151,7 +141,7 @@ class ProjectEndpoint implements IEndpoint {
         express.delete('/project/:uid', async function (req, res) {
             let apiKey = req.body.api_key;
             console.log(`DELETE on /project/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await checkApiKey(res, this._database, apiKey)) return;
+            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
             let projectGuid = req.params.uid;
             this._database.deleteProject(apiKey, projectGuid)
@@ -199,7 +189,7 @@ class ProjectEndpoint implements IEndpoint {
             let dstFilename = req.body.dst_filename;
 
             console.log(`POST on /project/${apiKey}/file with filenames: ${tmpFilename} => ${dstFilename}`);
-            if (!await checkApiKey(res, this._database, apiKey)) return;
+            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
             var fs = require('fs');
             await fs.createReadStream(settings.storageBaseDir + "/uploads/" + tmpFilename)

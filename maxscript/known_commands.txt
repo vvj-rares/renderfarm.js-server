@@ -1,0 +1,18 @@
+targetSpot rgb:(color 255 255 255) shadowColor:(color 0 0 0) multiplier:1 contrast:0 softenDiffuseEdge:0 nearAttenStart:0 nearAttenEnd:40 farAttenStart:80 farAttenEnd:200 decayRadius:40 atmosOpacity:100 atmosColorAmt:100 shadowMultiplier:1 hotspot:43 falloff:45 aspect:1 pos:[100,100,100] isSelected:on target:(Targetobject transform:(matrix3 [1,0,0] [0,1,0] [0,0,1] [10,10,10]))
+
+TargetDirectionallight rgb:(color 255 255 255) shadowColor:(color 0 0 0) multiplier:1 contrast:0 softenDiffuseEdge:0 nearAttenStart:0 nearAttenEnd:40 farAttenStart:80 farAttenEnd:200 decayRadius:40 atmosOpacity:100 atmosColorAmt:100 shadowMultiplier:1 hotspot:43 falloff:45 aspect:1 pos:[100,100,100] isSelected:on target:(Targetobject transform:(matrix3 [1,0,0] [0,1,0] [0,0,1] [10,10,10]))
+
+aOmni = Omnilight rgb:(color 255 255 255) shadowColor:(color 0 0 0) multiplier:1 contrast:0 softenDiffuseEdge:0 nearAttenStart:0 nearAttenEnd:40 farAttenStart:80 farAttenEnd:200 decayRadius:40 atmosOpacity:100 atmosColorAmt:100 shadowMultiplier:1 pos:[50,-20,100] isSelected:off; aOmni.shadowGenerator = shadowMap(); aOmni.baseObject.castShadows = true;
+
+aSkylight = Skylight pos:[50,50,0] isSelected:off; aSkylight.cast_Shadows = on; aSkylight.rays_per_sample = 12;
+
+Targetcamera fov:45 nearclip:1 farclip:1000 nearrange:0 farrange:1000 mpassEnabled:off mpassRenderPerPass:off pos:[100,100,100] isSelected:on target:(Targetobject transform:(matrix3 [1,0,0] [0,1,0] [0,0,1] [10,10,10]))
+
+resetMaxFile #noPrompt
+
+arr1=#(); arr2=#(); arr3=#(); isSuccess = (loadMaxFile "C:\\Temp\\scenes\\vray_simple.max" useFileUnits:true quiet:true allowPrompts:false missingExtFilesAction: #logmsg missingExtFilesList:&arr1  missingDLLsAction: #logmsg missingDLLsList:&arr2 missingXRefsAction: #logmsg missingXRefsList:&arr3); sOutput = stringStream ""; format "{ \"missingExtFilesList\": \"%\", \"missingDLLsList\": \"%\", \"missingXRefsList\": \"%\", \"isSuccess\": % }" (arr1 as string) (arr2 as string) (arr3 as string) isSuccess to: sOutput; print (sOutput as string);
+
+Plane length:100.0 width:100.0 pos:[0,0,0] isSelected:off
+Box pos:[-26.4992,28.62,0] isSelected:on width:17.8764 length:20.0055 height:31.9091
+
+render camera:$Camera001 outputSize: [640,480] outputfile: "C:\\Temp\\renderoutput\\1.png" vfb: false
