@@ -36,3 +36,8 @@ export interface IEndpoint {
 export interface IChecks {
     checkApiKey(res: any, database: IDatabase, apiKey: string): Promise<boolean>;
 }
+
+export interface IMaxscriptClient {
+    connect(ip: string): Promise<boolean>;
+    resetScene(): Promise<boolean>;
+}

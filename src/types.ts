@@ -6,6 +6,7 @@ const TYPES = {
     IApp: Symbol.for("IApp"),
     IEndpoint: Symbol.for("IEndpoint"),
     IChecks: Symbol.for("IChecks"),
+    IMaxscriptClient: Symbol.for("IMaxscriptClient"),
 };
 
 export { TYPES };

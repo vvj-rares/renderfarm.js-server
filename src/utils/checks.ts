@@ -6,6 +6,9 @@ const settings = require("../settings");
 @injectable()
 class Checks implements IChecks {
 
+    constructor() {
+    }
+
     public async checkApiKey(res: any, database: IDatabase, apiKey: string): Promise<boolean> {
 
         if (!settings.apiKeyCheck) {
