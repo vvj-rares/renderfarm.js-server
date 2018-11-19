@@ -43,8 +43,7 @@ class SceneMeshEndpoint implements IEndpoint {
             const LZString = require("lz-string");
             let sceneJsonText = LZString.decompressFromBase64(req.body.scene_data);
 
-            const uuidv4 = require('uuid/v4');
-            const meshId = uuidv4();
+            const meshId = require('../utils/genRandomName')("mesh");
             this._meshes[meshId] = sceneJsonText;
 
             // now let maxscript request mesh from me
@@ -52,16 +51,16 @@ class SceneMeshEndpoint implements IEndpoint {
                 .then(function(value) {
                     console.log("SceneMeshEndpoint connected to maxscript client, ", value);
 
-                    let filename = `mesh_${meshId}.json`;
+                    let filename = `${meshId}.json`;
                     this._maxscriptClient.downloadJson(`https://192.168.0.200:8000/scene/mesh/${meshId}?api_key=${apiKey}`, `C:\\\\Temp\\\\downloads\\\\${filename}`)
                         .then(function(value) {
                             // as we have json file saved locally, now it is the time to import it
                             console.log(`    OK | json file downloaded successfully`);
-                            this._maxscriptClient.importMesh(`C:\\\\Temp\\\\downloads\\\\${filename}`, `mesh_${meshId}`)
+                            this._maxscriptClient.importMesh(`C:\\\\Temp\\\\downloads\\\\${filename}`, `${meshId}`)
                                 .then(function(value) {
                                     this._maxscriptClient.disconnect();
                                     console.log(`    OK | mesh imported successfully`);
-                                    res.end(JSON.stringify({ id: `mesh_${meshId}` }, null, 2));
+                                    res.end(JSON.stringify({ id: `${meshId}` }, null, 2));
                                 }.bind(this))
                                 .catch(function(err) {
                                     this._maxscriptClient.disconnect();

@@ -41,13 +41,11 @@ class SceneCameraEndpoint implements IEndpoint {
                 .then(function(value) {
                     console.log("SceneCameraEndpoint connected to maxscript client, ", value);
 
-                    const uuidv4 = require('uuid/v4');
-
                     let cameraJson = {
-                        name: "camera_" + uuidv4(),
-                        position: [100,50,20],
-                        target: [5,10,1],
-                        fov: 54
+                        name: require('../utils/genRandomName')("camera"),
+                        position: [20,20,20],
+                        target: [0,0,0],
+                        fov: 25
                     };
 
                     this._maxscriptClient.createTargetCamera(cameraJson)

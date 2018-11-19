@@ -47,4 +47,8 @@ export interface IMaxscriptClient {
 
     downloadJson(url: string, path: string): Promise<boolean>;
     importMesh(path: string, nodeName: string): Promise<boolean>;
+
+    renderScene(camera: string, size: number[], filename: string): Promise<boolean>;
+
+    uploadPng(path: string, url: string): Promise<boolean>;
 }

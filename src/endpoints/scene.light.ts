@@ -41,10 +41,8 @@ class SceneLightEndpoint implements IEndpoint {
                 .then(function(value) {
                     console.log("SceneLightEndpoint connected to maxscript client, ", value);
 
-                    const uuidv4 = require('uuid/v4');
-
                     let skylightJson = {
-                        name: "skylight_" + uuidv4(),
+                        name: require('../utils/genRandomName')("skylight"),
                         position: [12,0,17]
                     };
 

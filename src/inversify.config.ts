@@ -12,6 +12,8 @@ import { SceneLightEndpoint } from "./endpoints/scene.light";
 import { SceneMeshEndpoint } from "./endpoints/scene.mesh";
 import { Checks } from "./utils/checks";
 import { MaxscriptClient } from "./maxscript_client/maxscript.client";
+import { FileEndpoint } from "./endpoints/file";
+import { JobEndpoint } from "./endpoints/job";
 
 const myContainer = new Container();
 myContainer.bind<interfaces.Warrior>(TYPES.Warrior).to(Ninja);
@@ -29,6 +31,8 @@ myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneCameraEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneLightEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneMeshEndpoint);
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(FileEndpoint);
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(JobEndpoint);
 
 myContainer.bind<interfaces.IMaxscriptClient>(TYPES.IMaxscriptClient).to(MaxscriptClient);
 

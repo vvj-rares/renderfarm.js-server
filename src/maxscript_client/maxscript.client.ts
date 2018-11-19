@@ -160,6 +160,53 @@ class MaxscriptClient implements IMaxscriptClient {
             this._client.write(maxscript);
         }.bind(this));
     }
+
+    renderScene(camera: string, size: number[], filename: string): Promise<boolean> {
+
+        return new Promise<boolean>(function(resolve, reject) {
+            // prepare response handlers for the command
+            this._responseHandler = function(data) {
+                console.log("renderScene returned: ", data.toString());
+                this._responseHandler = undefined;
+                resolve(true);
+            };
+
+            this._errorHandler = function(err) {
+                console.error("renderScene error: ", err);
+                reject(err);
+            };
+
+            // now run command
+            let maxscript = `render camera:$${camera} outputSize: [${size[0]},${size[1]}] ` 
+                          + `outputfile: "${filename}" vfb: false`;
+
+            console.log(" >> " + maxscript);
+
+            this._client.write(maxscript);
+        }.bind(this));
+    }
+
+    uploadPng(path: string, url: string): Promise<boolean> {
+        return new Promise<boolean>(function(resolve, reject) {
+            // prepare response handlers for the command
+            this._responseHandler = function(data) {
+                console.log("download json returned: ", data.toString());
+                this._responseHandler = undefined;
+                resolve(true);
+            };
+
+            this._errorHandler = function(err) {
+                console.error("download json  error: ", err);
+                reject(err);
+            };
+
+            // now run command
+            const curlPath = "C:\\\\bin\\\\curl";
+            let maxscript = `cmdexRun "${curlPath} -k -F \\\"somefile=@${path}\\\" \\\"${url}\\\" "`;
+
+            this._client.write(maxscript);
+        }.bind(this));
+    }
 }
 
 export { MaxscriptClient };

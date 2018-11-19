@@ -64,7 +64,7 @@
                 });
 
             }
-            rfarm.createCamera = function() {
+            rfarm.createCamera = function(camera, onCameraReady) {
                 console.log("Creating new scene...");
                 //todo: implement it
 
@@ -74,6 +74,7 @@
                     type: 'POST',
                     success: function(result) {
                         console.log(result);
+                        onCameraReady(result.id);
                     },
                     error: function(err) {
                         console.error(err);
@@ -98,7 +99,7 @@
                 });
 
             }
-            rfarm.createMesh = function(sceneJson) {
+            rfarm.createMesh = function(sceneJson, onMeshReady) {
                 console.log("Creating new mesh...");
                 //todo: implement it
 
@@ -111,6 +112,7 @@
                     type: 'POST',
                     success: function(result) {
                         console.log(result);
+                        if (onMeshReady) onMeshReady();
                     },
                     error: function(err) {
                         console.error(err);
@@ -134,15 +136,19 @@
                 saveAs(blob, "geometry.bson");
             }
 
-            document.render = function() {
+            rfarm.render = function(camera, onImageReady) {
                 console.log("Creating new render job...");
+
+                var width = $("#viewport").outerWidth();
+                var height = $("#viewport").outerHeight();
 
                 $.ajax({
                     url: "https://localhost:8000/job",
-                    data: { api_key: "75f5-4d53-b0f4", session: 123 },
+                    data: { api_key: "75f5-4d53-b0f4", width: width, height: height, camera: camera },
                     type: 'POST',
                     success: function(result) {
                         console.log(result);
+                        onImageReady(result.url);
                     },
                     error: function(err) {
                         console.error(err);
@@ -150,6 +156,13 @@
                 });
 
             };
+
+            document.renderScene = function() {
+                rfarm.render(document.cameraId, function(url) {
+                    $('#viewport').css("display", "none");
+                    $('#output').attr("src",url);
+                });
+            }
 
             window.onload = function() {
                 var renderer;
@@ -168,7 +181,8 @@
                 //todo: POST PerspectiveCamera on scene, callback => camera guid is set back on camera.userData.resourceId = "123"
 
                 renderer = new THREE.WebGLRenderer({
-                    antialias: true
+                    antialias: true,
+                    canvas: document.getElementById("viewport")
                 });
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 renderer.setClearColor(new THREE.Color(0xfefefe));
@@ -184,7 +198,9 @@
                 camera.position.z = 5;
                 camera.lookAt(0, 0, 0);
                 //todo: POST camera by resource id
-                rfarm.createCamera(camera);
+                rfarm.createCamera(camera, function(cameraId) {
+                    document.cameraId = cameraId; //todo: improve here
+                });
 
                 controls = new THREE.OrbitControls(camera);
 
@@ -222,7 +238,6 @@
                 scene.add(cube);
                 //todo: POST buffer geometry, save resource id in userData
                 // document.saveToJson(cube);
-                rfarm.createMesh(cube);
 
                 var geometry = new THREE.PlaneGeometry( 5, 5, 1 );
                     geometry = new THREE.BufferGeometry().fromGeometry(geometry);
@@ -230,26 +245,31 @@
                     color: 0xf0ffff, 
                     // side: THREE.DoubleSide
                 } );
+
                 var plane = new THREE.Mesh( geometry, material );
-                plane.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
+                plane.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
                 plane.castShadow = false;
                 plane.receiveShadow = true;
                 scene.add(plane);
-                //todo: POST buffer geometry, save resource id in userData
-                // rfarm.createMesh(plane)
 
+                //todo: now we have to post meshes one by one, this is wrong
+                rfarm.createMesh(cube, function() {
+                    rfarm.createMesh(plane);
+                });
+                    
                 var animate = function() {
                     requestAnimationFrame(animate);
                     controls.update();
                     renderer.render(scene, camera);
                 };
 
-                // animate();
-
+                animate();
             }
         </script>
     </head>
     <body>
-        <button onclick="render()">render</button>
+        <canvas id="viewport"></canvas>
+        <img id="output">
+        <button onclick="renderScene()" style="position: fixed; left: 0; top:0;">render</button>
     </body>
 </html>
