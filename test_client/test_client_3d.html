@@ -102,13 +102,16 @@
                 });
 
             }
-            rfarm.createMesh = function() {
+            rfarm.createMesh = function(sceneJson) {
                 console.log("Creating new mesh...");
                 //todo: implement it
 
+                var sceneText = JSON.stringify(sceneJson);
+                var compressedSceneData = LZString144.compressToBase64(sceneText);
+
                 $.ajax({
                     url: "https://localhost:8000/scene/mesh",
-                    data: { api_key: "75f5-4d53-b0f4" },
+                    data: { api_key: "75f5-4d53-b0f4", scene_data: compressedSceneData },
                     dataType: "application/json",
                     type: 'POST',
                     success: function(result) {
@@ -228,6 +231,7 @@
                 rfarm.createMesh(cube);
 
                 var geometry = new THREE.PlaneGeometry( 5, 5, 1 );
+                    geometry = new THREE.BufferGeometry().fromGeometry(geometry);
                 var material = new THREE.MeshPhongMaterial( {
                     color: 0xf0ffff, 
                     // side: THREE.DoubleSide
@@ -238,7 +242,7 @@
                 plane.receiveShadow = true;
                 scene.add(plane);
                 //todo: POST buffer geometry, save resource id in userData
-                rfarm.createMesh(plane)
+                // rfarm.createMesh(plane)
 
                 var animate = function() {
                     requestAnimationFrame(animate);

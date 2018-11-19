@@ -39,5 +39,12 @@ export interface IChecks {
 
 export interface IMaxscriptClient {
     connect(ip: string): Promise<boolean>;
+    disconnect();
+
     resetScene(): Promise<boolean>;
+    createTargetCamera(cameraJson): Promise<boolean>;
+    createSkylight(skylightJson: any): Promise<boolean>;
+
+    downloadJson(url: string, path: string): Promise<boolean>;
+    importMesh(path: string, nodeName: string): Promise<boolean>;
 }

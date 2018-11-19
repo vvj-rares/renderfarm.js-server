@@ -2,6 +2,7 @@ import { injectable, inject } from "inversify";
 import * as express from "express";
 import { IEndpoint, IDatabase, IChecks, IMaxscriptClient } from "../interfaces";
 import { TYPES } from "../types";
+import { timingSafeEqual } from "crypto";
 
 @injectable()
 class SceneEndpoint implements IEndpoint {
@@ -15,14 +16,6 @@ class SceneEndpoint implements IEndpoint {
         this._database = database;
         this._checks = checks;
         this._maxscriptClient = maxscriptClient;
-
-        this._maxscriptClient.connect("192.168.0.150")
-            .then(value => {
-                console.log("SceneEndpoint connected to maxscript client, ", value);
-            })
-            .catch(err => {
-                console.error("SceneEndpoint failed to connect to maxscript client, ", err);
-            });
     }
 
     bind(express: express.Application) {
@@ -47,16 +40,27 @@ class SceneEndpoint implements IEndpoint {
 
             //todo: this call must be evaluated with valid sessionID, so that we know which node is owned by the client
 
-            this._maxscriptClient.resetScene()
-                .then(value => {
-                    console.error(`    OK | scene reset`);
-                    res.send(JSON.stringify({}, null, 2));
-                })
-                .catch(err => {
-                    console.error(`  FAIL | failed to reset scene\n`, err);
-                    res.status(500);
-                    res.send(JSON.stringify({ error: "failed to reset scene" }, null, 2));
-                })
+            this._maxscriptClient.connect("192.168.0.150")
+                .then(function(value) {
+                    console.log("SceneEndpoint connected to maxscript client, ", value);
+
+                    this._maxscriptClient.resetScene()
+                    .then(function(value) {
+                        this._maxscriptClient.disconnect();
+                        console.log(`    OK | scene reset`);
+                        res.send(JSON.stringify({}, null, 2));
+                    }.bind(this))
+                    .catch(function(err) {
+                        this._maxscriptClient.disconnect();
+                        console.error(`  FAIL | failed to reset scene\n`, err);
+                        res.status(500);
+                        res.send(JSON.stringify({ error: "failed to reset scene" }, null, 2));
+                    }.bind(this))
+    
+                }.bind(this))
+                .catch(function(err) {
+                    console.error("SceneEndpoint failed to connect to maxscript client, ", err);
+                }.bind(this));
         }.bind(this));
 
         express.put('/scene/:uid', async function (req, res) {
