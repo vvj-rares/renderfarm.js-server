@@ -48,13 +48,13 @@ class SceneEndpoint implements IEndpoint {
                     .then(function(value) {
                         this._maxscriptClient.disconnect();
                         console.log(`    OK | scene reset`);
-                        res.send(JSON.stringify({}, null, 2));
+                        res.end(JSON.stringify({}, null, 2));
                     }.bind(this))
                     .catch(function(err) {
                         this._maxscriptClient.disconnect();
                         console.error(`  FAIL | failed to reset scene\n`, err);
                         res.status(500);
-                        res.send(JSON.stringify({ error: "failed to reset scene" }, null, 2));
+                        res.end(JSON.stringify({ error: "failed to reset scene" }, null, 2));
                     }.bind(this))
     
                 }.bind(this))

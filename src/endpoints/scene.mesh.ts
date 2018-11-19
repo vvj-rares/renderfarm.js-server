@@ -32,7 +32,7 @@ class SceneMeshEndpoint implements IEndpoint {
             console.log(`GET on /scene/mesh/${req.params.uid} with api_key: ${apiKey}`);
             if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
-            res.send(this._meshes[req.params.uid]);
+            res.end(this._meshes[req.params.uid]);
         }.bind(this));
 
         express.post('/scene/mesh', async function (req, res) {
@@ -61,20 +61,20 @@ class SceneMeshEndpoint implements IEndpoint {
                                 .then(function(value) {
                                     this._maxscriptClient.disconnect();
                                     console.log(`    OK | mesh imported successfully`);
-                                    res.send(JSON.stringify({ id: meshId }, null, 2));
+                                    res.end(JSON.stringify({ id: `mesh_${meshId}` }, null, 2));
                                 }.bind(this))
                                 .catch(function(err) {
                                     this._maxscriptClient.disconnect();
                                     console.error(`  FAIL | failed to import mesh\n`, err);
                                     res.status(500);
-                                    res.send(JSON.stringify({ error: "failed to import mesh" }, null, 2));
+                                    res.end(JSON.stringify({ error: "failed to import mesh" }, null, 2));
                                 }.bind(this));
                         }.bind(this))
                         .catch(function(err) {
                             this._maxscriptClient.disconnect();
                             console.error(`  FAIL | failed to download json file\n`, err);
                             res.status(500);
-                            res.send(JSON.stringify({ error: "failed to download json file" }, null, 2));
+                            res.end(JSON.stringify({ error: "failed to download json file" }, null, 2));
                         }.bind(this))
     
                 }.bind(this))

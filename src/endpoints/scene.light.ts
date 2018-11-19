@@ -52,13 +52,13 @@ class SceneLightEndpoint implements IEndpoint {
                         .then(function(value) {
                             this._maxscriptClient.disconnect();
                             console.log(`    OK | skylight created`);
-                            res.send(JSON.stringify({ id: skylightJson.name }, null, 2));
+                            res.end(JSON.stringify({ id: skylightJson.name }, null, 2));
                         }.bind(this))
                         .catch(function(err) {
                             this._maxscriptClient.disconnect();
                             console.error(`  FAIL | failed to create skylight\n`, err);
                             res.status(500);
-                            res.send(JSON.stringify({ error: "failed to create skylight" }, null, 2));
+                            res.end(JSON.stringify({ error: "failed to create skylight" }, null, 2));
                         }.bind(this))
     
                 }.bind(this))

@@ -20,6 +20,7 @@ class SessionEndpoint implements IEndpoint {
             console.log(`GET on /session with api_key: ${apiKey}`);
             if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
+            res.end(JSON.stringify({}, null, 2));
         }.bind(this));
 
         express.get('/session/:uid', async function (req, res) {
@@ -27,6 +28,7 @@ class SessionEndpoint implements IEndpoint {
             console.log(`GET on /session/${req.params.uid} with api_key: ${apiKey}`);
             if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
+            res.end(JSON.stringify({}, null, 2));
         }.bind(this));
 
         express.post('/session', async function (req, res) {
@@ -34,6 +36,8 @@ class SessionEndpoint implements IEndpoint {
             console.log(`POST on /session with api_key: ${apiKey}`);
             if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({}, null, 2));
         }.bind(this));
 
         express.put('/session/:uid', async function (req, res) {
@@ -41,6 +45,7 @@ class SessionEndpoint implements IEndpoint {
             console.log(`PUT on /session/${req.params.uid} with api_key: ${apiKey}`);
             if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
+            res.end(JSON.stringify({}, null, 2));
         }.bind(this));
 
         express.delete('/session/:uid', async function (req, res) {
@@ -48,6 +53,7 @@ class SessionEndpoint implements IEndpoint {
             console.log(`DELETE on /session/${req.params.uid} with api_key: ${apiKey}`);
             if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
+            res.end(JSON.stringify({}, null, 2));
         }.bind(this));
     }
 }

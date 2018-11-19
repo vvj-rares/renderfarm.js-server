@@ -54,13 +54,13 @@ class SceneCameraEndpoint implements IEndpoint {
                         .then(function(value) {
                             this._maxscriptClient.disconnect();
                             console.log(`    OK | camera created`);
-                            res.send(JSON.stringify({ id: cameraJson.name }, null, 2));
+                            res.end(JSON.stringify({ id: cameraJson.name }, null, 2));
                         }.bind(this))
                         .catch(function(err) {
                             this._maxscriptClient.disconnect();
                             console.error(`  FAIL | failed to create camera\n`, err);
                             res.status(500);
-                            res.send(JSON.stringify({ error: "failed to create camera" }, null, 2));
+                            res.end(JSON.stringify({ error: "failed to create camera" }, null, 2));
                         }.bind(this))
     
                 }.bind(this))

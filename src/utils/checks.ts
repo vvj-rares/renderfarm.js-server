@@ -23,7 +23,7 @@ class Checks implements IChecks {
             } else {
                 console.log(`  FAIL | api_key ${apiKey} declined`);
                 res.status(403);
-                res.send(JSON.stringify({ error: "api_key declined" }, null, 2));
+                res.end(JSON.stringify({ error: "api_key declined" }, null, 2));
                 return false;
             }
         }
