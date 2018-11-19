@@ -37,22 +37,30 @@ class SceneCameraEndpoint implements IEndpoint {
             console.log(`POST on /scene/camera with api_key: ${apiKey}`);
             if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
+            const LZString = require("lz-string");
+            let cameraJsonText = LZString.decompressFromBase64(req.body.camera_data);
+            let cameraJson: any = JSON.parse(cameraJsonText);
+
+            console.log(cameraJson);
+
             this._maxscriptClient.connect("192.168.0.150")
                 .then(function(value) {
                     console.log("SceneCameraEndpoint connected to maxscript client, ", value);
 
-                    let cameraJson = {
+                    let camera = {
                         name: require('../utils/genRandomName')("camera"),
-                        position: [20,20,20],
-                        target: [0,0,0],
-                        fov: 25
+                        position: [cameraJson.object.position[0], cameraJson.object.position[1], cameraJson.object.position[2]],
+                        target: [cameraJson.object.target[0],     cameraJson.object.target[1],   cameraJson.object.target[2]],
+                        fov: cameraJson.object.fov * cameraJson.object.aspect
                     };
 
-                    this._maxscriptClient.createTargetCamera(cameraJson)
+                    console.log(" >> " + JSON.stringify(camera) );
+
+                    this._maxscriptClient.createTargetCamera(camera)
                         .then(function(value) {
                             this._maxscriptClient.disconnect();
                             console.log(`    OK | camera created`);
-                            res.end(JSON.stringify({ id: cameraJson.name }, null, 2));
+                            res.end(JSON.stringify({ id: camera.name }, null, 2));
                         }.bind(this))
                         .catch(function(err) {
                             this._maxscriptClient.disconnect();
