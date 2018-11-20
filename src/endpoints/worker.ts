@@ -29,11 +29,9 @@ class WorkerEndpoint implements IEndpoint {
             console.log(`server error:\n${err.stack}`);
             server.close();
         }.bind(this));
-        
-        server.on('message', function(msg, rinfo) {
-            // "id"="00003964", "mac"="3ca9f4514de0", "session"="00000000-1234-4a7b-82a8-9c77df147319", "cpu_usage": 2.157171, "ram_usage": 2.890419, "total_ram": 3.888634 } from 192.168.0.150:56663
 
-            var rec = JSON.parse(msg.toString().split('=').join(':'));
+        server.on('message', function(msg, rinfo) {
+            var rec = JSON.parse(msg.toString());
             let knownWorker = this._workers[rec.mac];
             if (knownWorker !== undefined) { // update existing record
                 knownWorker.cpuUsage = rec.cpu_usage;
@@ -45,9 +43,8 @@ class WorkerEndpoint implements IEndpoint {
             } else {
                 let newWorker = new WorkerInfo(uuidv4(), rec.mac);
                 this._workers[rec.mac] = newWorker;
-                console.log(this._workers);
+                console.log(`new worker: ${msg} from ${rinfo.address}:${rinfo.port}`);
             }
-            // console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
         }.bind(this));
         
         server.on('listening', function() {

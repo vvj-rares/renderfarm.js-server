@@ -16,3 +16,7 @@ Plane length:100.0 width:100.0 pos:[0,0,0] isSelected:off
 Box pos:[-26.4992,28.62,0] isSelected:on width:17.8764 length:20.0055 height:31.9091
 
 render camera:$Camera001 outputSize: [640,480] outputfile: "C:\\Temp\\renderoutput\\1.png" vfb: false
+
+// start another instance of max and quit, aka restart 3ds max
+cmdexRun "start \"\" \"C:\Autodesk\3ds Max 2018\\3dsmax.exe\""
+quitMAX #noPrompt
