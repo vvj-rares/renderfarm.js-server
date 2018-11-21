@@ -33,50 +33,56 @@ class JobEndpoint implements IEndpoint {
         }.bind(this));
 
         express.post('/job', async function (req, res) {
-            let apiKey = req.body.api_key;
-            console.log(`POST on /job with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
+            console.log(`POST on /job with session: ${req.body.session}`);
 
-            let camera = req.body.camera;
-            let width = req.body.width;
-            let height = req.body.height;
+            this._database.getWorker(req.body.session)
+                .then(function(worker){
 
-            this._maxscriptClient.connect("192.168.0.150")
-                .then(function(value) {
-                    console.log("JobEndpoint connected to maxscript client, ", value);
+                    let camera = req.body.camera;
+                    let width = req.body.width;
+                    let height = req.body.height;
 
-                    const fileId = require('../utils/genRandomName')("render");
-
-                    const outputPath = `C:\\\\Temp\\\\${fileId}.png`;
-                    this._maxscriptClient.renderScene(camera, [width, height], outputPath)
+                    this._maxscriptClient.connect(worker.ip)
                         .then(function(value) {
-                            console.log(`    OK | image rendered`);
-                            this._maxscriptClient.uploadPng(outputPath, "https://192.168.0.200:8000/file")
+                            console.log("JobEndpoint connected to maxscript client, ", value);
+
+                            const fileId = require('../utils/genRandomName')("render");
+
+                            const outputPath = `C:\\\\Temp\\\\${fileId}.png`;
+                            this._maxscriptClient.renderScene(camera, [width, height], outputPath)
                                 .then(function(value) {
-                                    this._maxscriptClient.disconnect();
-                                    console.log(`    OK | rendered image uploaded`);
-                                    res.end(JSON.stringify({ url: `https://192.168.0.200:8000/file/${fileId}.png` }, null, 2));
+                                    console.log(`    OK | image rendered`);
+                                    this._maxscriptClient.uploadPng(outputPath, "https://192.168.0.200:8000/file")
+                                        .then(function(value) {
+                                            this._maxscriptClient.disconnect();
+                                            console.log(`    OK | rendered image uploaded`);
+                                            res.end(JSON.stringify({ url: `https://192.168.0.200:8000/file/${fileId}.png` }, null, 2));
+                                        }.bind(this))
+                                        .catch(function(err) {
+                                            this._maxscriptClient.disconnect();
+                                            console.error(`  FAIL | failed to upload rendered image\n`, err);
+                                            res.status(500);
+                                            res.end(JSON.stringify({ error: "failed to upload rendered image" }, null, 2));
+                                        }.bind(this));
+
                                 }.bind(this))
                                 .catch(function(err) {
                                     this._maxscriptClient.disconnect();
-                                    console.error(`  FAIL | failed to upload rendered image\n`, err);
+                                    console.error(`  FAIL | failed to render image\n`, err);
                                     res.status(500);
-                                    res.end(JSON.stringify({ error: "failed to upload rendered image" }, null, 2));
-                                }.bind(this));
-
+                                    res.end(JSON.stringify({ error: "failed to render image" }, null, 2));
+                                }.bind(this))
+            
                         }.bind(this))
                         .catch(function(err) {
-                            this._maxscriptClient.disconnect();
-                            console.error(`  FAIL | failed to render image\n`, err);
-                            res.status(500);
-                            res.end(JSON.stringify({ error: "failed to render image" }, null, 2));
-                        }.bind(this))
-    
-                }.bind(this))
-                .catch(function(err) {
-                    console.error("JobEndpoint failed to connect to maxscript client, ", err);
-                }.bind(this));
+                            console.error("JobEndpoint failed to connect to maxscript client, ", err);
+                        }.bind(this));
 
+                }.bind(this))
+                .catch(function(err){
+                    res.end(JSON.stringify({ error: "session is expired" }, null, 2));
+                }.bind(this)); // end of this._database.getWorker promise
+    
         }.bind(this));
 
         express.put('/job/:uid', async function (req, res) {

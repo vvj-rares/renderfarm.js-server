@@ -29,9 +29,11 @@ export interface IDatabase {
 
     storeWorker(workerInfo: WorkerInfo): Promise<WorkerInfo>;
     startWorkerSession(apiKey: string, sessionGuid: string): Promise<WorkerInfo>;
+    getWorker(sessionGuid: string): Promise<WorkerInfo>;
 
     startWorkerSession(apiKey: string, sessionGuid: string): Promise<WorkerInfo>;
     expireSessions(): Promise<SessionInfo[]>;
+    closeSession(sessionGuid: string): Promise<boolean>;
 }
 
 export interface IApp {

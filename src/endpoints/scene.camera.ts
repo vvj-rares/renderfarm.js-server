@@ -33,46 +33,48 @@ class SceneCameraEndpoint implements IEndpoint {
         }.bind(this));
 
         express.post('/scene/camera', async function (req, res) {
-            let apiKey = req.body.api_key;
-            console.log(`POST on /scene/camera with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
+            console.log(`POST on /scene/camera with session: ${req.body.session}`);
 
-            const LZString = require("lz-string");
-            let cameraJsonText = LZString.decompressFromBase64(req.body.camera);
-            let cameraJson: any = JSON.parse(cameraJsonText);
+            this._database.getWorker(req.body.session)
+                .then(function(worker){
 
-            console.log(cameraJson);
-
-            this._maxscriptClient.connect("192.168.0.150")
-                .then(function(value) {
-                    console.log("SceneCameraEndpoint connected to maxscript client, ", value);
-
-                    let camera = {
-                        name: require('../utils/genRandomName')("camera"),
-                        position: [cameraJson.object.position[0], cameraJson.object.position[1], cameraJson.object.position[2]],
-                        target: [cameraJson.object.target[0],     cameraJson.object.target[1],   cameraJson.object.target[2]],
-                        fov: cameraJson.object.fov * cameraJson.object.aspect
-                    };
-
-                    console.log(" >> " + JSON.stringify(camera) );
-
-                    this._maxscriptClient.createTargetCamera(camera)
+                    const LZString = require("lz-string");
+                    let cameraJsonText = LZString.decompressFromBase64(req.body.camera);
+                    let cameraJson: any = JSON.parse(cameraJsonText);
+        
+                    this._maxscriptClient.connect(worker.ip)
                         .then(function(value) {
-                            this._maxscriptClient.disconnect();
-                            console.log(`    OK | camera created`);
-                            res.end(JSON.stringify({ id: camera.name }, null, 2));
+                            console.log("SceneCameraEndpoint connected to maxscript client, ", value);
+        
+                            let camera = {
+                                name: require('../utils/genRandomName')("camera"),
+                                position: [cameraJson.object.position[0], cameraJson.object.position[1], cameraJson.object.position[2]],
+                                target: [cameraJson.object.target[0],     cameraJson.object.target[1],   cameraJson.object.target[2]],
+                                fov: cameraJson.object.fov * cameraJson.object.aspect
+                            };
+        
+                            this._maxscriptClient.createTargetCamera(camera)
+                                .then(function(value) {
+                                    this._maxscriptClient.disconnect();
+                                    console.log(`    OK | camera created`);
+                                    res.end(JSON.stringify({ id: camera.name }, null, 2));
+                                }.bind(this))
+                                .catch(function(err) {
+                                    this._maxscriptClient.disconnect();
+                                    console.error(`  FAIL | failed to create camera\n`, err);
+                                    res.status(500);
+                                    res.end(JSON.stringify({ error: "failed to create camera" }, null, 2));
+                                }.bind(this)); // end of this._maxscriptClient.createTargetCamera promise
+            
                         }.bind(this))
                         .catch(function(err) {
-                            this._maxscriptClient.disconnect();
-                            console.error(`  FAIL | failed to create camera\n`, err);
-                            res.status(500);
-                            res.end(JSON.stringify({ error: "failed to create camera" }, null, 2));
-                        }.bind(this))
-    
+                            console.error("SceneCameraEndpoint failed to connect to maxscript client, ", err);
+                        }.bind(this)); // end of this._maxscriptClient.connect promise
+        
                 }.bind(this))
-                .catch(function(err) {
-                    console.error("SceneCameraEndpoint failed to connect to maxscript client, ", err);
-                }.bind(this));
+                .catch(function(err){
+                    res.end(JSON.stringify({ error: "session is expired" }, null, 2));
+                }.bind(this)); // end of this._database.getWorker promise
 
         }.bind(this));
 

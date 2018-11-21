@@ -20,11 +20,9 @@ class SessionEndpoint implements IEndpoint {
 
         //expire sessions by timer
         setInterval(async function() {
-            console.log("Trying to expire some sessions...");
             await this._database.expireSessions()
                 .then(function(guids){
                     if (guids.length === 0) {
-                        console.log(`    OK | no sessions to expire`);
                         return;
                     }
                     console.log(`    OK | expired sessions: ${guids.length}`);
@@ -80,17 +78,21 @@ class SessionEndpoint implements IEndpoint {
                                 .catch(function(err) {
                                     this._maxscriptClient.disconnect();
                                     console.error(`  FAIL | failed to assign session to worker\n`, err);
+                                    res.status(500);
                                     res.end(JSON.stringify({ error: "failed to assign session to worker" }, null, 2));
                                 }.bind(this)); // end of this._maxscriptClient.setSession promise
     
                         }.bind(this))
                         .catch(function(err) {
                             console.error("SessionEndpoint failed to connect to maxscript client, ", err);
+                            res.status(500);
+                            res.end(JSON.stringify({ error: "failed to connect to maxscript client" }, null, 2));
                         }.bind(this)); // end of this._maxscriptClient.connect promise
 
                 }.bind(this))
                 .catch(function(err) {
                     console.error(`  FAIL | failed to create session\n`, err);
+                    res.status(500);
                     res.end(JSON.stringify({ error: "failed to create session", reason: err }, null, 2));
                 }.bind(this)); // end of this._database.startWorkerSession promise
 

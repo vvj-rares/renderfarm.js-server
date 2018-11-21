@@ -27,9 +27,7 @@ class FileEndpoint implements IEndpoint {
         }.bind(this));
 
         express.get('/file/:name', async function (req, res, next) {
-            let apiKey = req.query.api_key;
-            console.log(`GET on /file/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
+            console.log(`GET on /file/${req.params.name}`);
 
             var options = {
                 root: "C:\\Temp\\",
@@ -44,7 +42,8 @@ class FileEndpoint implements IEndpoint {
             var fileName = req.params.name;
             res.sendFile(fileName, options, function (err) {
                 if (err) {
-                    next(err);
+                    console.error(err);
+                    res.status(404);
                 } else {
                     console.log('Sent:', fileName);
                 }
@@ -55,7 +54,6 @@ class FileEndpoint implements IEndpoint {
         express.post('/file', upload.single('somefile'), function (req, res, next) {
             console.log(req.file);
             const fs = require("fs");
-            const uuid4 = require("uuid");
             fs.rename(req.file.destination + req.file.filename, req.file.destination + req.file.originalname, function(err) {
                 if ( err ) {
                     // todo: also return in response

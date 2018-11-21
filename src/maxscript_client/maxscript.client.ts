@@ -208,8 +208,6 @@ class MaxscriptClient implements IMaxscriptClient {
             let maxscript = `render camera:$${camera} outputSize: [${size[0]},${size[1]}] ` 
                           + `outputfile: "${filename}" vfb: false`;
 
-            console.log(" >> " + maxscript);
-
             this._client.write(maxscript);
         }.bind(this));
     }

@@ -148,8 +148,8 @@ class Database implements IDatabase {
         assert.notEqual(db, null);
 
         return new Promise<SessionInfo[]>(function (resolve, reject) {
-            // first expire sessions which have not been updated since 5 minutes
-            let expirationDate = new Date(Date.now() - 5*60*1000);
+            // first expire sessions which have not been updated since 15 seconds
+            let expirationDate = new Date(Date.now() - 15*1000); // 5*60*1000
 
             db.collection("sessions").find(
                 { 
@@ -246,14 +246,14 @@ class Database implements IDatabase {
                         } else {
                             reject(`all workers are busy`);
                         }
-                    })
+                    }.bind(this))
                     .catch(function(err) {
                         console.error(err);
                         reject(`failed to query available workers`);
                         return
-                    });
+                    }.bind(this));
 
-            });
+            }.bind(this));
         }.bind(this));
     }
 
@@ -278,6 +278,65 @@ class Database implements IDatabase {
                 .catch(function(err) {
                     reject(err);
                 });
+        }.bind(this));
+    }
+
+    async getWorker(sessionGuid: string): Promise<WorkerInfo> {
+
+        let db = this._client.db("rfarmdb");
+        assert.notEqual(db, null);
+
+        return new Promise<WorkerInfo>(function (resolve, reject) {
+            if (sessionGuid === undefined || sessionGuid === "" || sessionGuid === null) {
+                reject("session id is empty");
+            }
+
+            // first find not closed sessions, and join each with corresponding workers
+            db.collection("sessions").aggregate([
+                {
+                    $match: {
+                        guid: sessionGuid
+                    }
+                },
+                {
+                    $lookup:
+                      {
+                        from: "workers",
+                        localField: "workerMac",
+                        foreignField: "mac",
+                        as: "worker"
+                      }
+                },
+                { 
+                    $unwind : "$worker" 
+                }
+            ]).toArray(function(err, res) {
+                if (err) {
+                    console.error(err);
+                    reject(`failed to find worker by session guid: ${sessionGuid}`);
+                    return;
+                }
+
+                if (res.length > 1) {
+                    console.error(`Found more than one session with guid: ${sessionGuid}`);
+                }
+
+                if (res.length === 0) {
+                    console.log(`Session not found: ${sessionGuid}`);
+                    resolve(undefined);
+                }
+
+                let worker = WorkerInfo.fromJSON(res[0].worker);
+                console.log(`Found a worker for session ${sessionGuid}: ${JSON.stringify(worker)}`);
+                resolve(worker);
+            }.bind(this));
+        }.bind(this));
+    }
+
+    async closeSession(sessionGuid: string): Promise<boolean> {
+        //todo: implement it
+        return new Promise<boolean>(function(resolve, reject) {
+            resolve(true);
         }.bind(this));
     }
 }

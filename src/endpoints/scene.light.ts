@@ -32,38 +32,44 @@ class SceneLightEndpoint implements IEndpoint {
 
         }.bind(this));
 
-        express.post('/scene/light', async function (req, res) {
-            let apiKey = req.body.api_key;
-            console.log(`POST on /scene/light with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
+        express.post('/scene/skylight', async function (req, res) {
+            console.log(`POST on /scene/skylight with session: ${req.body.session}`);
 
-            this._maxscriptClient.connect("192.168.0.150")
-                .then(function(value) {
-                    console.log("SceneLightEndpoint connected to maxscript client, ", value);
+            this._database.getWorker(req.body.session)
+                .then(function(worker){
 
-                    let skylightJson = {
-                        name: require('../utils/genRandomName')("skylight"),
-                        position: [12,0,17]
-                    };
-
-                    this._maxscriptClient.createSkylight(skylightJson)
+                    this._maxscriptClient.connect(worker.ip)
                         .then(function(value) {
-                            this._maxscriptClient.disconnect();
-                            console.log(`    OK | skylight created`);
-                            res.end(JSON.stringify({ id: skylightJson.name }, null, 2));
+                            console.log("SceneLightEndpoint connected to maxscript client, ", value);
+
+                            let skylightJson = {
+                                name: require('../utils/genRandomName')("skylight"),
+                                position: [12,0,17]
+                            };
+
+                            this._maxscriptClient.createSkylight(skylightJson)
+                                .then(function(value) {
+                                    this._maxscriptClient.disconnect();
+                                    console.log(`    OK | skylight created`);
+                                    res.end(JSON.stringify({ id: skylightJson.name }, null, 2));
+                                }.bind(this))
+                                .catch(function(err) {
+                                    this._maxscriptClient.disconnect();
+                                    console.error(`  FAIL | failed to create skylight\n`, err);
+                                    res.status(500);
+                                    res.end(JSON.stringify({ error: "failed to create skylight" }, null, 2));
+                                }.bind(this)); // end of this._maxscriptClient.createSkylight promise
+            
                         }.bind(this))
                         .catch(function(err) {
-                            this._maxscriptClient.disconnect();
-                            console.error(`  FAIL | failed to create skylight\n`, err);
-                            res.status(500);
-                            res.end(JSON.stringify({ error: "failed to create skylight" }, null, 2));
-                        }.bind(this))
-    
-                }.bind(this))
-                .catch(function(err) {
-                    console.error("SceneLightEndpoint failed to connect to maxscript client, ", err);
-                }.bind(this));
+                            console.error("SceneLightEndpoint failed to connect to maxscript client, ", err);
+                        }.bind(this)); // end of this._maxscriptClient.connect promise
 
+                }.bind(this))
+                .catch(function(err){
+                    res.end(JSON.stringify({ error: "session is expired" }, null, 2));
+                }.bind(this)); // end of this._database.getWorker promise
+    
         }.bind(this));
 
         express.put('/scene/light/:uid', async function (req, res) {
