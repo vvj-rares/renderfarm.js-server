@@ -1,5 +1,4 @@
 class WorkerInfo {
-    private _guid: string;
     private _firstSeen: Date;
     private _lastSeen: Date;
     private _mac: string;
@@ -7,17 +6,11 @@ class WorkerInfo {
     private _ramUsage: number;
     private _totalRam: number;
     private _ip: string;
-    private _session: string;
 
-    constructor(guid: string, mac: string) {
+    constructor(mac: string) {
         this._firstSeen = new Date();
         this._lastSeen = new Date();
-        this._guid = guid;
         this._mac = mac;
-    }
-
-    public get guid(): string {
-        return this._guid;
     }
 
     public get firstSeen(): Date {
@@ -44,12 +37,11 @@ class WorkerInfo {
         this._totalRam = value;
     }
 
+    public get ip(): string {
+        return this._ip;
+    }
     public set ip(value: string) {
         this._ip = value;
-    }
-
-    public set session(value: string) {
-        this._session = value;
     }
 
     public touch(): void {
@@ -57,25 +49,39 @@ class WorkerInfo {
     }
 
     public static fromJSON(obj: any): WorkerInfo {
-        let res = new WorkerInfo(obj.guid, obj.mac);
+        let res = new WorkerInfo(obj.mac);
+
+        res._ip        = obj.ip;
 
         res._firstSeen = new Date(obj.firstSeen);
         res._lastSeen  = new Date(obj.lastSeen);
+
+        res._cpuUsage  = obj.cpuUsage;
+        res._ramUsage  = obj.ramUsage;
+        res._totalRam  = obj.totalRam;
 
         return res;
     }
 
     public toJSON(): any {
         return {
-            guid:       this._guid,
-            session:    this._session,
             ip:         this._ip,
             mac:        this._mac,
             firstSeen:  this._firstSeen.toISOString(),
             lastSeen:   this._lastSeen.toISOString(),
             cpuUsage:   this._cpuUsage,
             ramUsage:   this._ramUsage,
-            totalRam:   this._totalRam
+            totalRam:   this._totalRam,
+        }
+    }
+
+    public toDatabase(): any {
+        return {
+            ip:         this._ip,
+            mac:        this._mac,
+            firstSeen:  this._firstSeen,
+            lastSeen:   this._lastSeen,
+            totalRam:   this._totalRam,
         }
     }
 }

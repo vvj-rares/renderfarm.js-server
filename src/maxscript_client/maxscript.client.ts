@@ -68,6 +68,34 @@ class MaxscriptClient implements IMaxscriptClient {
         }.bind(this));
     }
 
+    setSession(sessionGuid: string): Promise<boolean> {
+
+        return new Promise<boolean>(function(resolve, reject) {
+            // prepare response handlers for the command
+            this._responseHandler = function(data) {
+                let response = data.toString();
+                console.log("session set returned: ", response);
+                this._responseHandler = undefined;
+
+                if (response.indexOf("worker_busy") !== -1) {
+                    resolve(false);
+                }
+
+                resolve(true);
+            };
+
+            this._errorHandler = function(err) {
+                console.error("session set error: ", err);
+                reject(err);
+            };
+
+            // now run command
+            let maxscript = `SessionGuid = "${sessionGuid}"; resetMaxFile #noPrompt`;
+
+            this._client.write(maxscript);
+        }.bind(this));
+    }
+
     createTargetCamera(cameraJson: any): Promise<boolean> {
 
         return new Promise<boolean>(function(resolve, reject) {

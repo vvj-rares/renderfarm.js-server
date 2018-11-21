@@ -3,7 +3,6 @@ import * as express from "express";
 import { IEndpoint, IDatabase, IChecks } from "../interfaces";
 import { TYPES } from "../types";
 import { WorkerInfo } from "../model/worker_info";
-import uuidv4 = require('uuid/v4');
 
 @injectable()
 class WorkerEndpoint implements IEndpoint {
@@ -30,7 +29,7 @@ class WorkerEndpoint implements IEndpoint {
             server.close();
         }.bind(this));
 
-        server.on('message', function(msg, rinfo) {
+        server.on('message', async function(msg, rinfo) {
             var rec = JSON.parse(msg.toString());
             let knownWorker = this._workers[rec.mac];
             if (knownWorker !== undefined) { // update existing record
@@ -38,18 +37,22 @@ class WorkerEndpoint implements IEndpoint {
                 knownWorker.ramUsage = rec.ram_usage;
                 knownWorker.totalRam = rec.total_ram;
                 knownWorker.ip       = rinfo.address;
-                knownWorker.session  = rec.session;
                 knownWorker.touch();
+
+                await this._database.storeWorker(knownWorker);
             } else {
-                let newWorker = new WorkerInfo(uuidv4(), rec.mac);
+                let newWorker = new WorkerInfo(rec.mac);
                 this._workers[rec.mac] = newWorker;
+
+                await this._database.storeWorker(newWorker);
+
                 console.log(`new worker: ${msg} from ${rinfo.address}:${rinfo.port}`);
             }
         }.bind(this));
         
         server.on('listening', function() {
             const address = server.address();
-            console.log(`server listening ${address.address}:${address.port}`);
+            console.log(`    OK | Worker monitor is listening on ${address.address}:${address.port}`);
         }.bind(this));
 
         server.bind(3000);

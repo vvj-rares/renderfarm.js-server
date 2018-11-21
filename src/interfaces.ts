@@ -2,6 +2,8 @@
 
 import * as express from "express";
 import { Project } from "./model/project";
+import { WorkerInfo } from "./model/worker_info";
+import { SessionInfo } from "./model/session_info";
 
 export interface Warrior {
     fight(): string;
@@ -19,10 +21,17 @@ export interface ThrowableWeapon {
 export interface IDatabase {
     connect(url: string): Promise<any>;
     getApiKey(apiKey: string): Promise<any>;
+
     getProjects(apiKey: string): Promise<Project[]>;
     getProject(apiKey: string, projectGuid: string): Promise<Project>;
     updateProject(apiKey: string, project: Project): Promise<Project>;
     deleteProject(apiKey: string, projectGuid: string): Promise<any>;
+
+    storeWorker(workerInfo: WorkerInfo): Promise<WorkerInfo>;
+    startWorkerSession(apiKey: string, sessionGuid: string): Promise<WorkerInfo>;
+
+    startWorkerSession(apiKey: string, sessionGuid: string): Promise<WorkerInfo>;
+    expireSessions(): Promise<SessionInfo[]>;
 }
 
 export interface IApp {
@@ -42,6 +51,8 @@ export interface IMaxscriptClient {
     disconnect();
 
     resetScene(): Promise<boolean>;
+    setSession(sessionGuid: string): Promise<boolean>;
+
     createTargetCamera(cameraJson): Promise<boolean>;
     createSkylight(skylightJson: any): Promise<boolean>;
 

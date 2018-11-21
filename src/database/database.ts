@@ -6,6 +6,8 @@ import { IDatabase } from "../interfaces"
 
 import assert = require("assert");
 import { Project } from "../model/project";
+import { WorkerInfo } from "../model/worker_info";
+import { SessionInfo } from "../model/session_info";
 
 @injectable()
 class Database implements IDatabase {
@@ -138,6 +140,144 @@ class Database implements IDatabase {
                 reject(err);
             });
 
+        }.bind(this));
+    }
+
+    async expireSessions(): Promise<SessionInfo[]> {
+        let db = this._client.db("rfarmdb");
+        assert.notEqual(db, null);
+
+        return new Promise<SessionInfo[]>(function (resolve, reject) {
+            // first exire sessions which have not been updated since 15 seconds
+            let expirationDate = new Date(Date.now() - 15*1000);
+
+            db.collection("sessions").find(
+                { 
+                    lastSeen : { $lte: expirationDate },
+                    closed: { $exists: false }
+                })
+                .toArray(function(err, res) {
+                    if (err) {
+                        console.error(err);
+                        reject(`failed to find expiring sessions`);
+                        return;
+                    }
+
+                    // now make a collection of busy mac addresses
+                    let expiringSessions = res;
+
+                    // now expire sessions
+                    db.collection("sessions").updateMany(
+                        { 
+                            lastSeen: { $lte: expirationDate }, 
+                            closed: { $exists: false } 
+                        },
+                        { $set: { closed: true, reason: "abandoned" } } )
+                        .then(function(value){
+                            if (value.result.nModified !== expiringSessions.length) {
+                                console.warn(` WARN | number of expired sessions: ${expiringSessions.length}, actually expired: ${value.result.nModified}`);
+                            }
+                            resolve(expiringSessions);
+                        }.bind(this))
+                        .catch(function(err){
+                            console.error(err);
+                            reject("failed to expire abandoned sessions");
+                        }.bind(this)); // end of  db.collection("sessions").updateMany promise
+
+                }); // end of find
+        });
+    }
+
+    async startWorkerSession(apiKey: string, sessionGuid: string): Promise<WorkerInfo> {
+        let db = this._client.db("rfarmdb");
+        assert.notEqual(db, null);
+
+        return new Promise<WorkerInfo>(function (resolve, reject) {
+            // first find not closed sessions, and join each with corresponding workers
+            db.collection("sessions").aggregate([
+                {
+                    $match: {
+                        closed: {
+                            $exists: false
+                        }
+                    }
+                },
+                {
+                    $lookup:
+                      {
+                        from: "workers",
+                        localField: "workerMac",
+                        foreignField: "mac",
+                        as: "worker"
+                      }
+                },
+                { 
+                    $unwind : "$worker" 
+                }
+            ]).toArray(function(err, res) {
+                if (err) {
+                    console.error(err);
+                    reject(`failed to query open sessions`);
+                    return;
+                }
+
+                // now make a collection of busy mac addresses
+                let busyWorkersMac = res.map(s => s.worker.mac);
+
+                //now find one worker, whose mac does not belong to busyWorkersMac
+                db.collection("workers").findOne(
+                    { mac: { $nin: busyWorkersMac } })
+                    .then(function(obj) {
+
+                        if (obj) {
+                            let newSession = new SessionInfo(apiKey, sessionGuid, obj.mac);
+                            db.collection("sessions").insertOne(newSession.toDatabase())
+                                .then(function(value){
+                                    if (value.insertedCount === 1) {
+                                        resolve({ session: newSession, worker: WorkerInfo.fromJSON(obj) });
+                                    } else {
+                                        reject(`failed to insert new session, insertedCount was ${value.insertedCount}`);
+                                    }
+                                }.bind(this))
+                                .catch(function(err){
+                                    console.error(err);
+                                    reject(`failed to insert new session`);
+                                }.bind(this))
+                        } else {
+                            reject(`all workers are busy`);
+                        }
+                    })
+                    .catch(function(err) {
+                        console.error(err);
+                        reject(`failed to query available workers`);
+                        return
+                    });
+
+            });
+        }.bind(this));
+    }
+
+    async storeWorker(workerInfo: WorkerInfo): Promise<WorkerInfo> {
+        let db = this._client.db("rfarmdb");
+        assert.notEqual(db, null);
+
+        let workerJson = workerInfo.toDatabase();
+
+        return new Promise<WorkerInfo>(function (resolve, reject) {
+            db.collection("workers").findOneAndUpdate(
+                { mac: workerInfo.mac },
+                { $set: workerJson },
+                { returnOriginal: false, upsert: true })
+                .then(function(obj) {
+                    if (obj.value) {
+                        resolve(WorkerInfo.fromJSON(obj.value));
+                    } else {
+                        reject(`unable to find worker with mac ${workerInfo.mac}`);
+                    }
+                })
+                .catch(function(err) {
+                    reject(err);
+                });
         }.bind(this));
     }
 }
