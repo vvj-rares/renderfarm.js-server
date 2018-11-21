@@ -39,6 +39,7 @@
                     data: { api_key: "75f5-4d53-b0f4" },
                     type: 'POST',
                     success: function(result) {
+                        document.sessionId = result.id;
                         console.log(result);
                     },
                     error: function(err) {
@@ -53,7 +54,9 @@
 
                 $.ajax({
                     url: "https://localhost:8000/scene",
-                    data: { api_key: "75f5-4d53-b0f4" },
+                    data: { 
+                        session: document.sessionId 
+                    },
                     type: 'POST',
                     success: function(result) {
                         console.log(result);
@@ -87,8 +90,9 @@
 
                 $.ajax({
                     url: "https://localhost:8000/scene/camera",
-                    data: { api_key: "75f5-4d53-b0f4", 
-                            camera_data: compressedCameraData 
+                    data: { 
+                        session: document.sessionId,
+                        camera: compressedCameraData 
                     },
                     type: 'POST',
                     success: function(result) {
@@ -107,7 +111,9 @@
 
                 $.ajax({
                     url: "https://localhost:8000/scene/light",
-                    data: { api_key: "75f5-4d53-b0f4" },
+                    data: { 
+                        session: document.sessionId, 
+                    },
                     type: 'POST',
                     success: function(result) {
                         console.log(result);
@@ -127,7 +133,10 @@
 
                 $.ajax({
                     url: "https://localhost:8000/scene/mesh",
-                    data: { api_key: "75f5-4d53-b0f4", scene_data: compressedSceneData },
+                    data: { 
+                        session: document.sessionId, 
+                        mesh: compressedSceneData 
+                    },
                     type: 'POST',
                     success: function(result) {
                         console.log(result);
@@ -163,7 +172,12 @@
 
                 $.ajax({
                     url: "https://localhost:8000/job",
-                    data: { api_key: "75f5-4d53-b0f4", width: width, height: height, camera: cameraId },
+                    data: { 
+                        session: document.sessionId, 
+                        width: width, 
+                        height: height, 
+                        camera: cameraId 
+                    },
                     type: 'POST',
                     success: function(result) {
                         console.log(result);
@@ -192,8 +206,6 @@
                 var controls;
 
                 rfarm.createSession();
-
-                return;
 
                 var scene = new THREE.Scene();
                 //todo: user API_KEY to create new session

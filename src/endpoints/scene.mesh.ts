@@ -41,7 +41,7 @@ class SceneMeshEndpoint implements IEndpoint {
             if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
             const LZString = require("lz-string");
-            let sceneJsonText = LZString.decompressFromBase64(req.body.scene_data);
+            let sceneJsonText = LZString.decompressFromBase64(req.body.mesh);
 
             const meshId = require('../utils/genRandomName')("mesh");
             this._meshes[meshId] = sceneJsonText;

@@ -38,7 +38,7 @@ class SceneCameraEndpoint implements IEndpoint {
             if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
             const LZString = require("lz-string");
-            let cameraJsonText = LZString.decompressFromBase64(req.body.camera_data);
+            let cameraJsonText = LZString.decompressFromBase64(req.body.camera);
             let cameraJson: any = JSON.parse(cameraJsonText);
 
             console.log(cameraJson);

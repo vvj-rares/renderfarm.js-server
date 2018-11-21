@@ -17,6 +17,23 @@ class SessionEndpoint implements IEndpoint {
         this._database = database;
         this._checks = checks;
         this._maxscriptClient = maxscriptClient;
+
+        //expire sessions by timer
+        setInterval(async function() {
+            console.log("Trying to expire some sessions...");
+            await this._database.expireSessions()
+                .then(function(guids){
+                    if (guids.length === 0) {
+                        console.log(`    OK | no sessions to expire`);
+                        return;
+                    }
+                    console.log(`    OK | expired sessions: ${guids.length}`);
+                }.bind(this))
+                .catch(function(err){
+                    console.error(err);
+                }.bind(this));
+
+        }.bind(this), 5000);
     }
 
     bind(express: express.Application) {
@@ -40,19 +57,6 @@ class SessionEndpoint implements IEndpoint {
             let apiKey = req.body.api_key;
             console.log(`POST on /session with api_key: ${apiKey}`);
             if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
-            //first we need to expire some abandoned sessions
-            await this._database.expireSessions()
-                .then(function(guids){
-                    if (guids.length === 0) {
-                        console.log(`    OK | no sessions to expire`);
-                        return;
-                    }
-                    console.log(`    OK | expired sessions: ${guids.length}`);
-                }.bind(this))
-                .catch(function(err){
-                    // ignore it
-                }.bind(this));
 
             const uuidv4 = require('uuid/v4');
             let newSessionGuid = uuidv4();

@@ -148,8 +148,8 @@ class Database implements IDatabase {
         assert.notEqual(db, null);
 
         return new Promise<SessionInfo[]>(function (resolve, reject) {
-            // first exire sessions which have not been updated since 15 seconds
-            let expirationDate = new Date(Date.now() - 15*1000);
+            // first expire sessions which have not been updated since 5 minutes
+            let expirationDate = new Date(Date.now() - 5*60*1000);
 
             db.collection("sessions").find(
                 { 
