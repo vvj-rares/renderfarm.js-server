@@ -1,20 +1,20 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IChecks, IMaxscriptClient } from "../interfaces";
+import { IEndpoint, IDatabase, IChecks, IMaxscriptClientFactory } from "../interfaces";
 import { TYPES } from "../types";
 
 @injectable()
 class SceneCameraEndpoint implements IEndpoint {
     private _database: IDatabase;
     private _checks: IChecks;
-    private _maxscriptClient: IMaxscriptClient;
+    private _maxscriptClientFactory: IMaxscriptClientFactory;
 
     constructor(@inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.IChecks) checks: IChecks,
-                @inject(TYPES.IMaxscriptClient) maxscriptClient: IMaxscriptClient) {
+                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
         this._database = database;
         this._checks = checks;
-        this._maxscriptClient = maxscriptClient;
+        this._maxscriptClientFactory = maxscriptClientFactory;
     }
 
     bind(express: express.Application) {
@@ -42,7 +42,8 @@ class SceneCameraEndpoint implements IEndpoint {
                     let cameraJsonText = LZString.decompressFromBase64(req.body.camera);
                     let cameraJson: any = JSON.parse(cameraJsonText);
         
-                    this._maxscriptClient.connect(worker.ip)
+                    let maxscriptClient = this._maxscriptClientFactory.create();
+                    maxscriptClient.connect(worker.ip)
                         .then(function(value) {
                             console.log("SceneCameraEndpoint connected to maxscript client, ", value);
         
@@ -53,23 +54,23 @@ class SceneCameraEndpoint implements IEndpoint {
                                 fov: cameraJson.object.fov * cameraJson.object.aspect
                             };
         
-                            this._maxscriptClient.createTargetCamera(camera)
+                            maxscriptClient.createTargetCamera(camera)
                                 .then(function(value) {
-                                    this._maxscriptClient.disconnect();
+                                    maxscriptClient.disconnect();
                                     console.log(`    OK | camera created`);
                                     res.end(JSON.stringify({ id: camera.name }, null, 2));
                                 }.bind(this))
                                 .catch(function(err) {
-                                    this._maxscriptClient.disconnect();
+                                    maxscriptClient.disconnect();
                                     console.error(`  FAIL | failed to create camera\n`, err);
                                     res.status(500);
                                     res.end(JSON.stringify({ error: "failed to create camera" }, null, 2));
-                                }.bind(this)); // end of this._maxscriptClient.createTargetCamera promise
+                                }.bind(this)); // end of maxscriptClient.createTargetCamera promise
             
                         }.bind(this))
                         .catch(function(err) {
                             console.error("SceneCameraEndpoint failed to connect to maxscript client, ", err);
-                        }.bind(this)); // end of this._maxscriptClient.connect promise
+                        }.bind(this)); // end of maxscriptClient.connect promise
         
                 }.bind(this))
                 .catch(function(err){

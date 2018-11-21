@@ -286,12 +286,13 @@
                     rfarm.createScene(function() {
                         rfarm.createLight(function() {
                             rfarm.createMesh(cube, function() {
-                                rfarm.createMesh(plane);
+                            });
+                            rfarm.createMesh(plane, function() {
                             });
                         });
                     });
                 });
-                    
+
                 var animate = function() {
                     requestAnimationFrame(animate);
                     controls.update();

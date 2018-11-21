@@ -15,6 +15,7 @@ import { MaxscriptClient } from "./maxscript_client/maxscript.client";
 import { FileEndpoint } from "./endpoints/file";
 import { JobEndpoint } from "./endpoints/job";
 import { WorkerEndpoint } from "./endpoints/worker";
+import { MaxscriptClientFactory } from "./maxscript_client/maxscript.client.factory";
 
 const myContainer = new Container();
 myContainer.bind<interfaces.Warrior>(TYPES.Warrior).to(Ninja);
@@ -36,6 +37,6 @@ myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(FileEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(JobEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(WorkerEndpoint);
 
-myContainer.bind<interfaces.IMaxscriptClient>(TYPES.IMaxscriptClient).to(MaxscriptClient);
+myContainer.bind<interfaces.IMaxscriptClientFactory>(TYPES.IMaxscriptClientFactory).to(MaxscriptClientFactory);
 
 export { myContainer };

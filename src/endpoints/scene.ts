@@ -1,21 +1,20 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IChecks, IMaxscriptClient } from "../interfaces";
+import { IEndpoint, IDatabase, IChecks, IMaxscriptClient, IMaxscriptClientFactory } from "../interfaces";
 import { TYPES } from "../types";
-import { timingSafeEqual } from "crypto";
 
 @injectable()
 class SceneEndpoint implements IEndpoint {
     private _database: IDatabase;
     private _checks: IChecks;
-    private _maxscriptClient: IMaxscriptClient;
+    private _maxscriptClientFactory: IMaxscriptClientFactory;
 
     constructor(@inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.IChecks) checks: IChecks,
-                @inject(TYPES.IMaxscriptClient) maxscriptClient: IMaxscriptClient) {
+                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
         this._database = database;
         this._checks = checks;
-        this._maxscriptClient = maxscriptClient;
+        this._maxscriptClientFactory = maxscriptClientFactory;
     }
 
     bind(express: express.Application) {
@@ -39,18 +38,19 @@ class SceneEndpoint implements IEndpoint {
             this._database.getWorker(req.body.session)
                 .then(function(worker){
 
-                    this._maxscriptClient.connect(worker.ip)
+                    let maxscriptClient = this._maxscriptClientFactory.create();
+                    maxscriptClient.connect(worker.ip)
                         .then(function(value) {
                             console.log("SceneEndpoint connected to maxscript client, ", value);
 
-                            this._maxscriptClient.resetScene()
+                            maxscriptClient.resetScene()
                             .then(function(value) {
-                                this._maxscriptClient.disconnect();
+                                maxscriptClient.disconnect();
                                 console.log(`    OK | scene reset`);
                                 res.end(JSON.stringify({ success: true, message: "created empty scene" }, null, 2));
                             }.bind(this))
                             .catch(function(err) {
-                                this._maxscriptClient.disconnect();
+                                maxscriptClient.disconnect();
                                 console.error(`  FAIL | failed to reset scene\n`, err);
                                 res.status(500);
                                 res.end(JSON.stringify({ error: "failed to reset scene" }, null, 2));
@@ -59,7 +59,7 @@ class SceneEndpoint implements IEndpoint {
                         }.bind(this))
                         .catch(function(err) {
                             console.error("SceneEndpoint failed to connect to maxscript client, ", err);
-                        }.bind(this)); // end of this._maxscriptClient.connect promise
+                        }.bind(this)); // end of maxscriptClient.connect promise
 
                 }.bind(this))
                 .catch(function(err){

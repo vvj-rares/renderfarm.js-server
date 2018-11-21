@@ -1,20 +1,20 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IChecks, IMaxscriptClient } from "../interfaces";
+import { IEndpoint, IDatabase, IChecks, IMaxscriptClientFactory } from "../interfaces";
 import { TYPES } from "../types";
 
 @injectable()
 class SceneLightEndpoint implements IEndpoint {
     private _database: IDatabase;
     private _checks: IChecks;
-    private _maxscriptClient: IMaxscriptClient;
+    private _maxscriptClientFactory: IMaxscriptClientFactory;
 
     constructor(@inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.IChecks) checks: IChecks,
-                @inject(TYPES.IMaxscriptClient) maxscriptClient: IMaxscriptClient) {
+                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
         this._database = database;
         this._checks = checks;
-        this._maxscriptClient = maxscriptClient;
+        this._maxscriptClientFactory = maxscriptClientFactory;
     }
 
     bind(express: express.Application) {
@@ -38,7 +38,8 @@ class SceneLightEndpoint implements IEndpoint {
             this._database.getWorker(req.body.session)
                 .then(function(worker){
 
-                    this._maxscriptClient.connect(worker.ip)
+                    let maxscriptClient = this._maxscriptClientFactory.create();
+                    maxscriptClient.connect(worker.ip)
                         .then(function(value) {
                             console.log("SceneLightEndpoint connected to maxscript client, ", value);
 
@@ -47,23 +48,23 @@ class SceneLightEndpoint implements IEndpoint {
                                 position: [12,0,17]
                             };
 
-                            this._maxscriptClient.createSkylight(skylightJson)
+                            maxscriptClient.createSkylight(skylightJson)
                                 .then(function(value) {
-                                    this._maxscriptClient.disconnect();
+                                    maxscriptClient.disconnect();
                                     console.log(`    OK | skylight created`);
                                     res.end(JSON.stringify({ id: skylightJson.name }, null, 2));
                                 }.bind(this))
                                 .catch(function(err) {
-                                    this._maxscriptClient.disconnect();
+                                    maxscriptClient.disconnect();
                                     console.error(`  FAIL | failed to create skylight\n`, err);
                                     res.status(500);
                                     res.end(JSON.stringify({ error: "failed to create skylight" }, null, 2));
-                                }.bind(this)); // end of this._maxscriptClient.createSkylight promise
+                                }.bind(this)); // end of maxscriptClient.createSkylight promise
             
                         }.bind(this))
                         .catch(function(err) {
                             console.error("SceneLightEndpoint failed to connect to maxscript client, ", err);
-                        }.bind(this)); // end of this._maxscriptClient.connect promise
+                        }.bind(this)); // end of maxscriptClient.connect promise
 
                 }.bind(this))
                 .catch(function(err){

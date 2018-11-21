@@ -34,7 +34,7 @@ class Database implements IDatabase {
 
         return db.collection("api-keys").findOneAndUpdate(
             { apiKey: apiKey }, 
-            { $set: { lastSeen : (new Date()).toISOString() } },
+            { $set: { lastSeen : new Date() } },
             { returnOriginal: false });
     }
 
@@ -60,7 +60,7 @@ class Database implements IDatabase {
         return new Promise<Project>(function (resolve, reject) {
             db.collection("projects").findOneAndUpdate(
                 { apiKey: apiKey, guid: projectGuid },
-                { $set: { lastSeen : (new Date()).toISOString() } },
+                { $set: { lastSeen : new Date() } },
                 { returnOriginal: false })
                 .then(function(obj) {
                     if (obj.value) {
@@ -310,7 +310,7 @@ class Database implements IDatabase {
                 { 
                     $unwind : "$worker" 
                 }
-            ]).toArray(function(err, res) {
+            ]).toArray(async function(err, res) {
                 if (err) {
                     console.error(err);
                     reject(`failed to find worker by session guid: ${sessionGuid}`);
@@ -325,6 +325,10 @@ class Database implements IDatabase {
                     console.log(`Session not found: ${sessionGuid}`);
                     resolve(undefined);
                 }
+
+                await db.collection("sessions").updateOne(
+                    { guid: sessionGuid },
+                    { $set: { lastSeen : new Date() } });
 
                 let worker = WorkerInfo.fromJSON(res[0].worker);
                 console.log(`Found a worker for session ${sessionGuid}: ${JSON.stringify(worker)}`);

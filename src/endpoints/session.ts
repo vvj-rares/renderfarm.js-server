@@ -1,25 +1,24 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IChecks, IMaxscriptClient } from "../interfaces";
+import { IEndpoint, IDatabase, IChecks, IMaxscriptClient, IMaxscriptClientFactory } from "../interfaces";
 import { TYPES } from "../types";
-import { SessionInfo } from "../model/session_info";
 import { WorkerInfo } from "../model/worker_info";
 
 @injectable()
 class SessionEndpoint implements IEndpoint {
     private _database: IDatabase;
     private _checks: IChecks;
-    private _maxscriptClient: IMaxscriptClient;
+    private _maxscriptClientFactory: IMaxscriptClientFactory;
 
     constructor(@inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.IChecks) checks: IChecks,
-                @inject(TYPES.IMaxscriptClient) maxscriptClient: IMaxscriptClient) {
+                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
         this._database = database;
         this._checks = checks;
-        this._maxscriptClient = maxscriptClient;
+        this._maxscriptClientFactory = maxscriptClientFactory;
 
         //expire sessions by timer
-        setInterval(async function() {
+        false && setInterval(async function() {
             await this._database.expireSessions()
                 .then(function(guids){
                     if (guids.length === 0) {
@@ -65,29 +64,30 @@ class SessionEndpoint implements IEndpoint {
                     let workerInfo = WorkerInfo.fromJSON(value.worker);
                     console.log(`    OK | session ${value.session.guid} assigned to worker ${value.worker.mac}`);
 
-                    this._maxscriptClient.connect(workerInfo.ip)
+                    let maxscriptClient = this._maxscriptClientFactory.create();
+                    maxscriptClient.connect(workerInfo.ip)
                         .then(function(value) {
                             console.log("SessionEndpoint connected to maxscript client, ", value);
 
-                            this._maxscriptClient.setSession(newSessionGuid)
+                            maxscriptClient.setSession(newSessionGuid)
                                 .then(function(value) {
-                                    this._maxscriptClient.disconnect();
+                                    maxscriptClient.disconnect();
                                     console.log(`    OK | SessionGuid on worker was updated`);
                                     res.end(JSON.stringify({ id: newSessionGuid }, null, 2));
                                 }.bind(this))
                                 .catch(function(err) {
-                                    this._maxscriptClient.disconnect();
+                                    maxscriptClient.disconnect();
                                     console.error(`  FAIL | failed to assign session to worker\n`, err);
                                     res.status(500);
                                     res.end(JSON.stringify({ error: "failed to assign session to worker" }, null, 2));
-                                }.bind(this)); // end of this._maxscriptClient.setSession promise
+                                }.bind(this)); // end of maxscriptClient.setSession promise
     
                         }.bind(this))
                         .catch(function(err) {
                             console.error("SessionEndpoint failed to connect to maxscript client, ", err);
                             res.status(500);
                             res.end(JSON.stringify({ error: "failed to connect to maxscript client" }, null, 2));
-                        }.bind(this)); // end of this._maxscriptClient.connect promise
+                        }.bind(this)); // end of maxscriptClient.connect promise
 
                 }.bind(this))
                 .catch(function(err) {

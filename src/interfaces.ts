@@ -65,3 +65,7 @@ export interface IMaxscriptClient {
 
     uploadPng(path: string, url: string): Promise<boolean>;
 }
+
+export interface IMaxscriptClientFactory {
+    create(): IMaxscriptClient;
+}
