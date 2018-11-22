@@ -107,6 +107,46 @@
                 });
 
             }
+
+
+            rfarm.updateCamera = function(camera, onCameraReady) {
+                console.log("Updating camera...");
+
+                var cameraJson = camera.toJSON();
+                cameraJson.object.projectionMatrix = camera.projectionMatrix.elements;
+
+                var cameraWorldDir = new THREE.Vector3();
+                camera.getWorldDirection ( cameraWorldDir );
+                cameraJson.object.worldDirection = [cameraWorldDir.x, cameraWorldDir.y, cameraWorldDir.z];
+
+                cameraJson.object.position = [camera.position.x, camera.position.y, camera.position.z];
+                cameraJson.object.quaternion = [camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w];
+
+                var cameraTarget = camera.position.clone();
+                cameraTarget.addScaledVector ( cameraWorldDir, camera.focus );
+                cameraJson.object.target = [cameraTarget.x, cameraTarget.y, cameraTarget.z];
+
+                var cameraText = JSON.stringify(cameraJson);
+                var compressedCameraData = LZString144.compressToBase64(cameraText);
+
+                $.ajax({
+                    url: "https://localhost:8000/scene/camera",
+                    data: { 
+                        session: document.sessionId,
+                        camera: compressedCameraData 
+                    },
+                    type: 'PUT',
+                    success: function(result) {
+                        console.log(result);
+                        onCameraReady(result.id);
+                    },
+                    error: function(err) {
+                        console.error(err);
+                    }
+                });
+
+            }
+
             rfarm.createLight = function(onCreated) {
                 console.log("Creating new light...");
                 //todo: implement it
@@ -201,7 +241,17 @@
                         $('#output').attr("src",url);
                     });
                 });
-            }
+            };
+
+            document.rerenderScene = function() {
+                document.camera.position.set(10,10,10);
+                rfarm.updateCamera(document.camera, function(cameraId) {
+                    rfarm.render(document.cameraId, function(url) {
+                        $('#viewport').css("display", "none");
+                        $('#output').attr("src",url);
+                    });
+                });
+            };
 
             window.onload = function() {
                 var renderer;
@@ -307,5 +357,6 @@
         <canvas id="viewport"></canvas>
         <img id="output">
         <button onclick="renderScene()" style="position: fixed; left: 0; top:0;">render</button>
+        <button onclick="rerenderScene()" style="position: fixed; left: 70; top:0;">(re)render</button>
     </body>
 </html>

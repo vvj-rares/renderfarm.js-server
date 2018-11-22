@@ -122,6 +122,59 @@ class MaxscriptClient implements IMaxscriptClient {
         }.bind(this));
     }
 
+    updateTargetCamera(cameraJson: any): Promise<boolean> {
+
+        return new Promise<boolean>(function(resolve, reject) {
+            // prepare response handlers for the command
+            this._responseHandler = function(data) {
+                console.log("update camera returned: ", data.toString());
+                this._responseHandler = undefined;
+                resolve(true);
+            };
+
+            this._errorHandler = function(err) {
+                console.error("update camera error: ", err);
+                reject(err);
+            };
+
+            let maxscript = "";
+            if (cameraJson.fov !== undefined)      
+                maxscript = maxscript + ` $${cameraJson.name}.fov = ${cameraJson.fov}; `;
+
+            if (cameraJson.position !== undefined) 
+                maxscript = maxscript + ` $${cameraJson.name}.pos = [${cameraJson.position[0]},${cameraJson.position[2]},${cameraJson.position[1]}]; `;
+
+            if (cameraJson.target !== undefined)   
+                maxscript = maxscript + ` $${cameraJson.name}.target.pos = [${cameraJson.target[0]},${cameraJson.target[2]},${cameraJson.target[1]}]; `;
+
+            if (maxscript !== "") {
+                this._client.write(maxscript);
+            } else {
+                resolve(true); // no changes, just resolve the promise
+            }
+        }.bind(this));
+    }
+
+    deleteObjects(mask: string): Promise<boolean> {
+
+        return new Promise<boolean>(function(resolve, reject) {
+            // prepare response handlers for the command
+            this._responseHandler = function(data) {
+                console.log("delete objects returned: ", data.toString());
+                this._responseHandler = undefined;
+                resolve(true);
+            };
+
+            this._errorHandler = function(err) {
+                console.error("delete objects error: ", err);
+                reject(err);
+            };
+
+            let maxscript = `delete $${mask};`;
+            this._client.write(maxscript);
+        }.bind(this));
+    }
+
     createSkylight(skylightJson: any): Promise<boolean> {
 
         return new Promise<boolean>(function(resolve, reject) {

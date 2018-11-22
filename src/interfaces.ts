@@ -56,6 +56,9 @@ export interface IMaxscriptClient {
     setSession(sessionGuid: string): Promise<boolean>;
 
     createTargetCamera(cameraJson): Promise<boolean>;
+    updateTargetCamera(cameraJson: any): Promise<boolean>;
+    deleteObjects(mask: string): Promise<boolean>;
+
     createSkylight(skylightJson: any): Promise<boolean>;
 
     downloadJson(url: string, path: string): Promise<boolean>;

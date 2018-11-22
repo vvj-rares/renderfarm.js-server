@@ -11,7 +11,6 @@ import { SceneCameraEndpoint } from "./endpoints/scene.camera";
 import { SceneLightEndpoint } from "./endpoints/scene.light";
 import { SceneMeshEndpoint } from "./endpoints/scene.mesh";
 import { Checks } from "./utils/checks";
-import { MaxscriptClient } from "./maxscript_client/maxscript.client";
 import { FileEndpoint } from "./endpoints/file";
 import { JobEndpoint } from "./endpoints/job";
 import { WorkerEndpoint } from "./endpoints/worker";

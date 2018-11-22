@@ -18,7 +18,7 @@ class SessionEndpoint implements IEndpoint {
         this._maxscriptClientFactory = maxscriptClientFactory;
 
         //expire sessions by timer
-        false && setInterval(async function() {
+        setInterval(async function() {
             await this._database.expireSessions()
                 .then(function(guids){
                     if (guids.length === 0) {
