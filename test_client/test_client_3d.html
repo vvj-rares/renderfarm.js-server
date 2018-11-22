@@ -44,7 +44,7 @@
                         if (onCreated) onCreated(result.id);
                     },
                     error: function(err) {
-                        console.error(err);
+                        console.error(err.responseJSON);
                     }
                 });
 
@@ -285,10 +285,10 @@
                 rfarm.createSession(function() {
                     rfarm.createScene(function() {
                         rfarm.createLight(function() {
-                            rfarm.createMesh(cube, function() {
-                            });
-                            rfarm.createMesh(plane, function() {
-                            });
+                        });
+                        rfarm.createMesh(cube, function() {
+                        });
+                        rfarm.createMesh(plane, function() {
                         });
                     });
                 });
@@ -299,7 +299,7 @@
                     renderer.render(scene, camera);
                 };
 
-                animate();
+                // animate();
             }
         </script>
     </head>

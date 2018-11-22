@@ -8,6 +8,7 @@ class SceneMeshEndpoint implements IEndpoint {
     private _database: IDatabase;
     private _checks: IChecks;
     private _maxscriptClientFactory: IMaxscriptClientFactory;
+    private _meshes: { [id: string] : any; } = {};
 
     constructor(@inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.IChecks) checks: IChecks,
