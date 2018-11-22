@@ -20,3 +20,70 @@ render camera:$Camera001 outputSize: [640,480] outputfile: "C:\\Temp\\renderoutp
 // start another instance of max and quit, aka restart 3ds max
 cmdexRun "start \"\" \"C:\Autodesk\3ds Max 2018\\3dsmax.exe\""
 quitMAX #noPrompt
+
+
+// messing with materials
+// collect materials from all geometries
+for obj in $* do (
+	if (superclassOf obj == GeometryClass) then (
+		print obj.name
+		print obj.material
+	)
+)
+
+
+// collect all scene materials
+--mats = #()
+ --for matClass in material.classes do
+ --(
+-- 	for m in (getclassinstances matClass processAllAnimatables:true processChildren:true) do append mats m
+-- )
+ --print mats
+
+
+// create and assign new material
+--newmat = StandardMaterial()
+--	 newmat.name = ("MAT_" + i as string)
+--	 selection[i].material = newmat
+
+
+// check submaterials
+for i = 1 to myMaterial.getNumSubMtls() do
+(
+ 	 mySubMat = getSubMtl myMaterial i
+ 	 --get maps of the subMaterial here and print them
+)
+
+
+//assign default materials on meshes
+i = 0;
+for obj in $* do (
+	if (superclassOf obj == GeometryClass) then (
+		print obj.name
+		
+		i = i + 1;
+
+		newmat = StandardMaterial name: ("MAT_" + i as string)
+		obj.material = newmat
+	)
+)
+
+fn getMaterialByName findName = (
+	for matClass in material.classes do
+	(
+		for m in (getclassinstances matClass processAllAnimatables:true processChildren:true) do (
+			if (m.name == findName) then (
+				return m;
+			)
+		)
+	)
+	return false;
+)
+ 
+getMaterialByName "MAT_1"
+// end of -- assign default materials on meshes
+
+
+// creating StandardMaterial
+// see here: http://docs.autodesk.com/3DSMAX/15/ENU/MAXScript-Help/index.html?url=files/GUID-23A6A316-7C51-430C-8A44-9236C837DB10.htm,topicNumber=d30e494083
+newmat = StandardMaterial name:"abc" diffuse:(color 149.94 149.94 149.94)
