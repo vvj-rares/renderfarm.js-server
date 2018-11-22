@@ -172,7 +172,7 @@ class Database implements IDatabase {
                             lastSeen: { $lte: expirationDate }, 
                             closed: { $exists: false } 
                         },
-                        { $set: { closed: true, reason: "abandoned" } } )
+                        { $set: { closed: true, closedAt: new Date(), abandoned: true } } )
                         .then(function(value){
                             if (value.result.nModified !== expiringSessions.length) {
                                 console.warn(` WARN | number of expired sessions: ${expiringSessions.length}, actually expired: ${value.result.nModified}`);
