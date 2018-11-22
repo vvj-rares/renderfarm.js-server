@@ -42,6 +42,7 @@ class SceneMeshEndpoint implements IEndpoint {
 
                     const LZString = require("lz-string");
                     let sceneJsonText = LZString.decompressFromBase64(req.body.mesh);
+                    let materialName = req.body.material;
 
                     const meshId = require('../utils/genRandomName')("mesh");
                     this._meshes[meshId] = sceneJsonText;
@@ -59,9 +60,24 @@ class SceneMeshEndpoint implements IEndpoint {
                                     console.log(`    OK | json file downloaded successfully`);
                                     maxscriptClient.importMesh(`C:\\\\Temp\\\\downloads\\\\${filename}`, `${meshId}`)
                                         .then(function(value) {
-                                            maxscriptClient.disconnect(socket);
-                                            console.log(`    OK | mesh imported successfully`);
-                                            res.end(JSON.stringify({ id: `${meshId}` }, null, 2));
+                                            if (materialName !== undefined) {
+                                                maxscriptClient.assignMaterial(materialName, meshId)
+                                                    .then(function(value) {
+                                                        maxscriptClient.disconnect(socket);
+                                                        console.log(`    OK | mesh imported successfully`);
+                                                        res.end(JSON.stringify({ id: `${meshId}`, materialId: materialName }, null, 2));
+                                                    }.bind(this))
+                                                    .catch(function(err) {
+                                                        maxscriptClient.disconnect();
+                                                        console.error(`  FAIL | failed to assign material\n`, err);
+                                                        res.status(500);
+                                                        res.end(JSON.stringify({ error: "failed to assign material" }, null, 2));
+                                                    }.bind(this)); // end of maxscriptClient.assignMaterial promise
+                                            } else {
+                                                maxscriptClient.disconnect(socket);
+                                                console.log(`    OK | mesh imported successfully`);
+                                                res.end(JSON.stringify({ id: `${meshId}` }, null, 2));
+                                            }
                                         }.bind(this))
                                         .catch(function(err) {
                                             maxscriptClient.disconnect();

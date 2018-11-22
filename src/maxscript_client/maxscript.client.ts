@@ -191,8 +191,30 @@ class MaxscriptClient implements IMaxscriptClient {
             };
 
             // now run command
-            let maxscript = `aSkylight = Skylight pos:[${skylightJson.position[0]},${skylightJson.position[2]},${skylightJson.position[1]}] `
+            let maxscript = `aSkylight = Skylight name:"${skylightJson.name}" pos:[${skylightJson.position[0]},${skylightJson.position[2]},${skylightJson.position[1]}] `
                           + `isSelected:off; aSkylight.cast_Shadows = on; aSkylight.rays_per_sample = 15;`;
+
+            this._client.write(maxscript);
+        }.bind(this));
+    }
+
+    createStandardMaterial(materialJson: any): Promise<boolean> {
+
+        return new Promise<boolean>(function(resolve, reject) {
+            // prepare response handlers for the command
+            this._responseHandler = function(data) {
+                console.log("create default material returned: ", data.toString());
+                this._responseHandler = undefined;
+                resolve(true);
+            };
+
+            this._errorHandler = function(err) {
+                console.error("create default material error: ", err);
+                reject(err);
+            };
+
+            // now run command
+            let maxscript = `StandardMaterial name:"${materialJson.name}" diffuse:(color ${materialJson.diffuseColor[0]} ${materialJson.diffuseColor[1]} ${materialJson.diffuseColor[2]})`;
 
             this._client.write(maxscript);
         }.bind(this));
@@ -237,6 +259,31 @@ class MaxscriptClient implements IMaxscriptClient {
 
             // now run command
             let maxscript = `threejsImportJson \"${path}\" \"${nodeName}\"`;
+
+            this._client.write(maxscript);
+        }.bind(this));
+    }
+
+    assignMaterial(materialName: string, nodeName: string): Promise<boolean> {
+
+        return new Promise<boolean>(function(resolve, reject) {
+            // prepare response handlers for the command
+            this._responseHandler = function(data) {
+                console.log("assign material returned: ", data.toString());
+                this._responseHandler = undefined;
+                resolve(true);
+            };
+
+            this._errorHandler = function(err) {
+                console.error("assign material error: ", err);
+                reject(err);
+            };
+
+            // now run command
+            let maxscript = `mat = rayysFindMaterialByName "${materialName}"; `
+                          + `if (mat != false) then (`
+                          + `  $${nodeName}.Material = mat`
+                          + `) `;
 
             this._client.write(maxscript);
         }.bind(this));

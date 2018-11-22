@@ -67,18 +67,6 @@ for obj in $* do (
 		obj.material = newmat
 	)
 )
-
-fn getMaterialByName findName = (
-	for matClass in material.classes do
-	(
-		for m in (getclassinstances matClass processAllAnimatables:true processChildren:true) do (
-			if (m.name == findName) then (
-				return m;
-			)
-		)
-	)
-	return false;
-)
  
 getMaterialByName "MAT_1"
 // end of -- assign default materials on meshes

@@ -167,7 +167,32 @@
                 });
 
             }
-            rfarm.createMesh = function(sceneJson, onMeshReady) {
+
+            rfarm.createMaterial = function(material, onCreated) {
+                console.log("Creating new material...");
+                //todo: implement it
+
+                $.ajax({
+                    url: "https://localhost:8000/scene/0/material",
+                    data: { 
+                        session: document.sessionId, 
+                        diffuseColor_r: Math.round(255*material.color.r),
+                        diffuseColor_g: Math.round(255*material.color.g),
+                        diffuseColor_b: Math.round(255*material.color.b)
+                    },
+                    type: 'POST',
+                    success: function(result) {
+                        console.log(result);
+                        if (onCreated) onCreated(result.id);
+                    },
+                    error: function(err) {
+                        console.error(err);
+                    }
+                });
+
+            }
+
+            rfarm.createMesh = function(sceneJson, materialName, onMeshReady) {
                 console.log("Creating new mesh...");
                 //todo: implement it
 
@@ -178,7 +203,8 @@
                     url: "https://localhost:8000/scene/mesh",
                     data: { 
                         session: document.sessionId, 
-                        mesh: compressedSceneData 
+                        mesh: compressedSceneData,
+                        material: materialName
                     },
                     type: 'POST',
                     success: function(result) {
@@ -336,9 +362,13 @@
                     rfarm.createScene(function() {
                         rfarm.createLight(function() {
                         });
-                        rfarm.createMesh(cube, function() {
+                        rfarm.createMaterial(cube.material, function(materialName) {
+                            rfarm.createMesh(cube, materialName, function() {
+                            });
                         });
-                        rfarm.createMesh(plane, function() {
+                        rfarm.createMaterial(plane.material, function(materialName) {
+                            rfarm.createMesh(plane, materialName, function() {
+                            });
                         });
                     });
                 });

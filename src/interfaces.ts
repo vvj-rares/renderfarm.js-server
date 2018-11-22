@@ -60,9 +60,12 @@ export interface IMaxscriptClient {
     deleteObjects(mask: string): Promise<boolean>;
 
     createSkylight(skylightJson: any): Promise<boolean>;
+    createStandardMaterial(materialJson: any): Promise<boolean>;
 
     downloadJson(url: string, path: string): Promise<boolean>;
     importMesh(path: string, nodeName: string): Promise<boolean>;
+
+    assignMaterial(materialName: string, nodeName: string): Promise<boolean>;
 
     renderScene(camera: string, size: number[], filename: string): Promise<boolean>;
 
