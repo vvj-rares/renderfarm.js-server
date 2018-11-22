@@ -72,7 +72,7 @@ class SceneEndpoint implements IEndpoint {
             let apiKey = req.body.api_key;
             console.log(`PUT on /scene/${req.params.uid} with api_key: ${apiKey}`);
             if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
+            
         }.bind(this));
 
         express.delete('/scene/:uid', async function (req, res) {

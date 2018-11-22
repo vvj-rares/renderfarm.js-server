@@ -74,13 +74,15 @@ class SceneCameraEndpoint implements IEndpoint {
         
                 }.bind(this))
                 .catch(function(err){
+                    console.error(err);
                     res.end(JSON.stringify({ error: "session is expired" }, null, 2));
                 }.bind(this)); // end of this._database.getWorker promise
 
         }.bind(this));
 
-        express.put('/scene/camera/:uid', async function (req, res) {
-            console.log(`PUT on /scene/camera/${req.params.uid} with session: ${req.body.session}`);
+        express.put('/scene/:sceneid/camera/:uid', async function (req, res) {
+            let sceneid = req.params.sceneid;
+            console.log(`PUT on /scene/${sceneid}/camera/${req.params.uid} with session: ${req.body.session}`);
 
             let cameraId = req.params.uid;
 

@@ -130,7 +130,7 @@
                 var compressedCameraData = LZString144.compressToBase64(cameraText);
 
                 $.ajax({
-                    url: "https://localhost:8000/scene/camera",
+                    url: "https://localhost:8000/scene/0/camera/" + document.cameraId,
                     data: { 
                         session: document.sessionId,
                         camera: compressedCameraData 
