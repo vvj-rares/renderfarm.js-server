@@ -1,10 +1,12 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IChecks, IMaxscriptClient } from "../interfaces";
+import { IEndpoint, IDatabase, IChecks } from "../interfaces";
 import { TYPES } from "../types";
 
 var multer  = require("multer");
 var upload = multer({ dest: "C:\\Temp\\" });
+
+const settings = require("../settings");
 
 @injectable()
 class RenderOutputEndpoint implements IEndpoint {
@@ -52,15 +54,30 @@ class RenderOutputEndpoint implements IEndpoint {
         }.bind(this));
 
         express.post('/render_output', upload.single('somefile'), function (req, res, next) {
+            console.log(`POST on /render_output`);
+
+            var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            if (ip.indexOf("::ffff:192.168.") === -1 && ip !== "::1" && ip !== "127.0.0.1") {
+                console.error(`  FAIL | request from ${ip} rejected`);
+                res.status(403);
+                res.end(JSON.stringify({ error: "access denied" }, null, 2));
+            }
+
             console.log(req.file);
+
             const fs = require("fs");
-            fs.rename(req.file.destination + req.file.filename, req.file.destination + req.file.originalname, function(err) {
+            let dstPath = req.file.destination + req.file.originalname;
+            fs.rename(req.file.destination + req.file.filename, dstPath, function(err) {
                 if ( err ) {
                     // todo: also return in response
                     console.log('ERROR: ' + err);
                 }
             });
-            res.end(JSON.stringify({}, null, 2));
+            console.error(`    OK | render output was accepted: ${dstPath}`);
+            res.end(JSON.stringify({ 
+                success: true, 
+                filename: req.file.originalname 
+            }, null, 2));
 
             /*
 { fieldname: 'somefile',
