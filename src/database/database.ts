@@ -224,9 +224,13 @@ class Database implements IDatabase {
                 // now make a collection of busy mac addresses
                 let busyWorkersMac = res.map(s => s.worker.mac);
 
+                let recentOnlineDate = new Date(Date.now() - 3*1000); // pick the ones who were seen not less than 3 seconds ago
                 //now find one worker, whose mac does not belong to busyWorkersMac
                 db.collection("workers").findOne(
-                    { mac: { $nin: busyWorkersMac } })
+                    { 
+                        mac: { $nin: busyWorkersMac },
+                        lastSeen : { $gte: recentOnlineDate },
+                    })
                     .then(function(obj) {
 
                         if (obj) {
@@ -338,10 +342,26 @@ class Database implements IDatabase {
     }
 
     async closeSession(sessionGuid: string): Promise<boolean> {
-        //todo: implement it
-        return new Promise<boolean>(function(resolve, reject) {
-            resolve(true);
-        }.bind(this));
+        let db = this._client.db("rfarmdb");
+        assert.notEqual(db, null);
+
+        return new Promise<boolean>(function (resolve, reject) {
+
+            db.collection("sessions").findOneAndUpdate(
+                { guid : sessionGuid },
+                { $set: { closed: true, closedAt: new Date() } },
+                { returnOriginal: false })
+                .then(function(obj) {
+                    if (obj.value) {
+                        resolve(true);
+                    } else {
+                        reject(`unable to find session with guid ${sessionGuid}`);
+                    }
+                })
+                .catch(function(err) {
+                    reject(err);
+                });
+        });
     }
 }
 
