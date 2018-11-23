@@ -57,7 +57,7 @@ class RenderOutputEndpoint implements IEndpoint {
             console.log(`POST on /render_output`);
 
             var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            if (ip.indexOf("::ffff:192.168.") === -1 && ip !== "::1" && ip !== "127.0.0.1") {
+            if (!ip.startsWith("192.168.") && !ip.startsWith("::ffff:192.168.") && ip !== "::1" && ip !== "127.0.0.1") {
                 console.error(`  FAIL | request from ${ip} rejected`);
                 res.status(403);
                 res.end(JSON.stringify({ error: "access denied" }, null, 2));
