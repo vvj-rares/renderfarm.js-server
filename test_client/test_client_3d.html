@@ -49,6 +49,27 @@
                 });
 
             };
+
+            rfarm.closeSession = function(sessionGuid, onClosed) {
+                console.log("Closing session...");
+                //todo: implement it
+
+                $.ajax({
+                    url: "https://localhost:8000/session/" + sessionGuid,
+                    data: { 
+                        session: document.sessionId 
+                    },
+                    type: 'DELETE',
+                    success: function(result) {
+                        console.log(result);
+                        if (onClosed) onClosed();
+                    },
+                    error: function(err) {
+                        console.error(err);
+                    }
+                });
+            };
+
             rfarm.createScene = function(onCreated) {
                 console.log("Creating new scene...");
                 //todo: implement it
@@ -67,8 +88,8 @@
                         console.error(err);
                     }
                 });
+            };
 
-            }
             rfarm.createCamera = function(camera, onCameraReady) {
                 console.log("Creating new scene...");
                 //todo: implement it
@@ -265,6 +286,7 @@
                     rfarm.render(document.cameraId, function(url) {
                         $('#viewport').css("display", "none");
                         $('#output').attr("src",url);
+                        rfarm.closeSession(document.sessionId);
                     });
                 });
             };
@@ -379,7 +401,7 @@
                     renderer.render(scene, camera);
                 };
 
-                animate();
+                // animate();
             }
         </script>
     </head>
