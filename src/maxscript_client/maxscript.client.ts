@@ -111,12 +111,15 @@ class MaxscriptClient implements IMaxscriptClient {
                 reject(err);
             };
 
+            let m = cameraJson.matrix;
             // now run command
-            let maxscript = `Targetcamera fov:${cameraJson.fov} nearclip:1 farclip:1000 nearrange:0 farrange:1000 ` 
+            let maxscript = `cam = FreeCamera fov:${cameraJson.fov} nearclip:1 farclip:1000 nearrange:0 farrange:1000 ` 
                           + ` mpassEnabled:off mpassRenderPerPass:off ` 
-                          + ` pos:[${cameraJson.position[0]},${cameraJson.position[2]},${cameraJson.position[1]}] `
-                          + ` isSelected:on name:"${cameraJson.name}" ` 
-                          + ` target:(Targetobject transform:(matrix3 [1,0,0] [0,1,0] [0,0,1] [${cameraJson.target[0]},${cameraJson.target[2]},${cameraJson.target[1]}]))`;
+                          + ` isSelected:on name:"${cameraJson.name}"; ` 
+                          + `cam.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}]) * (matrix3 [1,0,0] [0,0,1] [0,1,0] [0,0,0])`;
+
+            console.log(" >> maxscript: ", maxscript);
+            console.log(" >> camera matrix: ", cameraJson.matrix);
 
             this._client.write(maxscript);
         }.bind(this));
@@ -242,7 +245,7 @@ class MaxscriptClient implements IMaxscriptClient {
         }.bind(this));
     }
 
-    importMesh(path: string, nodeName: string): Promise<boolean> {
+    importMesh(path: string, nodeName: string, matrix: number[]): Promise<boolean> {
 
         return new Promise<boolean>(function(resolve, reject) {
             // prepare response handlers for the command
@@ -257,8 +260,11 @@ class MaxscriptClient implements IMaxscriptClient {
                 reject(err);
             };
 
+            let m = matrix;
+
             // now run command
-            let maxscript = `threejsImportJson \"${path}\" \"${nodeName}\"`;
+            let maxscript = `threejsImportJson \"${path}\" \"${nodeName}\"; ` 
+                          + ` $${nodeName}.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}]) * (matrix3 [1,0,0] [0,0,1] [0,1,0] [0,0,0])`;
 
             this._client.write(maxscript);
         }.bind(this));

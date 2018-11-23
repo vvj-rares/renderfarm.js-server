@@ -47,6 +47,9 @@ class SceneMeshEndpoint implements IEndpoint {
                     const meshId = require('../utils/genRandomName')("mesh");
                     this._meshes[meshId] = sceneJsonText;
 
+                    let sceneJson = JSON.parse(sceneJsonText);
+                    let matrix = sceneJson.object.matrix;
+
                     // now let maxscript request mesh from me
                     let maxscriptClient = this._maxscriptClientFactory.create();
                     maxscriptClient.connect(worker.ip)
@@ -58,7 +61,7 @@ class SceneMeshEndpoint implements IEndpoint {
                                 .then(function(value) {
                                     // as we have json file saved locally, now it is the time to import it
                                     console.log(`    OK | json file downloaded successfully`);
-                                    maxscriptClient.importMesh(`C:\\\\Temp\\\\downloads\\\\${filename}`, `${meshId}`)
+                                    maxscriptClient.importMesh(`C:\\\\Temp\\\\downloads\\\\${filename}`, `${meshId}`, matrix)
                                         .then(function(value) {
                                             if (materialName !== undefined) {
                                                 maxscriptClient.assignMaterial(materialName, meshId)

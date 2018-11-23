@@ -63,7 +63,7 @@ export interface IMaxscriptClient {
     createStandardMaterial(materialJson: any): Promise<boolean>;
 
     downloadJson(url: string, path: string): Promise<boolean>;
-    importMesh(path: string, nodeName: string): Promise<boolean>;
+    importMesh(path: string, nodeName: string, matrix: number[]): Promise<boolean>;
 
     assignMaterial(materialName: string, nodeName: string): Promise<boolean>;
 

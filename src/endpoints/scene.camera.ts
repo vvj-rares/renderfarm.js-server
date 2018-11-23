@@ -49,8 +49,8 @@ class SceneCameraEndpoint implements IEndpoint {
         
                             let camera = {
                                 name: require('../utils/genRandomName')("camera"),
-                                position: [cameraJson.object.position[0], cameraJson.object.position[1], cameraJson.object.position[2]],
-                                target: [cameraJson.object.target[0],     cameraJson.object.target[1],   cameraJson.object.target[2]],
+                                // position: cameraJson.object.position,
+                                matrix: cameraJson.object.matrix,
                                 fov: cameraJson.object.fov * cameraJson.object.aspect
                             };
         
@@ -100,8 +100,8 @@ class SceneCameraEndpoint implements IEndpoint {
         
                             let camera = {
                                 name: cameraId,
-                                position: [cameraJson.object.position[0], cameraJson.object.position[1], cameraJson.object.position[2]],
-                                target: [cameraJson.object.target[0],     cameraJson.object.target[1],   cameraJson.object.target[2]],
+                                position: cameraJson.object.position,
+                                quaternion: cameraJson.object.quaternion,
                                 fov: cameraJson.object.fov * cameraJson.object.aspect
                             };
         

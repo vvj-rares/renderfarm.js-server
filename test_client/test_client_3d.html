@@ -95,18 +95,18 @@
                 //todo: implement it
 
                 var cameraJson = camera.toJSON();
-                cameraJson.object.projectionMatrix = camera.projectionMatrix.elements;
+                //cameraJson.object.projectionMatrix = camera.projectionMatrix.elements;
 
-                var cameraWorldDir = new THREE.Vector3();
-                camera.getWorldDirection ( cameraWorldDir );
-                cameraJson.object.worldDirection = [cameraWorldDir.x, cameraWorldDir.y, cameraWorldDir.z];
+                //var cameraWorldDir = new THREE.Vector3();
+                //camera.getWorldDirection ( cameraWorldDir );
+                //cameraJson.object.worldDirection = [cameraWorldDir.x, cameraWorldDir.y, cameraWorldDir.z];
 
-                cameraJson.object.position = [camera.position.x, camera.position.y, camera.position.z];
-                cameraJson.object.quaternion = [camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w];
+                // cameraJson.object.position = [camera.position.x, camera.position.y, camera.position.z];
+                // cameraJson.object.rotation = camera.matrix.elements;
 
-                var cameraTarget = camera.position.clone();
-                cameraTarget.addScaledVector ( cameraWorldDir, camera.focus );
-                cameraJson.object.target = [cameraTarget.x, cameraTarget.y, cameraTarget.z];
+                //var cameraTarget = camera.position.clone();
+                //cameraTarget.addScaledVector ( cameraWorldDir, camera.focus );
+                //cameraJson.object.target = [cameraTarget.x, cameraTarget.y, cameraTarget.z];
 
                 var cameraText = JSON.stringify(cameraJson);
                 var compressedCameraData = LZString144.compressToBase64(cameraText);
@@ -142,6 +142,11 @@
 
                 cameraJson.object.position = [camera.position.x, camera.position.y, camera.position.z];
                 cameraJson.object.quaternion = [camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w];
+                cameraJson.object.rotation = [
+                    camera.matrix[0], camera.matrix[1], camera.matrix[2],
+                    camera.matrix[4], camera.matrix[5], camera.matrix[6],
+                    camera.matrix[8], camera.matrix[9], camera.matrix[10]
+                ];
 
                 var cameraTarget = camera.position.clone();
                 cameraTarget.addScaledVector ( cameraWorldDir, camera.focus );
@@ -286,7 +291,7 @@
                     rfarm.render(document.cameraId, function(url) {
                         $('#viewport').css("display", "none");
                         $('#output').attr("src",url);
-                        rfarm.closeSession(document.sessionId);
+                        //rfarm.closeSession(document.sessionId);
                     });
                 });
             };
@@ -325,8 +330,8 @@
                 document.body.appendChild(renderer.domElement);
 
                 camera.position.x = 5;
-                camera.position.y = 5;
-                camera.position.z = 5;
+                camera.position.y = 6;
+                camera.position.z = 7;
                 camera.lookAt(0, 0, 0);
                 camera.updateProjectionMatrix ();
                 document.camera = camera;
@@ -348,6 +353,11 @@
                 var helper = new THREE.CameraHelper( spotLight.shadow.camera );
                 scene.add( helper );
 
+                var axesHelper = new THREE.AxesHelper( 5 );
+                //axesHelper.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
+                //axesHelper.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI/2));
+                scene.add( axesHelper );
+
                 var gridHelper = new THREE.GridHelper(4, 4);
                 scene.add(gridHelper);
 
@@ -366,6 +376,19 @@
                 //todo: POST buffer geometry, save resource id in userData
                 // document.saveToJson(cube);
 
+                var geometry = new THREE.ConeGeometry( 0.5, 3, 32 );
+                    geometry = new THREE.BufferGeometry().fromGeometry(geometry);
+                var material = new THREE.MeshPhongMaterial({
+                    color: 0x40e040,
+                    transparent: false,
+                    opacity: 0.95
+                });
+                var cone = new THREE.Mesh( geometry, material );
+                cone.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/4));
+                cone.applyMatrix(new THREE.Matrix4().makeRotationY(-Math.PI/4));
+                cone.applyMatrix(new THREE.Matrix4().makeTranslation(2, 1.2, -2));
+                scene.add( cone );
+
                 var geometry = new THREE.PlaneGeometry( 5, 5, 1 );
                     geometry = new THREE.BufferGeometry().fromGeometry(geometry);
                 var material = new THREE.MeshPhongMaterial( {
@@ -374,7 +397,8 @@
                 } );
 
                 var plane = new THREE.Mesh( geometry, material );
-                plane.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
+                plane.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
+                plane.applyMatrix(new THREE.Matrix4().makeTranslation(0,0,0));
                 plane.castShadow = false;
                 plane.receiveShadow = true;
                 scene.add(plane);
@@ -392,6 +416,10 @@
                             rfarm.createMesh(plane, materialName, function() {
                             });
                         });
+                        rfarm.createMaterial(cone.material, function(materialName) {
+                            rfarm.createMesh(cone, materialName, function() {
+                            });
+                        });
                     });
                 });
 
@@ -401,7 +429,7 @@
                     renderer.render(scene, camera);
                 };
 
-                // animate();
+                animate();
             }
         </script>
     </head>
