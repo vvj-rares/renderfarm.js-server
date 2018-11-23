@@ -4,7 +4,6 @@ import * as interfaces from "./interfaces";
 import { Ninja, Katana, Shuriken } from "./entities";
 import { Database } from "./database/database";
 import { App } from "./app";
-import { ProjectEndpoint } from "./endpoints/project";
 import { SessionEndpoint } from "./endpoints/session";
 import { SceneEndpoint } from "./endpoints/scene";
 import { SceneCameraEndpoint } from "./endpoints/scene.camera";
@@ -27,7 +26,6 @@ myContainer.bind<interfaces.IDatabase>(TYPES.IDatabase).to(Database).inSingleton
 
 myContainer.bind<interfaces.IApp>(TYPES.IApp).to(App);
 
-myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ProjectEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SessionEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneCameraEndpoint);
