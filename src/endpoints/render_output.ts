@@ -7,7 +7,7 @@ var multer  = require("multer");
 var upload = multer({ dest: "C:\\Temp\\" });
 
 @injectable()
-class FileEndpoint implements IEndpoint {
+class RenderOutputEndpoint implements IEndpoint {
     private _database: IDatabase;
     private _checks: IChecks;
 
@@ -18,16 +18,16 @@ class FileEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get('/file', async function (req, res) {
+        express.get('/render_output', async function (req, res) {
             let apiKey = req.query.api_key;
-            console.log(`GET on /file with api_key: ${apiKey}`);
+            console.log(`GET on /render_output with api_key: ${apiKey}`);
             if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
             res.end(JSON.stringify({}, null, 2));
         }.bind(this));
 
-        express.get('/file/:name', async function (req, res, next) {
-            console.log(`GET on /file/${req.params.name}`);
+        express.get('/render_output/:name', async function (req, res, next) {
+            console.log(`GET on /render_output/${req.params.name}`);
 
             var options = {
                 root: "C:\\Temp\\",
@@ -51,7 +51,7 @@ class FileEndpoint implements IEndpoint {
   
         }.bind(this));
 
-        express.post('/file', upload.single('somefile'), function (req, res, next) {
+        express.post('/render_output', upload.single('somefile'), function (req, res, next) {
             console.log(req.file);
             const fs = require("fs");
             fs.rename(req.file.destination + req.file.filename, req.file.destination + req.file.originalname, function(err) {
@@ -75,22 +75,22 @@ class FileEndpoint implements IEndpoint {
             
         }.bind(this));
 
-        express.put('/file/:uid', async function (req, res) {
+        express.put('/render_output/:uid', async function (req, res) {
             let apiKey = req.body.api_key;
-            console.log(`PUT on /file/${req.params.uid} with api_key: ${apiKey}`);
+            console.log(`PUT on /render_output/${req.params.uid} with api_key: ${apiKey}`);
             if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
         }.bind(this));
 
-        express.delete('/file/:uid', async function (req, res) {
+        express.delete('/render_output/:uid', async function (req, res) {
             let apiKey = req.body.api_key;
-            console.log(`DELETE on /file/${req.params.uid} with api_key: ${apiKey}`);
+            console.log(`DELETE on /render_output/${req.params.uid} with api_key: ${apiKey}`);
             if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
 
         }.bind(this));
     }
 }
 
-export { FileEndpoint };
+export { RenderOutputEndpoint };
 
 //curl -F 'img_avatar=@/home/petehouston/hello.txt' http://localhost/upload

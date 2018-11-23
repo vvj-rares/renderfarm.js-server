@@ -10,7 +10,7 @@ import { SceneCameraEndpoint } from "./endpoints/scene.camera";
 import { SceneLightEndpoint } from "./endpoints/scene.light";
 import { SceneMeshEndpoint } from "./endpoints/scene.mesh";
 import { Checks } from "./utils/checks";
-import { FileEndpoint } from "./endpoints/file";
+import { RenderOutputEndpoint } from "./endpoints/render_output";
 import { JobEndpoint } from "./endpoints/job";
 import { WorkerEndpoint } from "./endpoints/worker";
 import { MaxscriptClientFactory } from "./maxscript_client/maxscript.client.factory";
@@ -32,7 +32,7 @@ myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneCameraEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneLightEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneMeshEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneMaterialEndpoint);
-myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(FileEndpoint);
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(RenderOutputEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(JobEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(WorkerEndpoint);
 

@@ -53,11 +53,11 @@ class JobEndpoint implements IEndpoint {
                             maxscriptClient.renderScene(camera, [width, height], outputPath)
                                 .then(function(value) {
                                     console.log(`    OK | image rendered`);
-                                    maxscriptClient.uploadPng(outputPath, "https://192.168.0.200:8000/file")
+                                    maxscriptClient.uploadPng(outputPath, "https://192.168.0.200:8000/render_output")
                                         .then(function(value) {
                                             maxscriptClient.disconnect();
                                             console.log(`    OK | rendered image uploaded`);
-                                            res.end(JSON.stringify({ url: `https://192.168.0.200:8000/file/${fileId}.png` }, null, 2));
+                                            res.end(JSON.stringify({ url: `https://192.168.0.200:8000/render_output/${fileId}.png` }, null, 2));
                                         }.bind(this))
                                         .catch(function(err) {
                                             maxscriptClient.disconnect();
