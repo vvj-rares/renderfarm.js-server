@@ -52,7 +52,7 @@ export interface IMaxscriptClient {
     connect(ip: string): Promise<boolean>;
     disconnect();
 
-    resetScene(): Promise<boolean>;
+    createScene(sceneName): Promise<boolean>;
     setSession(sessionGuid: string): Promise<boolean>;
 
     createTargetCamera(cameraJson): Promise<boolean>;

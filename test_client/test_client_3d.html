@@ -28,16 +28,6 @@
         <script src="js/rfarm_client.js"></script>
 
         <script type="text/javascript">
-            // document.renderScene = function() {
-            //     rfarm.createCamera(document.camera, function(cameraId) {
-            //         document.cameraId = cameraId; //todo: improve here
-            //         rfarm.render(document.cameraId, function(url) {
-            //             $('#viewport').css("display", "none");
-            //             $('#output').attr("src",url);
-            //             //rfarm.closeSession(document.sessionId);
-            //         });
-            //     });
-            // }.bind(rfarm);
 
             document.saveJson = function(jsonObj, filename) {
                 var sceneText = JSON.stringify(jsonObj);
@@ -91,7 +81,6 @@
                 camera.position.z = 7;
                 camera.lookAt(0, 0, 0);
                 camera.updateProjectionMatrix ();
-                document.camera = camera;
 
                 controls = new THREE.OrbitControls(camera);
 
@@ -120,7 +109,6 @@
 
                 var geometry = new THREE.DodecahedronGeometry(1, 0);
                     geometry = new THREE.BufferGeometry().fromGeometry(geometry);
-                document.geom = geometry;
 
                 var material = new THREE.MeshPhongMaterial({
                     color: 0x40e040,
@@ -181,22 +169,22 @@
                 scene.add(plane);
 
                 //todo: now we have to post meshes one by one, this is wrong
-                rfarm.createSession(function() {
-                    rfarm.createScene(function() {
-                        rfarm.createLight(function() {
-                        });
-                        rfarm.createMaterial(cube.material, function(materialName) {
-                            rfarm.createMesh(cube, materialName, function() {
-                            });
-                        });
-                        rfarm.createMaterial(plane.material, function(materialName) {
-                            rfarm.createMesh(plane, materialName, function() {
-                            });
-                        });
-                        rfarm.createMaterial(cone.material, function(materialName) {
-                            rfarm.createMesh(cone, materialName, function() {
-                            });
-                        });
+                rfarm.createSession(function(sessionId) {
+                    rfarm.createScene(scene, function(sceneNodeName) {
+                        // rfarm.createLight(function() {
+                        // });
+                        // rfarm.createMaterial(cube.material, function(materialName) {
+                        //     rfarm.createMesh(cube, materialName, function() {
+                        //     });
+                        // });
+                        // rfarm.createMaterial(plane.material, function(materialName) {
+                        //     rfarm.createMesh(plane, materialName, function() {
+                        //     });
+                        // });
+                        // rfarm.createMaterial(cone.material, function(materialName) {
+                        //     rfarm.createMesh(cone, materialName, function() {
+                        //     });
+                        // });
                     });
                 });
 

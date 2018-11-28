@@ -48,7 +48,7 @@ class MaxscriptClient implements IMaxscriptClient {
         this._client.destroy();
     }
 
-    resetScene(): Promise<boolean> {
+    createScene(sceneName): Promise<boolean> {
 
         return new Promise<boolean>(function(resolve, reject) {
             // prepare response handlers for the command
@@ -64,7 +64,7 @@ class MaxscriptClient implements IMaxscriptClient {
             };
 
             // now run command
-            this._client.write("resetMaxFile #noPrompt");
+            this._client.write(`resetMaxFile #noPrompt; Dummy name:"${sceneName}"`);
         }.bind(this));
     }
 

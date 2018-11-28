@@ -43,18 +43,20 @@ class SceneEndpoint implements IEndpoint {
                         .then(function(value) {
                             console.log("SceneEndpoint connected to maxscript client, ", value);
 
-                            maxscriptClient.resetScene()
-                            .then(function(value) {
-                                maxscriptClient.disconnect();
-                                console.log(`    OK | scene reset`);
-                                res.end(JSON.stringify({ success: true, message: "created empty scene" }, null, 2));
-                            }.bind(this))
-                            .catch(function(err) {
-                                maxscriptClient.disconnect();
-                                console.error(`  FAIL | failed to reset scene\n`, err);
-                                res.status(500);
-                                res.end(JSON.stringify({ error: "failed to reset scene" }, null, 2));
-                            }.bind(this))
+                            let sceneName = require('../utils/genRandomName')("scene");
+
+                            maxscriptClient.createScene(sceneName)
+                                .then(function(value) {
+                                    maxscriptClient.disconnect();
+                                    console.log(`    OK | scene reset`);
+                                    res.end(JSON.stringify({ id: sceneName }, null, 2));
+                                }.bind(this))
+                                .catch(function(err) {
+                                    maxscriptClient.disconnect();
+                                    console.error(`  FAIL | failed to reset scene\n`, err);
+                                    res.status(500);
+                                    res.end(JSON.stringify({ error: "failed to reset scene" }, null, 2));
+                                }.bind(this))
             
                         }.bind(this))
                         .catch(function(err) {
