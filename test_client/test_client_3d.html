@@ -25,224 +25,28 @@
             }
         </style>
 
+        <script src="js/rfarm_client.js"></script>
+
         <script type="text/javascript">
-            var rfarm = {
+            // document.renderScene = function() {
+            //     rfarm.createCamera(document.camera, function(cameraId) {
+            //         document.cameraId = cameraId; //todo: improve here
+            //         rfarm.render(document.cameraId, function(url) {
+            //             $('#viewport').css("display", "none");
+            //             $('#output').attr("src",url);
+            //             //rfarm.closeSession(document.sessionId);
+            //         });
+            //     });
+            // }.bind(rfarm);
 
+            document.saveJson = function(jsonObj, filename) {
+                var sceneText = JSON.stringify(jsonObj);
+
+                var blob = new Blob([sceneText], {
+                    type: "text/plain;charset=utf-8"
+                });
+                saveAs(blob, filename);
             };
-
-            rfarm.createSession = function(onCreated) {
-                console.log("Requesting new session...");
-                //todo: implement it
-
-                $.ajax({
-                    url: "https://localhost:8000/session",
-                    data: { api_key: "75f5-4d53-b0f4" },
-                    type: 'POST',
-                    success: function(result) {
-                        document.sessionId = result.id;
-                        console.log(result);
-                        if (onCreated) onCreated(result.id);
-                    },
-                    error: function(err) {
-                        console.error(err.responseJSON);
-                    }
-                });
-
-            };
-
-            rfarm.closeSession = function(sessionGuid, onClosed) {
-                console.log("Closing session...");
-                //todo: implement it
-
-                $.ajax({
-                    url: "https://localhost:8000/session/" + sessionGuid,
-                    data: { 
-                        session: document.sessionId 
-                    },
-                    type: 'DELETE',
-                    success: function(result) {
-                        console.log(result);
-                        if (onClosed) onClosed();
-                    },
-                    error: function(err) {
-                        console.error(err);
-                    }
-                });
-            };
-
-            rfarm.createScene = function(onCreated) {
-                console.log("Creating new scene...");
-                //todo: implement it
-
-                $.ajax({
-                    url: "https://localhost:8000/scene",
-                    data: { 
-                        session: document.sessionId 
-                    },
-                    type: 'POST',
-                    success: function(result) {
-                        console.log(result);
-                        if (onCreated) onCreated();
-                    },
-                    error: function(err) {
-                        console.error(err);
-                    }
-                });
-            };
-
-            rfarm.createCamera = function(camera, onCameraReady) {
-                console.log("Creating new scene...");
-                //todo: implement it
-
-                var cameraJson = camera.toJSON();
-                //cameraJson.object.projectionMatrix = camera.projectionMatrix.elements;
-
-                //var cameraWorldDir = new THREE.Vector3();
-                //camera.getWorldDirection ( cameraWorldDir );
-                //cameraJson.object.worldDirection = [cameraWorldDir.x, cameraWorldDir.y, cameraWorldDir.z];
-
-                // cameraJson.object.position = [camera.position.x, camera.position.y, camera.position.z];
-                // cameraJson.object.rotation = camera.matrix.elements;
-
-                //var cameraTarget = camera.position.clone();
-                //cameraTarget.addScaledVector ( cameraWorldDir, camera.focus );
-                //cameraJson.object.target = [cameraTarget.x, cameraTarget.y, cameraTarget.z];
-
-                var cameraText = JSON.stringify(cameraJson);
-                var compressedCameraData = LZString144.compressToBase64(cameraText);
-
-                $.ajax({
-                    url: "https://localhost:8000/scene/camera",
-                    data: { 
-                        session: document.sessionId,
-                        camera: compressedCameraData 
-                    },
-                    type: 'POST',
-                    success: function(result) {
-                        console.log(result);
-                        onCameraReady(result.id);
-                    },
-                    error: function(err) {
-                        console.error(err);
-                    }
-                });
-
-            }
-
-
-            rfarm.updateCamera = function(camera, onCameraReady) {
-                console.log("Updating camera...");
-
-                var cameraJson = camera.toJSON();
-                cameraJson.object.projectionMatrix = camera.projectionMatrix.elements;
-
-                var cameraWorldDir = new THREE.Vector3();
-                camera.getWorldDirection ( cameraWorldDir );
-                cameraJson.object.worldDirection = [cameraWorldDir.x, cameraWorldDir.y, cameraWorldDir.z];
-
-                cameraJson.object.position = [camera.position.x, camera.position.y, camera.position.z];
-                cameraJson.object.quaternion = [camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w];
-                cameraJson.object.rotation = [
-                    camera.matrix[0], camera.matrix[1], camera.matrix[2],
-                    camera.matrix[4], camera.matrix[5], camera.matrix[6],
-                    camera.matrix[8], camera.matrix[9], camera.matrix[10]
-                ];
-
-                var cameraTarget = camera.position.clone();
-                cameraTarget.addScaledVector ( cameraWorldDir, camera.focus );
-                cameraJson.object.target = [cameraTarget.x, cameraTarget.y, cameraTarget.z];
-
-                var cameraText = JSON.stringify(cameraJson);
-                var compressedCameraData = LZString144.compressToBase64(cameraText);
-
-                $.ajax({
-                    url: "https://localhost:8000/scene/0/camera/" + document.cameraId,
-                    data: { 
-                        session: document.sessionId,
-                        camera: compressedCameraData 
-                    },
-                    type: 'PUT',
-                    success: function(result) {
-                        console.log(result);
-                        onCameraReady(result.id);
-                    },
-                    error: function(err) {
-                        console.error(err);
-                    }
-                });
-
-            }
-
-            rfarm.createLight = function(onCreated) {
-                console.log("Creating new light...");
-                //todo: implement it
-
-                $.ajax({
-                    url: "https://localhost:8000/scene/skylight",
-                    data: { 
-                        session: document.sessionId, 
-                    },
-                    type: 'POST',
-                    success: function(result) {
-                        console.log(result);
-                        if (onCreated) onCreated();
-                    },
-                    error: function(err) {
-                        console.error(err);
-                    }
-                });
-
-            }
-
-            rfarm.createMaterial = function(material, onCreated) {
-                console.log("Creating new material...");
-                //todo: implement it
-
-                $.ajax({
-                    url: "https://localhost:8000/scene/0/material",
-                    data: { 
-                        session: document.sessionId, 
-                        diffuseColor_r: Math.round(255*material.color.r),
-                        diffuseColor_g: Math.round(255*material.color.g),
-                        diffuseColor_b: Math.round(255*material.color.b)
-                    },
-                    type: 'POST',
-                    success: function(result) {
-                        console.log(result);
-                        if (onCreated) onCreated(result.id);
-                    },
-                    error: function(err) {
-                        console.error(err);
-                    }
-                });
-
-            }
-
-            rfarm.createMesh = function(sceneJson, materialName, onMeshReady) {
-                console.log("Creating new mesh...");
-                //todo: implement it
-
-                var sceneText = JSON.stringify(sceneJson);
-                var compressedSceneData = LZString144.compressToBase64(sceneText);
-
-                $.ajax({
-                    url: "https://localhost:8000/scene/mesh",
-                    data: { 
-                        session: document.sessionId, 
-                        mesh: compressedSceneData,
-                        material: materialName
-                    },
-                    type: 'POST',
-                    success: function(result) {
-                        console.log(result);
-                        if (onMeshReady) onMeshReady();
-                    },
-                    error: function(err) {
-                        console.error(err);
-                    }
-                });
-
-            }
 
             document.saveSceneAs = function(scene) {
                 var sceneJson = scene.toJSON();
@@ -258,53 +62,6 @@
                 });
                 saveAs(blob, "geometry.bson");
             }
-
-            rfarm.render = function(cameraId, onImageReady) {
-                console.log("Creating new render job...");
-
-                var width = $("#viewport").outerWidth();
-                var height = $("#viewport").outerHeight();
-
-                $.ajax({
-                    url: "https://localhost:8000/job",
-                    data: { 
-                        session: document.sessionId, 
-                        width: width, 
-                        height: height, 
-                        camera: cameraId 
-                    },
-                    type: 'POST',
-                    success: function(result) {
-                        console.log(result);
-                        onImageReady(result.url);
-                    },
-                    error: function(err) {
-                        console.error(err);
-                    }
-                });
-
-            };
-
-            document.renderScene = function() {
-                rfarm.createCamera(document.camera, function(cameraId) {
-                    document.cameraId = cameraId; //todo: improve here
-                    rfarm.render(document.cameraId, function(url) {
-                        $('#viewport').css("display", "none");
-                        $('#output').attr("src",url);
-                        //rfarm.closeSession(document.sessionId);
-                    });
-                });
-            };
-
-            document.rerenderScene = function() {
-                document.camera.position.set(10,10,10);
-                rfarm.updateCamera(document.camera, function(cameraId) {
-                    rfarm.render(document.cameraId, function(url) {
-                        $('#viewport').css("display", "none");
-                        $('#output').attr("src",url);
-                    });
-                });
-            };
 
             window.onload = function() {
                 var renderer;
@@ -363,18 +120,38 @@
 
                 var geometry = new THREE.DodecahedronGeometry(1, 0);
                     geometry = new THREE.BufferGeometry().fromGeometry(geometry);
+                document.geom = geometry;
+
                 var material = new THREE.MeshPhongMaterial({
                     color: 0x40e040,
                     transparent: false,
                     opacity: 0.95
                 });
+
                 var cube = new THREE.Mesh(geometry, material);
                 cube.applyMatrix(new THREE.Matrix4().makeTranslation(0, 1, 0))
                 cube.castShadow = true;
                 cube.receiveShadow = false;
                 scene.add(cube);
-                //todo: POST buffer geometry, save resource id in userData
-                // document.saveToJson(cube);
+
+                var cube2 = new THREE.Mesh(geometry, material);
+                cube2.applyMatrix(new THREE.Matrix4().makeTranslation(-1.75, 1, -1.75));
+                cube2.castShadow = true;
+                cube2.receiveShadow = false;
+                scene.add(cube2);
+
+                var material3 = new THREE.MeshPhongMaterial({
+                    color: 0x40e0e0,
+                    transparent: false,
+                    opacity: 0.95
+                });
+
+                var cube3 = new THREE.Mesh(geometry, material3);
+                cube3.applyMatrix(new THREE.Matrix4().makeTranslation(-1.75, 1, 1.75));
+                cube3.castShadow = true;
+                cube3.receiveShadow = false;
+                scene.add(cube3);
+// =============
 
                 var geometry = new THREE.ConeGeometry( 0.5, 3, 32 );
                     geometry = new THREE.BufferGeometry().fromGeometry(geometry);
@@ -438,5 +215,6 @@
         <img id="output">
         <button onclick="renderScene()" style="position: fixed; left: 0; top:0;">render</button>
         <button onclick="rerenderScene()" style="position: fixed; left: 70; top:0;">(re)render</button>
+        <button onclick="saveJson(document.geom.toJSON(), 'BufferGeometry.json')" style="position: fixed; left: 160; top:0;">save json</button>
     </body>
 </html>
