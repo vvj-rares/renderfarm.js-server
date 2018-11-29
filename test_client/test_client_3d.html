@@ -127,7 +127,7 @@
                 cube2.applyMatrix(new THREE.Matrix4().makeTranslation(-1.75, 1, -1.75));
                 cube2.castShadow = true;
                 cube2.receiveShadow = false;
-                //scene.add(cube2);
+                scene.add(cube2);
 
                 var material3 = new THREE.MeshPhongMaterial({
                     color: 0x40e0e0,
@@ -139,7 +139,7 @@
                 cube3.applyMatrix(new THREE.Matrix4().makeTranslation(-1.75, 1, 1.75));
                 cube3.castShadow = true;
                 cube3.receiveShadow = false;
-                //scene.add(cube3);
+                scene.add(cube3);
 // =============
 
                 var geometry = new THREE.ConeGeometry( 0.5, 3, 32 );
@@ -181,15 +181,19 @@
                             rfarm.createMesh(plane, function(planeNodeName) {
                                 rfarm.createMesh(cone, function(coneNodeName) {
                                     rfarm.createMesh(cube, function(cubeNodeName) {
-                                        rfarm.createSpotlight(spotLight, spotLight.target, function(spotLightName) {
-                                            rfarm.createCamera(camera, function(cameraName) {
-                                                var width = $("#viewport").outerWidth();
-                                                var height = $("#viewport").outerHeight();
+                                        rfarm.createMesh(cube2, function(cube2NodeName) {
+                                            rfarm.createMesh(cube3, function(cube3NodeName) {
+                                                rfarm.createSpotlight(spotLight, spotLight.target, function(spotLightName) {
+                                                    rfarm.createCamera(camera, function(cameraName) {
+                                                        var width = $("#viewport").outerWidth();
+                                                        var height = $("#viewport").outerHeight();
 
-                                                rfarm.render(cameraName, width, height, function(url) {
-                                                    $('#viewport').css("display", "none");
-                                                    $('#output').attr("src",url);
-                                                    rfarm.closeSession(sessionId);
+                                                        false && rfarm.render(cameraName, width, height, function(url) {
+                                                            $('#viewport').css("display", "none");
+                                                            $('#output').attr("src",url);
+                                                            rfarm.closeSession(sessionId);
+                                                        });
+                                                    });
                                                 });
                                             });
                                         });

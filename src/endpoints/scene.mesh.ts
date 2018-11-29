@@ -42,8 +42,6 @@ class SceneMeshEndpoint implements IEndpoint {
                     let geometryName = req.body.geometryName;
                     let materialName = req.body.materialName;
 
-                    let meshName = require('../utils/genRandomName')("mesh");
-        
                     // now let maxscript request it from me
                     let maxscriptClient = this._maxscriptClientFactory.create();
                     maxscriptClient.connect(worker.ip)
@@ -60,21 +58,9 @@ class SceneMeshEndpoint implements IEndpoint {
 
                                             maxscriptClient.linkToParent(geometryName, parentName)
                                                 .then(function(value) {
+                                                    maxscriptClient.disconnect(socket);
                                                     console.log(`    OK | linked to parent successfully`);
-
-                                                    maxscriptClient.renameObject(geometryName, meshName)
-                                                        .then(function(value) {
-                                                            maxscriptClient.disconnect(socket);
-                                                            console.log(`    OK | renamed node successfully`);
-                                                            res.end(JSON.stringify({ id: meshName }, null, 2));
-                                                        }.bind(this))
-                                                        .catch(function(err) {
-                                                            maxscriptClient.disconnect();
-                                                            console.error(`  FAIL | failed to rename node\n`, err);
-                                                            res.status(500);
-                                                            res.end(JSON.stringify({ error: "failed to rename node" }, null, 2));
-                                                        }.bind(this)); // end of maxscriptClient.renameObject promise
-                                                    
+                                                    res.end(JSON.stringify({ id: geometryName }, null, 2));
                                                 }.bind(this))
                                                 .catch(function(err) {
                                                     maxscriptClient.disconnect();

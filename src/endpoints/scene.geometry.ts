@@ -56,6 +56,47 @@ class SceneGeometryEndpoint implements IEndpoint {
             if (this._geometryCache[req.body.session] !== undefined && this._geometryCache[req.body.session][ geometryJson.uuid ] !== undefined) {
                 // ok this geometry can be found in 3ds max scene by given name (id)
                 console.log("Given geometry already exists");
+
+                // so now we don't need to import BufferGeometry, instead we're going to instance copy existing 3ds max object
+                this._database.getWorker(req.body.session)
+                    .then(function(worker){
+                    
+                        //first cache it internally, so that 3ds max can download it
+                        let clonedNodeName = require('../utils/genRandomName')("mesh");
+
+                        let cachedGeometry = this._geometryCache[req.body.session][ geometryJson.uuid ];
+
+                        // now let maxscript request it from me
+                        let maxscriptClient = this._maxscriptClientFactory.create();
+                        maxscriptClient.connect(worker.ip)
+                            .then(function(socket) {
+                                console.log("SceneGeometryEndpoint connected to maxscript client");
+
+                                maxscriptClient.cloneInstance(cachedGeometry.maxNodeName, clonedNodeName)
+                                    .then(function(value) {
+                                        maxscriptClient.disconnect(socket);
+                                        console.log(`    OK | existing geometry was cloned successfully`);
+                                        res.end(JSON.stringify({ id: `${clonedNodeName}` }, null, 2));
+                                    }.bind(this))
+                                    .catch(function(err) {
+                                        maxscriptClient.disconnect();
+                                        console.error(`  FAIL | failed to clone scene geometry\n`, err);
+                                        res.status(500);
+                                        res.end(JSON.stringify({ error: "failed to clone scene geometry" }, null, 2));
+                                    }.bind(this)); // end of maxscriptClient.downloadJson promise
+                
+                            }.bind(this))
+                            .catch(function(err) {
+                                console.error("SceneGeometryEndpoint failed to connect to maxscript client, ", err);
+                            }.bind(this)); // end of maxscriptClient.connect promise
+
+                    }.bind(this))
+                    .catch(function(err){
+                        res.end(JSON.stringify({ error: "session is expired" }, null, 2));
+                    }.bind(this)); // end of this._database.getWorker promise
+
+
+                
                 res.end({ id: this._geometryCache[req.body.session][ geometryJson.uuid ].maxNodeName, already_exists: true });
             } else {
                 // ok this geometry was never imported to 3ds max scene, let's do it now
@@ -64,7 +105,7 @@ class SceneGeometryEndpoint implements IEndpoint {
                     .then(function(worker){
                     
                         //first cache it internally, so that 3ds max can download it
-                        let maxNodeName = require('../utils/genRandomName')("geometry");
+                        let maxNodeName = require('../utils/genRandomName')("mesh");
 
                         if (this._geometryCache[req.body.session] === undefined) {
                             this._geometryCache[req.body.session] = {};

@@ -239,6 +239,26 @@ class MaxscriptClient implements IMaxscriptClient {
         }.bind(this));
     }
 
+    cloneInstance(nodeName: string, cloneName: string): Promise<boolean> {
+
+        return new Promise<boolean>(function(resolve, reject) {
+            // prepare response handlers for the command
+            this._responseHandler = function(data) {
+                console.log("instance clone returned: ", data.toString());
+                this._responseHandler = undefined;
+                resolve(true);
+            };
+
+            this._errorHandler = function(err) {
+                console.error("instance clone error: ", err);
+                reject(err);
+            };
+
+            let maxscript = `instance $${nodeName} name:"${cloneName}" transform: (matrix3 [1,0,0] [0,1,0] [0,0,1] [0,0,0])`;
+            this._client.write(maxscript);
+        }.bind(this));
+    }
+
     deleteObjects(mask: string): Promise<boolean> {
 
         return new Promise<boolean>(function(resolve, reject) {
@@ -318,8 +338,6 @@ class MaxscriptClient implements IMaxscriptClient {
             if (spotlightJson.shadow && spotlightJson.shadow.mapsize > 0) {
                 maxscript += ` aTargetSpot.mapSize = ${spotlightJson.shadow.mapsize}; `;
             }
-
-            console.log(" >> maxscript: ", maxscript);
 
             this._client.write(maxscript);
         }.bind(this));
