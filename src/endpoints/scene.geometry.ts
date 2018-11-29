@@ -83,21 +83,21 @@ class SceneGeometryEndpoint implements IEndpoint {
                                         console.error(`  FAIL | failed to clone scene geometry\n`, err);
                                         res.status(500);
                                         res.end(JSON.stringify({ error: "failed to clone scene geometry" }, null, 2));
-                                    }.bind(this)); // end of maxscriptClient.downloadJson promise
+                                    }.bind(this)); // end of maxscriptClient.cloneInstance promise
                 
                             }.bind(this))
                             .catch(function(err) {
                                 console.error("SceneGeometryEndpoint failed to connect to maxscript client, ", err);
+                                //todo: res.end is missing here
                             }.bind(this)); // end of maxscriptClient.connect promise
 
                     }.bind(this))
                     .catch(function(err){
+                        //todo: log error to console here
                         res.end(JSON.stringify({ error: "session is expired" }, null, 2));
                     }.bind(this)); // end of this._database.getWorker promise
-
-
                 
-                res.end({ id: this._geometryCache[req.body.session][ geometryJson.uuid ].maxNodeName, already_exists: true });
+                // res.end({ id: this._geometryCache[req.body.session][ geometryJson.uuid ].maxNodeName, already_exists: true });
             } else {
                 // ok this geometry was never imported to 3ds max scene, let's do it now
 

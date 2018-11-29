@@ -88,14 +88,15 @@ class SceneMeshEndpoint implements IEndpoint {
                         }.bind(this))
                         .catch(function(err) {
                             console.error("SceneMeshEndpoint failed to connect to maxscript client, ", err);
+                            // todo: add res.end here
                         }.bind(this)); // end of maxscriptClient.connect promise
 
                 }.bind(this))
                 .catch(function(err){
+                    //todo: log error to console here
                     res.end(JSON.stringify({ error: "session is expired" }, null, 2));
                 }.bind(this)); // end of this._database.getWorker promise
 
-            res.end({});
         }.bind(this));
 
         express.put('/scene/:sceneid/mesh/:uid', async function (req, res) {
@@ -104,7 +105,6 @@ class SceneMeshEndpoint implements IEndpoint {
         }.bind(this));
 
         express.delete('/scene/:sceneid/mesh/:uid', async function (req, res) {
-            let apiKey = req.body.api_key;
             console.log(`DELETE on on /scene/${req.params.sceneid}/mesh/${req.params.uid}  with session: ${req.body.session}`);
             res.end({});
         }.bind(this));

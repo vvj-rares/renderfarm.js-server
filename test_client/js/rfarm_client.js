@@ -241,13 +241,15 @@ rfarm._postGeometry = function(geometry, onComplete) {
 rfarm._postMaterial = function(material, onComplete) {
     console.log("Creating new material...");
 
+    var materialJson = material.toJSON();
+    var materialText = JSON.stringify(materialJson);
+    var compressedMaterialData = LZString144.compressToBase64(materialText);
+
     $.ajax({
         url: this.baseUrl  + "/scene/0/material",
-        data: { 
+        data: {
             session: this.sessionId,
-            diffuseColor_r: Math.round(255*material.color.r),
-            diffuseColor_g: Math.round(255*material.color.g),
-            diffuseColor_b: Math.round(255*material.color.b)
+            material: compressedMaterialData,
         },
         type: 'POST',
         success: function(result) {

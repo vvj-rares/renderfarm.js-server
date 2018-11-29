@@ -9,6 +9,13 @@ class SceneMaterialEndpoint implements IEndpoint {
     private _checks: IChecks;
     private _maxscriptClientFactory: IMaxscriptClientFactory;
 
+    // maps uuid of threejs material to material name in 3ds max
+    // key is sessionId, cache items are resolved per session
+    // value is dictionary of following:
+    //     key   is threejs uuid of the threejs material,
+    //     value is { maxMatName: string, materialJsonText: string }
+    private _materialCache: { [sessionId: string] : { [id: string] : any; }; } = {};
+
     constructor(@inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.IChecks) checks: IChecks,
                 @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
@@ -34,46 +41,62 @@ class SceneMaterialEndpoint implements IEndpoint {
             let sceneid = req.params.sceneid;
             console.log(`POST on /scene/${sceneid}/material with session: ${req.body.session}`);
 
-            let diffuseColor_r = req.body.diffuseColor_r;
-            let diffuseColor_g = req.body.diffuseColor_g;
-            let diffuseColor_b = req.body.diffuseColor_b;
+            const LZString = require("lz-string");
+            let materialJsonText = LZString.decompressFromBase64(req.body.material);
+            let materialJson = JSON.parse(materialJsonText);
 
-            this._database.getWorker(req.body.session)
-                .then(function(worker){
+            if (this._materialCache[req.body.session] !== undefined && this._materialCache[req.body.session][ materialJson.uuid ] !== undefined) {
+                // ok this material can be found in 3ds max scene by given name (id)
+                let cachedMaterial = this._materialCache[req.body.session][ materialJson.uuid ];
 
-                    let maxscriptClient = this._maxscriptClientFactory.create();
-                    maxscriptClient.connect(worker.ip)
-                        .then(function(value) {
-                            console.log("SceneMaterialEndpoint connected to maxscript client, ", value);
+                console.log("Given material already exists");
+                res.end(JSON.stringify({ id: cachedMaterial.maxMatName }, null, 2));
+            } else {
+                // ok this material was never created, let's do it now
 
-                            let materialJson = {
-                                name: require('../utils/genRandomName')("material"),
-                                diffuseColor: [diffuseColor_r, diffuseColor_g, diffuseColor_b]
-                            };
+                this._database.getWorker(req.body.session)
+                    .then(function(worker){
 
-                            maxscriptClient.createStandardMaterial(materialJson)
-                                .then(function(value) {
-                                    maxscriptClient.disconnect();
-                                    console.log(`    OK | material created`);
-                                    res.end(JSON.stringify({ id: materialJson.name }, null, 2));
-                                }.bind(this))
-                                .catch(function(err) {
-                                    maxscriptClient.disconnect();
-                                    console.error(`  FAIL | failed to create material\n`, err);
-                                    res.status(500);
-                                    res.end(JSON.stringify({ error: "failed to create material" }, null, 2));
-                                }.bind(this)); // end of maxscriptClient.createStandardMaterial promise
-            
-                        }.bind(this))
-                        .catch(function(err) {
-                            console.error("SceneMaterialEndpoint failed to connect to maxscript client, ", err);
-                        }.bind(this)); // end of maxscriptClient.connect promise
+                        materialJson.name = require('../utils/genRandomName')("material");
 
-                }.bind(this))
-                .catch(function(err){
-                    res.end(JSON.stringify({ error: "session is expired" }, null, 2));
-                }.bind(this)); // end of this._database.getWorker promise
-    
+                        if (this._materialCache[req.body.session] === undefined) {
+                            this._materialCache[req.body.session] = {};
+                        }
+        
+                        this._materialCache[req.body.session][ materialJson.uuid ] = {
+                            maxMatName:       materialJson.name,
+                            materialJsonText: materialJsonText
+                        };
+        
+                        let maxscriptClient = this._maxscriptClientFactory.create();
+                        maxscriptClient.connect(worker.ip)
+                            .then(function(value) {
+                                console.log("SceneMaterialEndpoint connected to maxscript client, ", value);
+
+                                maxscriptClient.createMaterial(materialJson)
+                                    .then(function(value) {
+                                        maxscriptClient.disconnect();
+                                        console.log(`    OK | material created`);
+                                        res.end(JSON.stringify({ id: materialJson.name }, null, 2));
+                                    }.bind(this))
+                                    .catch(function(err) {
+                                        maxscriptClient.disconnect();
+                                        console.error(`  FAIL | failed to create material\n`, err);
+                                        res.status(500);
+                                        res.end(JSON.stringify({ error: "failed to create material" }, null, 2));
+                                    }.bind(this)); // end of maxscriptClient.createMaterial promise
+                
+                            }.bind(this))
+                            .catch(function(err) {
+                                console.error("SceneMaterialEndpoint failed to connect to maxscript client, ", err);
+                            }.bind(this)); // end of maxscriptClient.connect promise
+
+                    }.bind(this))
+                    .catch(function(err){
+                        res.end(JSON.stringify({ error: "session is expired" }, null, 2));
+                    }.bind(this)); // end of this._database.getWorker promise
+            } // end of if else
+
         }.bind(this));
 
         express.put('/scene/:sceneid/material/:uid', async function (req, res) {

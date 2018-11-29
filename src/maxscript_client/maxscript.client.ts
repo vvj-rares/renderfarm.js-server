@@ -343,7 +343,7 @@ class MaxscriptClient implements IMaxscriptClient {
         }.bind(this));
     }
 
-    createStandardMaterial(materialJson: any): Promise<boolean> {
+    createMaterial(materialJson: any): Promise<boolean> {
 
         return new Promise<boolean>(function(resolve, reject) {
             // prepare response handlers for the command
@@ -358,8 +358,33 @@ class MaxscriptClient implements IMaxscriptClient {
                 reject(err);
             };
 
+            let diffuse = {
+                r: (materialJson.color >> 16) & 0xFF,
+                g: (materialJson.color >> 8)  & 0xFF,
+                b: (materialJson.color)       & 0xFF
+            };
+
+            let specular = {
+                r: (materialJson.specular >> 16) & 0xFF,
+                g: (materialJson.specular >> 8)  & 0xFF,
+                b: (materialJson.specular)       & 0xFF
+            };
+
+            let emissive = {
+                r: (materialJson.emissive >> 16) & 0xFF,
+                g: (materialJson.emissive >> 8)  & 0xFF,
+                b: (materialJson.emissive)       & 0xFF
+            };
+
             // now run command
-            let maxscript = `StandardMaterial name:"${materialJson.name}" diffuse:(color ${materialJson.diffuseColor[0]} ${materialJson.diffuseColor[1]} ${materialJson.diffuseColor[2]})`;
+            let maxscript = `StandardMaterial name:"${materialJson.name}" ` 
+                          + ` diffuse: (color ${diffuse.r}  ${diffuse.g}  ${diffuse.b}) `
+                          + ` specular:(color ${specular.r} ${specular.g} ${specular.b}) `
+                          + ` emissive:(color ${emissive.r} ${emissive.g} ${emissive.b}) `
+                          + ` opacity: ${materialJson.opacity !== undefined ? 100 * materialJson.opacity : 100} `
+                          + ` glossiness: ${materialJson.shininess !== undefined ? materialJson.shininess : 30} `
+                          + ` specularLevel: 75 `
+                          + ` shaderType: 5 `; // for Phong
 
             this._client.write(maxscript);
         }.bind(this));

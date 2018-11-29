@@ -68,7 +68,7 @@ export interface IMaxscriptClient {
 
     createSpotlight(spotlightJson: any): Promise<boolean>;
     createSkylight(skylightJson: any): Promise<boolean>;
-    createStandardMaterial(materialJson: any): Promise<boolean>;
+    createMaterial(materialJson: any): Promise<boolean>;
 
     downloadJson(url: string, path: string): Promise<boolean>;
     importMesh(path: string, nodeName: string): Promise<boolean>;
