@@ -8,7 +8,6 @@ class SceneMeshEndpoint implements IEndpoint {
     private _database: IDatabase;
     private _checks: IChecks;
     private _maxscriptClientFactory: IMaxscriptClientFactory;
-    private _meshes: { [id: string] : any; } = {};
 
     constructor(@inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.IChecks) checks: IChecks,
@@ -19,83 +18,86 @@ class SceneMeshEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get('/scene/mesh', async function (req, res) {
-            let apiKey = req.query.api_key;
-            console.log(`GET on /scene/mesh with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
+        express.get('/scene/:sceneid/mesh', async function (req, res) {
+            console.log(`GET on /scene/${req.body.sceneid}/mesh with session: ${req.body.session}`);
+            res.end({});
         }.bind(this));
 
-        express.get('/scene/mesh/:uid', async function (req, res) {
-            if (this._meshes[req.params.uid] === undefined) {
-                res.end({ error: "mesh not found"});
-                return;
-            }
-            res.end(this._meshes[req.params.uid]);
+        express.get('/scene/:sceneid/mesh/:uuid', async function (req, res) {
+            console.log(`GET on on /scene/${req.body.sceneid}/mesh/${req.params.uuid}`);
+            res.end({});
         }.bind(this));
 
-        express.post('/scene/mesh', async function (req, res) {
-            console.log(`POST on /scene/mesh with session: ${req.body.session}`);
+        express.post('/scene/:sceneid/mesh', async function (req, res) {
+            console.log(`POST on /scene/${req.body.sceneid}/mesh with session: ${req.body.session}`);
 
             this._database.getWorker(req.body.session)
                 .then(function(worker){
 
                     const LZString = require("lz-string");
-                    let sceneJsonText = LZString.decompressFromBase64(req.body.mesh);
-                    let materialName = req.body.material;
+                    let matrixWorldText = LZString.decompressFromBase64(req.body.matrixWorld);
+                    let matrixWorldArray = JSON.parse(matrixWorldText);
+                
+                    let parentName = req.body.parentName;
+                    let geometryName = req.body.geometryName;
+                    let materialName = req.body.materialName;
 
-                    const meshId = require('../utils/genRandomName')("mesh");
-                    this._meshes[meshId] = sceneJsonText;
-
-                    let sceneJson = JSON.parse(sceneJsonText);
-                    let matrix = sceneJson.object.matrix;
-
-                    // now let maxscript request mesh from me
+                    let meshName = require('../utils/genRandomName')("mesh");
+        
+                    // now let maxscript request it from me
                     let maxscriptClient = this._maxscriptClientFactory.create();
                     maxscriptClient.connect(worker.ip)
                         .then(function(socket) {
                             console.log("SceneMeshEndpoint connected to maxscript client");
 
-                            let filename = `${meshId}.json`;
-                            maxscriptClient.downloadJson(`https://192.168.0.200:8000/scene/mesh/${meshId}`, `C:\\\\Temp\\\\downloads\\\\${filename}`)
+                            maxscriptClient.setObjectWorldMatrix(geometryName, matrixWorldArray)
                                 .then(function(value) {
-                                    // as we have json file saved locally, now it is the time to import it
-                                    console.log(`    OK | json file downloaded successfully`);
-                                    maxscriptClient.importMesh(`C:\\\\Temp\\\\downloads\\\\${filename}`, `${meshId}`, matrix)
+                                    console.log(`    OK | node world matrix set successfully`);
+
+                                    maxscriptClient.assignMaterial(geometryName, materialName)
                                         .then(function(value) {
-                                            if (materialName !== undefined) {
-                                                maxscriptClient.assignMaterial(materialName, meshId)
-                                                    .then(function(value) {
-                                                        maxscriptClient.disconnect(socket);
-                                                        console.log(`    OK | mesh imported successfully`);
-                                                        res.end(JSON.stringify({ id: `${meshId}`, materialId: materialName }, null, 2));
-                                                    }.bind(this))
-                                                    .catch(function(err) {
-                                                        maxscriptClient.disconnect();
-                                                        console.error(`  FAIL | failed to assign material\n`, err);
-                                                        res.status(500);
-                                                        res.end(JSON.stringify({ error: "failed to assign material" }, null, 2));
-                                                    }.bind(this)); // end of maxscriptClient.assignMaterial promise
-                                            } else {
-                                                maxscriptClient.disconnect(socket);
-                                                console.log(`    OK | mesh imported successfully`);
-                                                res.end(JSON.stringify({ id: `${meshId}` }, null, 2));
-                                            }
+                                            console.log(`    OK | material assigned successfully`);
+
+                                            maxscriptClient.linkToParent(geometryName, parentName)
+                                                .then(function(value) {
+                                                    console.log(`    OK | linked to parent successfully`);
+
+                                                    maxscriptClient.renameObject(geometryName, meshName)
+                                                        .then(function(value) {
+                                                            maxscriptClient.disconnect(socket);
+                                                            console.log(`    OK | renamed node successfully`);
+                                                            res.end(JSON.stringify({ id: meshName }, null, 2));
+                                                        }.bind(this))
+                                                        .catch(function(err) {
+                                                            maxscriptClient.disconnect();
+                                                            console.error(`  FAIL | failed to rename node\n`, err);
+                                                            res.status(500);
+                                                            res.end(JSON.stringify({ error: "failed to rename node" }, null, 2));
+                                                        }.bind(this)); // end of maxscriptClient.renameObject promise
+                                                    
+                                                }.bind(this))
+                                                .catch(function(err) {
+                                                    maxscriptClient.disconnect();
+                                                    console.error(`  FAIL | failed to link node to parent\n`, err);
+                                                    res.status(500);
+                                                    res.end(JSON.stringify({ error: "failed to link node to parent" }, null, 2));
+                                                }.bind(this)); // end of maxscriptClient.linkToParent promise
+
                                         }.bind(this))
                                         .catch(function(err) {
                                             maxscriptClient.disconnect();
-                                            console.error(`  FAIL | failed to import mesh\n`, err);
+                                            console.error(`  FAIL | failed to assign material\n`, err);
                                             res.status(500);
-                                            res.end(JSON.stringify({ error: "failed to import mesh" }, null, 2));
-                                        }.bind(this)); // end of maxscriptClient.importMesh promise
+                                            res.end(JSON.stringify({ error: "failed to assign material" }, null, 2));
+                                        }.bind(this)); // end of maxscriptClient.assignMaterial promise
 
                                 }.bind(this))
                                 .catch(function(err) {
                                     maxscriptClient.disconnect();
-                                    console.error(`  FAIL | failed to download json file\n`, err);
+                                    console.error(`  FAIL | failed to set node world matrix\n`, err);
                                     res.status(500);
-                                    res.end(JSON.stringify({ error: "failed to download json file" }, null, 2));
-                                }.bind(this)); // end of maxscriptClient.downloadJson promise
+                                    res.end(JSON.stringify({ error: "failed to set node world matrix" }, null, 2));
+                                }.bind(this)); // end of maxscriptClient.setObjectWorldMatrix promise
             
                         }.bind(this))
                         .catch(function(err) {
@@ -106,21 +108,19 @@ class SceneMeshEndpoint implements IEndpoint {
                 .catch(function(err){
                     res.end(JSON.stringify({ error: "session is expired" }, null, 2));
                 }.bind(this)); // end of this._database.getWorker promise
-    
+
+            res.end({});
         }.bind(this));
 
-        express.put('/scene/mesh/:uid', async function (req, res) {
-            let apiKey = req.body.api_key;
-            console.log(`PUT on /scene/mesh/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
+        express.put('/scene/:sceneid/mesh/:uid', async function (req, res) {
+            console.log(`PUT on on /scene/${req.body.sceneid}/mesh/${req.params.uid}  with session: ${req.body.session}`);
+            res.end({});
         }.bind(this));
 
-        express.delete('/scene/mesh/:uid', async function (req, res) {
+        express.delete('/scene/:sceneid/mesh/:uid', async function (req, res) {
             let apiKey = req.body.api_key;
-            console.log(`DELETE on /scene/mesh/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
+            console.log(`DELETE on on /scene/${req.body.sceneid}/mesh/${req.params.uid}  with session: ${req.body.session}`);
+            res.end({});
         }.bind(this));
     }
 }

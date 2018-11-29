@@ -16,7 +16,6 @@ import { WorkerEndpoint } from "./endpoints/worker";
 import { MaxscriptClientFactory } from "./maxscript_client/maxscript.client.factory";
 import { SceneMaterialEndpoint } from "./endpoints/scene.material";
 import { SceneGeometryEndpoint } from "./endpoints/scene.geometry";
-import { SceneNodeEndpoint } from "./endpoints/scene.node";
 
 const myContainer = new Container();
 myContainer.bind<interfaces.Warrior>(TYPES.Warrior).to(Ninja);
@@ -34,7 +33,7 @@ myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneCameraEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneLightEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneMaterialEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneGeometryEndpoint);
-myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneNodeEndpoint);
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneMeshEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(RenderOutputEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(JobEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(WorkerEndpoint);

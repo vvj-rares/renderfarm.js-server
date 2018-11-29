@@ -28,7 +28,6 @@
         <script src="js/rfarm_client.js"></script>
 
         <script type="text/javascript">
-
             document.saveJson = function(jsonObj, filename) {
                 var sceneText = JSON.stringify(jsonObj);
 
@@ -126,7 +125,7 @@
                 cube2.applyMatrix(new THREE.Matrix4().makeTranslation(-1.75, 1, -1.75));
                 cube2.castShadow = true;
                 cube2.receiveShadow = false;
-                scene.add(cube2);
+                //scene.add(cube2);
 
                 var material3 = new THREE.MeshPhongMaterial({
                     color: 0x40e0e0,
@@ -138,7 +137,7 @@
                 cube3.applyMatrix(new THREE.Matrix4().makeTranslation(-1.75, 1, 1.75));
                 cube3.castShadow = true;
                 cube3.receiveShadow = false;
-                scene.add(cube3);
+                //scene.add(cube3);
 // =============
 
                 var geometry = new THREE.ConeGeometry( 0.5, 3, 32 );
@@ -168,37 +167,38 @@
                 plane.receiveShadow = true;
                 scene.add(plane);
 
-                //todo: now we have to post meshes one by one, this is wrong
-                rfarm.createSession(function(sessionId) {
-                    rfarm.createScene(scene, function(sceneNodeName) {
-                        rfarm.createMesh(plane, function(planeNodeName) {
-                            console.log(planeNodeName);
-                            rfarm.closeSession(sessionId);
-                        });
-                        // rfarm.createLight(function() {
-                        // });
-                        // rfarm.createMaterial(cube.material, function(materialName) {
-                        //     rfarm.createMesh(cube, materialName, function() {
-                        //     });
-                        // });
-                        // rfarm.createMaterial(plane.material, function(materialName) {
-                        //     rfarm.createMesh(plane, materialName, function() {
-                        //     });
-                        // });
-                        // rfarm.createMaterial(cone.material, function(materialName) {
-                        //     rfarm.createMesh(cone, materialName, function() {
-                        //     });
-                        // });
-                    });
-                });
-
                 var animate = function() {
                     requestAnimationFrame(animate);
                     controls.update();
                     renderer.render(scene, camera);
                 };
 
-                // animate();
+                document.renderScene = function() {
+                    rfarm.createSession(function(sessionId) {
+                        rfarm.createScene(scene, function(sceneNodeName) {
+                            rfarm.createMesh(plane, function(planeNodeName) {
+                                rfarm.createMesh(cone, function(coneNodeName) {
+                                    rfarm.createMesh(cube, function(cubeNodeName) {
+                                        rfarm.createLight(function() {
+                                            rfarm.createCamera(camera, function(cameraName) {
+                                                var width = $("#viewport").outerWidth();
+                                                var height = $("#viewport").outerHeight();
+
+                                                rfarm.render(cameraName, width, height, function(url) {
+                                                    $('#viewport').css("display", "none");
+                                                    $('#output').attr("src",url);
+                                                    // rfarm.closeSession(sessionId);
+                                                });
+                                            });
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                };
+
+                animate();
             }
         </script>
     </head>
@@ -206,7 +206,6 @@
         <canvas id="viewport"></canvas>
         <img id="output">
         <button onclick="renderScene()" style="position: fixed; left: 0; top:0;">render</button>
-        <button onclick="rerenderScene()" style="position: fixed; left: 70; top:0;">(re)render</button>
         <button onclick="saveJson(document.geom.toJSON(), 'BufferGeometry.json')" style="position: fixed; left: 160; top:0;">save json</button>
     </body>
 </html>

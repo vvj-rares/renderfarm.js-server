@@ -18,22 +18,18 @@ class SceneLightEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get('/scene/light', async function (req, res) {
-            let apiKey = req.query.api_key;
-            console.log(`GET on /scene/light with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
+        express.get('/scene/:sceneid/light', async function (req, res) {
+            console.log(`GET on /scene/${req.body.sceneid}/light with session: ${req.body.session}`);
+            res.end({});
         }.bind(this));
 
-        express.get('/scene/light/:uid', async function (req, res) {
-            let apiKey = req.query.api_key;
-            console.log(`GET on /scene/light/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
+        express.get('/scene/:sceneid/light/:uid', async function (req, res) {
+            console.log(`GET on /scene/${req.body.sceneid}/light/${req.params.uid} with session: ${req.body.session}`);
+            res.end({});
         }.bind(this));
 
-        express.post('/scene/skylight', async function (req, res) {
-            console.log(`POST on /scene/skylight with session: ${req.body.session}`);
+        express.post('/scene/:sceneid/skylight', async function (req, res) {
+            console.log(`POST on /scene/${req.body.sceneid}/skylight with session: ${req.body.session}`);
 
             this._database.getWorker(req.body.session)
                 .then(function(worker){
@@ -73,18 +69,14 @@ class SceneLightEndpoint implements IEndpoint {
     
         }.bind(this));
 
-        express.put('/scene/light/:uid', async function (req, res) {
-            let apiKey = req.body.api_key;
-            console.log(`PUT on /scene/light/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
+        express.put('/scene/:sceneid/light/:uid', async function (req, res) {
+            console.log(`PUT on /scene/${req.body.sceneid}/light/${req.params.uid} with session: ${req.body.session}`);
+            res.end({});
         }.bind(this));
 
-        express.delete('/scene/light/:uid', async function (req, res) {
-            let apiKey = req.body.api_key;
-            console.log(`DELETE on /scene/light/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
+        express.delete('/scene/:sceneid/light/:uid', async function (req, res) {
+            console.log(`DELETE on /scene/${req.body.sceneid}/light/${req.params.uid} with session: ${req.body.session}`);
+            res.end({});
         }.bind(this));
     }
 }

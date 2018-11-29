@@ -84,17 +84,19 @@ rfarm.createScene = function(scene, onComplete) {
 }.bind(rfarm);
 
 // public
-rfarm.createMesh = function(obj) {
+rfarm.createMesh = function(obj, onComplete) {
     if (obj.type === "Mesh") {
         this._postGeometry( obj.geometry, function(geometryName) {
             this._postMaterial( obj.material, function(materialName) {
                 this._getMaxNodeName( obj.parent, function(parentName) {
                     obj.updateMatrixWorld (true);
-                    this._postNode(parentName, geometryName, materialName, obj.matrixWorld.elements, function(nodeName) {
-                        this.nodes[ obj.uuid ] = {
-                            node: obj,     // object in threejs scene
-                            name: nodeName // name in 3ds max scene
-                        };
+                    this._postMesh(parentName, geometryName, materialName, obj.matrixWorld.elements, function(nodeName) {
+                        // 3ds max object may be renamed when it was added to scene
+                        this.geometries[ obj.geometry.uuid ].maxNodeName = nodeName;
+
+                        this.nodes[ obj.uuid ] = new rfarm._rfarmNode(obj, nodeName);
+                        console.log("client nodes: ", this.nodes);
+                        onComplete(nodeName);
                     }.bind(this));
                 }.bind(this) )
             }.bind(this) );
@@ -102,17 +104,20 @@ rfarm.createMesh = function(obj) {
     }
 }.bind(rfarm);
 
-/*
-
+//public
 rfarm.createCamera = function(camera, onCameraReady) {
     console.log("Creating new scene...");
+
+    camera.updateMatrix();
+    camera.updateMatrixWorld (true);
+    camera.updateProjectionMatrix();
 
     var cameraJson = camera.toJSON();
     var cameraText = JSON.stringify(cameraJson);
     var compressedCameraData = LZString144.compressToBase64(cameraText);
 
     $.ajax({
-        url: "https://localhost:8000/scene/camera",
+        url: "https://localhost:8000/scene/0/camera",
         data: { 
             session: this.sessionId,
             camera: compressedCameraData 
@@ -129,12 +134,13 @@ rfarm.createCamera = function(camera, onCameraReady) {
 
 }.bind(rfarm);
 
+//public
 rfarm.createLight = function(onCreated) {
     console.log("Creating new light...");
     //todo: implement it
 
     $.ajax({
-        url: this.baseUrl  + "/scene/skylight",
+        url: this.baseUrl  + "/scene/0/skylight",
         data: { 
             session: this.sessionId, 
         },
@@ -149,19 +155,17 @@ rfarm.createLight = function(onCreated) {
     });
 }.bind(rfarm);
 
-rfarm.render = function(camera, width, height, onImageReady) {
+//public
+rfarm.render = function(cameraName, width, height, onImageReady) {
     console.log("Creating new render job...");
-
-    // var width = $("#viewport").outerWidth();
-    // var height = $("#viewport").outerHeight();
 
     $.ajax({
         url: this.baseUrl  + "/job",
         data: { 
-            session: document.sessionId, 
+            session: this.sessionId,
             width: width, 
             height: height, 
-            camera: cameraId 
+            camera: cameraName 
         },
         type: 'POST',
         success: function(result) {
@@ -173,10 +177,10 @@ rfarm.render = function(camera, width, height, onImageReady) {
         }.bind(this)
     });
 }.bind(rfarm);
-*/
 
+// private
 rfarm._postGeometry = function(geometry, onComplete) {
-    console.log("Creating new geometry...");
+    console.log("Importing geometry...");
 
     var geometryText = JSON.stringify(geometry.toJSON());
     var compressedGeometryData = LZString144.compressToBase64(geometryText);
@@ -236,14 +240,14 @@ rfarm._getMaxNodeName = function(threeNodeRef, onComplete) {
     }
 }.bind(rfarm);
 
-rfarm._postNode = function(parentName, geometryName, materialName, matrixWorldArray, onComplete) {
+rfarm._postMesh = function(parentName, geometryName, materialName, matrixWorldArray, onComplete) {
     console.log("Creating new node...");
 
     var matrixText = JSON.stringify(matrixWorldArray);
     var compressedMatrixData = LZString144.compressToBase64(matrixText);
 
     $.ajax({
-        url: this.baseUrl  + "/scene/0/node",
+        url: this.baseUrl  + "/scene/0/mesh",
         data: { 
             session: this.sessionId,
             parentName: parentName,
@@ -254,9 +258,6 @@ rfarm._postNode = function(parentName, geometryName, materialName, matrixWorldAr
         type: 'POST',
         success: function(result) {
             console.log(result);
-
-            //todo: add node to inner cache
-
             if (onComplete) onComplete(result.id);
         }.bind(this),
         error: function(err) {
@@ -264,14 +265,3 @@ rfarm._postNode = function(parentName, geometryName, materialName, matrixWorldAr
         }.bind(this)
     });
 }.bind(rfarm);
-
-// document.renderScene = function() {
-//     rfarm.createCamera(document.camera, function(cameraId) {
-//         document.cameraId = cameraId; //todo: improve here
-//         rfarm.render(document.cameraId, function(url) {
-//             $('#viewport').css("display", "none");
-//             $('#output').attr("src",url);
-//             //rfarm.closeSession(document.sessionId);
-//         });
-//     });
-// }.bind(rfarm);

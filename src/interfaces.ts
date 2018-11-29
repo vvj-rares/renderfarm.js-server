@@ -57,6 +57,7 @@ export interface IMaxscriptClient {
 
     setObjectWorldMatrix(nodeName, matrixWorldArray): Promise<boolean>;
     linkToParent(nodeName: string, parentName: string): Promise<boolean>;
+    renameObject(nodeName: string, newName: string): Promise<boolean>;
 
     setSession(sessionGuid: string): Promise<boolean>;
 

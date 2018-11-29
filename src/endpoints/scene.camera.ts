@@ -18,22 +18,18 @@ class SceneCameraEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get('/scene/camera', async function (req, res) {
-            let apiKey = req.query.api_key;
-            console.log(`GET on /scene/camera with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
+        express.get('/scene/:sceneid/camera', async function (req, res) {
+            console.log(`GET on /scene/${req.body.sceneid}/camera with session: ${req.body.session}`);
+            res.end({});
         }.bind(this));
 
-        express.get('/scene/camera/:uid', async function (req, res) {
-            let apiKey = req.query.api_key;
-            console.log(`GET on /scene/camera/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
+        express.get('/scene/:sceneid/camera/:uid', async function (req, res) {
+            console.log(`GET on /scene/${req.body.sceneid}/camera/${req.params.uid} with session: ${req.body.session}`);
+            res.end({});
         }.bind(this));
 
-        express.post('/scene/camera', async function (req, res) {
-            console.log(`POST on /scene/camera with session: ${req.body.session}`);
+        express.post('/scene/:sceneid/camera', async function (req, res) {
+            console.log(`POST on /scene/${req.body.sceneid}/camera with session: ${req.body.session}`);
 
             this._database.getWorker(req.body.session)
                 .then(function(worker){
@@ -41,6 +37,8 @@ class SceneCameraEndpoint implements IEndpoint {
                     const LZString = require("lz-string");
                     let cameraJsonText = LZString.decompressFromBase64(req.body.camera);
                     let cameraJson: any = JSON.parse(cameraJsonText);
+
+                    console.log(" >> cameraJson: ", cameraJson);
         
                     let maxscriptClient = this._maxscriptClientFactory.create();
                     maxscriptClient.connect(worker.ip)
@@ -130,11 +128,9 @@ class SceneCameraEndpoint implements IEndpoint {
 
         }.bind(this));
 
-        express.delete('/scene/camera/:uid', async function (req, res) {
-            let apiKey = req.body.api_key;
-            console.log(`DELETE on /scene/camera/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
+        express.delete('/scene/:sceneid/camera/:uid', async function (req, res) {
+            console.log(`DELETE on /scene/${req.body.sceneid}/camera/${req.params.uid} with session: ${req.body.session}`);
+            res.end({});
         }.bind(this));
     }
 }

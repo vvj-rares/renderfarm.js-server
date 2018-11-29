@@ -19,17 +19,13 @@ class JobEndpoint implements IEndpoint {
 
     bind(express: express.Application) {
         express.get('/job', async function (req, res) {
-            let apiKey = req.query.api_key;
-            console.log(`GET on /job with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
+            console.log(`GET on /job with session: ${req.body.session}`);
+            res.end({});
         }.bind(this));
 
         express.get('/job/:uid', async function (req, res) {
-            let apiKey = req.query.api_key;
-            console.log(`GET on /job/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
+            console.log(`GET on /job/${req.params.uid} with session: ${req.body.session}`);
+            res.end({});
         }.bind(this));
 
         express.post('/job', async function (req, res) {
@@ -87,17 +83,13 @@ class JobEndpoint implements IEndpoint {
         }.bind(this));
 
         express.put('/job/:uid', async function (req, res) {
-            let apiKey = req.body.api_key;
-            console.log(`PUT on /job/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
+            console.log(`PUT on /job/${req.params.uid} with session: ${req.body.session}`);
+            res.end({});
         }.bind(this));
 
         express.delete('/job/:uid', async function (req, res) {
-            let apiKey = req.body.api_key;
-            console.log(`DELETE on /job/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
+            console.log(`DELETE on /job/${req.params.uid} with session: ${req.body.session}`);
+            res.end({});
         }.bind(this));
     }
 }

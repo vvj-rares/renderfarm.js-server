@@ -64,7 +64,7 @@ class MaxscriptClient implements IMaxscriptClient {
             };
 
             // now run command
-            this._client.write(`resetMaxFile #noPrompt"`);
+            this._client.write(`resetMaxFile #noPrompt`);
         }.bind(this));
     }
 
@@ -126,6 +126,27 @@ class MaxscriptClient implements IMaxscriptClient {
             };
 
             let maxscript = `$${nodeName}.parent = $${parentName}`;
+
+            this._client.write(maxscript);
+        }.bind(this));
+    }
+
+    renameObject(nodeName: string, newName: string): Promise<boolean> {
+
+        return new Promise<boolean>(function(resolve, reject) {
+            // prepare response handlers for the command
+            this._responseHandler = function(data) {
+                console.log("rename object returned: ", data.toString());
+                this._responseHandler = undefined;
+                resolve(true);
+            };
+
+            this._errorHandler = function(err) {
+                console.error("rename object error: ", err);
+                reject(err);
+            };
+
+            let maxscript = `$${nodeName}.name = $${newName}`;
 
             this._client.write(maxscript);
         }.bind(this));
@@ -320,12 +341,8 @@ class MaxscriptClient implements IMaxscriptClient {
                 reject(err);
             };
 
-            // let m = matrix;
-
             // now run command
-            let maxscript = `threejsImportBufferGeometry \"${path}\" \"${nodeName}\"; ` ;
-            //              + ` $${nodeName}.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}])`;
-
+            let maxscript = `threejsImportBufferGeometry \"${path}\" \"${nodeName}\"`;
             this._client.write(maxscript);
         }.bind(this));
     }
