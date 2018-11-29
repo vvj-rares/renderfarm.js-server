@@ -48,7 +48,7 @@ class MaxscriptClient implements IMaxscriptClient {
         this._client.destroy();
     }
 
-    createScene(sceneName): Promise<boolean> {
+    resetScene(): Promise<boolean> {
 
         return new Promise<boolean>(function(resolve, reject) {
             // prepare response handlers for the command
@@ -64,7 +64,70 @@ class MaxscriptClient implements IMaxscriptClient {
             };
 
             // now run command
+            this._client.write(`resetMaxFile #noPrompt"`);
+        }.bind(this));
+    }
+
+    createScene(sceneName): Promise<boolean> {
+
+        return new Promise<boolean>(function(resolve, reject) {
+            // prepare response handlers for the command
+            this._responseHandler = function(data) {
+                console.log("create scene returned: ", data.toString());
+                this._responseHandler = undefined;
+                resolve(true);
+            };
+
+            this._errorHandler = function(err) {
+                console.error("create scene error: ", err);
+                reject(err);
+            };
+
+            // now run command
             this._client.write(`resetMaxFile #noPrompt; Dummy name:"${sceneName}"`);
+        }.bind(this));
+    }
+
+    setObjectWorldMatrix(nodeName, matrixWorldArray): Promise<boolean> {
+
+        return new Promise<boolean>(function(resolve, reject) {
+            // prepare response handlers for the command
+            this._responseHandler = function(data) {
+                console.log("set object world matrix returned: ", data.toString());
+                this._responseHandler = undefined;
+                resolve(true);
+            };
+
+            this._errorHandler = function(err) {
+                console.error("set object world matrix error: ", err);
+                reject(err);
+            };
+
+            let m = matrixWorldArray;
+            let maxscript = `in coordsys world $${nodeName}.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}])`;
+
+            this._client.write(maxscript);
+        }.bind(this));
+    }
+
+    linkToParent(nodeName: string, parentName: string): Promise<boolean> {
+
+        return new Promise<boolean>(function(resolve, reject) {
+            // prepare response handlers for the command
+            this._responseHandler = function(data) {
+                console.log("link to parent returned: ", data.toString());
+                this._responseHandler = undefined;
+                resolve(true);
+            };
+
+            this._errorHandler = function(err) {
+                console.error("link to parent error: ", err);
+                reject(err);
+            };
+
+            let maxscript = `$${nodeName}.parent = $${parentName}`;
+
+            this._client.write(maxscript);
         }.bind(this));
     }
 
@@ -116,10 +179,7 @@ class MaxscriptClient implements IMaxscriptClient {
             let maxscript = `cam = FreeCamera fov:${cameraJson.fov} nearclip:1 farclip:1000 nearrange:0 farrange:1000 ` 
                           + ` mpassEnabled:off mpassRenderPerPass:off ` 
                           + ` isSelected:on name:"${cameraJson.name}"; ` 
-                          + `cam.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}]) * (matrix3 [1,0,0] [0,0,1] [0,1,0] [0,0,0])`;
-
-            console.log(" >> maxscript: ", maxscript);
-            console.log(" >> camera matrix: ", cameraJson.matrix);
+                          + `cam.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}])`;
 
             this._client.write(maxscript);
         }.bind(this));
@@ -245,7 +305,7 @@ class MaxscriptClient implements IMaxscriptClient {
         }.bind(this));
     }
 
-    importMesh(path: string, nodeName: string, matrix: number[]): Promise<boolean> {
+    importMesh(path: string, nodeName: string): Promise<boolean> {
 
         return new Promise<boolean>(function(resolve, reject) {
             // prepare response handlers for the command
@@ -260,17 +320,17 @@ class MaxscriptClient implements IMaxscriptClient {
                 reject(err);
             };
 
-            let m = matrix;
+            // let m = matrix;
 
             // now run command
-            let maxscript = `threejsImportJson \"${path}\" \"${nodeName}\"; ` 
-                          + ` $${nodeName}.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}]) * (matrix3 [1,0,0] [0,0,1] [0,1,0] [0,0,0])`;
+            let maxscript = `threejsImportBufferGeometry \"${path}\" \"${nodeName}\"; ` ;
+            //              + ` $${nodeName}.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}])`;
 
             this._client.write(maxscript);
         }.bind(this));
     }
 
-    assignMaterial(materialName: string, nodeName: string): Promise<boolean> {
+    assignMaterial(nodeName: string, materialName: string): Promise<boolean> {
 
         return new Promise<boolean>(function(resolve, reject) {
             // prepare response handlers for the command

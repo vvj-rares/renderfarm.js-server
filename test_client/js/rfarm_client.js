@@ -1,10 +1,12 @@
 var rfarm = {
     apiKey: "75f5-4d53-b0f4",
     baseUrl: "https://localhost:8000",
-    geometries: [],  // here we map scene geometry uuid <==> backend geometry resource
-    materials: [],   // here we map scene material uuid <==> backend material resource
-    nodes: [],       // here we map scene nodes         <==> backend nodes
-    sessionId: null, // current session
+
+    geometries: {},  // here we map scene geometry uuid <==> backend geometry resource
+    materials: {},   // here we map scene material uuid <==> backend material resource
+
+    nodes: {},       // here we map scene nodes         <==> backend nodes
+    sessionId: null,  // current session
 
     // node constructor, maps threejs node ref to 3ds max node name
     _rfarmNode: function(threeNodeRef, maxNodeName) {
@@ -59,10 +61,7 @@ rfarm.closeSession = function(sessionGuid, onClosed) {
 
 // public
 rfarm.createScene = function(scene, onComplete) {
-    //todo: ajax post scene, creates a dummy object where all other objects are linked
-
     console.log("Creating new scene...");
-    //todo: implement it
 
     $.ajax({
         url: this.baseUrl  + "/scene",
@@ -72,15 +71,16 @@ rfarm.createScene = function(scene, onComplete) {
         type: 'POST',
         success: function(result) {
             console.log(result);
-            onComplete(result.id);
-        },
+
+            let sceneRootNodeName = result.id;
+            this.nodes[ scene.uuid ] = new rfarm._rfarmNode(scene, sceneRootNodeName);
+
+            if (onComplete) onComplete(result.id);
+        }.bind(this),
         error: function(err) {
             console.error(err);
-        }
+        }.bind(this)
     });
-
-    var sceneRootName = "scene_774637";
-    this.nodes[ scene.uuid ] = new rfarm._rfarmNode(scene, sceneRootName);
 }.bind(rfarm);
 
 // public
@@ -89,7 +89,8 @@ rfarm.createMesh = function(obj) {
         this._postGeometry( obj.geometry, function(geometryName) {
             this._postMaterial( obj.material, function(materialName) {
                 this._getMaxNodeName( obj.parent, function(parentName) {
-                    this._postNode(parentName, geometryName, materialName, obj.matrixWorld, function(nodeName) {
+                    obj.updateMatrixWorld (true);
+                    this._postNode(parentName, geometryName, materialName, obj.matrixWorld.elements, function(nodeName) {
                         this.nodes[ obj.uuid ] = {
                             node: obj,     // object in threejs scene
                             name: nodeName // name in 3ds max scene
@@ -148,54 +149,6 @@ rfarm.createLight = function(onCreated) {
     });
 }.bind(rfarm);
 
-rfarm.createMaterial = function(material, onCreated) {
-    console.log("Creating new material...");
-    //todo: implement it
-
-    $.ajax({
-        url: this.baseUrl  + "/scene/0/material",
-        data: { 
-            session: this.sessionId,
-            diffuseColor_r: Math.round(255*material.color.r),
-            diffuseColor_g: Math.round(255*material.color.g),
-            diffuseColor_b: Math.round(255*material.color.b)
-        },
-        type: 'POST',
-        success: function(result) {
-            console.log(result);
-            if (onCreated) onCreated(result.id);
-        }.bind(this),
-        error: function(err) {
-            console.error(err);
-        }.bind(this)
-    });
-}.bind(rfarm);
-
-rfarm.createMesh = function(sceneJson, materialName, onMeshReady) {
-    console.log("Creating new mesh...");
-    //todo: implement it
-
-    var sceneText = JSON.stringify(sceneJson);
-    var compressedSceneData = LZString144.compressToBase64(sceneText);
-
-    $.ajax({
-        url: this.baseUrl  + "/scene/mesh",
-        data: { 
-            session: this.sessionId,
-            mesh: compressedSceneData,
-            material: materialName
-        },
-        type: 'POST',
-        success: function(result) {
-            console.log(result);
-            if (onMeshReady) onMeshReady();
-        },
-        error: function(err) {
-            console.error(err);
-        }
-    });
-}.bind(rfarm);
-
 rfarm.render = function(camera, width, height, onImageReady) {
     console.log("Creating new render job...");
 
@@ -223,23 +176,93 @@ rfarm.render = function(camera, width, height, onImageReady) {
 */
 
 rfarm._postGeometry = function(geometry, onComplete) {
-    //todo: ajax post buffer geometry
+    console.log("Creating new geometry...");
+
+    var geometryText = JSON.stringify(geometry.toJSON());
+    var compressedGeometryData = LZString144.compressToBase64(geometryText);
+
+    $.ajax({
+        url: this.baseUrl  + "/scene/0/geometry",
+        data: { 
+            session: this.sessionId,
+            geometry: compressedGeometryData
+        },
+        type: 'POST',
+        success: function(result) {
+            console.log(result);
+
+            let editableMeshNodeName = result.id;
+            this.geometries[ geometry.uuid ] = new rfarm._rfarmNode(geometry, editableMeshNodeName);
+
+            if (onComplete) onComplete(result.id);
+        }.bind(this),
+        error: function(err) {
+            console.error(err);
+        }.bind(this)
+    });
+
 }.bind(rfarm);
 
-rfarm._postMaterial = function() {
-    //todo: ajax post material
+rfarm._postMaterial = function(material, onComplete) {
+    console.log("Creating new material...");
+
+    $.ajax({
+        url: this.baseUrl  + "/scene/0/material",
+        data: { 
+            session: this.sessionId,
+            diffuseColor_r: Math.round(255*material.color.r),
+            diffuseColor_g: Math.round(255*material.color.g),
+            diffuseColor_b: Math.round(255*material.color.b)
+        },
+        type: 'POST',
+        success: function(result) {
+            console.log(result);
+
+            let maxMaterialName = result.id;
+            this.materials[ material.uuid ] = new rfarm._rfarmNode(material, maxMaterialName);
+
+            if (onComplete) onComplete(result.id);
+        }.bind(this),
+        error: function(err) {
+            console.error(err);
+        }.bind(this)
+    });
 }.bind(rfarm);
 
 rfarm._getMaxNodeName = function(threeNodeRef, onComplete) {
     // returns node name in 3ds max by given threejs node ref
-
     if (this.nodes[ threeNodeRef.uuid ] !== undefined) {
         onComplete( this.nodes[ threeNodeRef.uuid ].maxNodeName );
     }
 }.bind(rfarm);
 
-rfarm._postNode = function(parentName, geometryName, materialName, matrixWorld) {
-    // todo: create a node in 3ds max
+rfarm._postNode = function(parentName, geometryName, materialName, matrixWorldArray, onComplete) {
+    console.log("Creating new node...");
+
+    var matrixText = JSON.stringify(matrixWorldArray);
+    var compressedMatrixData = LZString144.compressToBase64(matrixText);
+
+    $.ajax({
+        url: this.baseUrl  + "/scene/0/node",
+        data: { 
+            session: this.sessionId,
+            parentName: parentName,
+            geometryName: geometryName,
+            materialName: materialName,
+            matrixWorld: compressedMatrixData
+        },
+        type: 'POST',
+        success: function(result) {
+            console.log(result);
+
+            //todo: add node to inner cache
+
+            if (onComplete) onComplete(result.id);
+        }.bind(this),
+        error: function(err) {
+            console.error(err);
+        }.bind(this)
+    });
 }.bind(rfarm);
 
 // document.renderScene = function() {

@@ -52,7 +52,12 @@ export interface IMaxscriptClient {
     connect(ip: string): Promise<boolean>;
     disconnect();
 
+    resetScene(sceneName): Promise<boolean>;
     createScene(sceneName): Promise<boolean>;
+
+    setObjectWorldMatrix(nodeName, matrixWorldArray): Promise<boolean>;
+    linkToParent(nodeName: string, parentName: string): Promise<boolean>;
+
     setSession(sessionGuid: string): Promise<boolean>;
 
     createTargetCamera(cameraJson): Promise<boolean>;
@@ -63,9 +68,9 @@ export interface IMaxscriptClient {
     createStandardMaterial(materialJson: any): Promise<boolean>;
 
     downloadJson(url: string, path: string): Promise<boolean>;
-    importMesh(path: string, nodeName: string, matrix: number[]): Promise<boolean>;
+    importMesh(path: string, nodeName: string): Promise<boolean>;
 
-    assignMaterial(materialName: string, nodeName: string): Promise<boolean>;
+    assignMaterial(nodeName: string, materialName: string): Promise<boolean>;
 
     renderScene(camera: string, size: number[], filename: string): Promise<boolean>;
 
