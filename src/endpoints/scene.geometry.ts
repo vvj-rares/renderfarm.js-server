@@ -10,9 +10,11 @@ class SceneGeometryEndpoint implements IEndpoint {
     private _maxscriptClientFactory: IMaxscriptClientFactory;
 
     // maps uuid of threejs buffer geometry to node name in 3ds max, that was imported from this buffer geometry
-    // key is threejs uuid of the buffer geometry,
-    // value is { maxNodeName: string, geometryJsonText: string }
-    private _geometryCache: { [id: string] : any; } = {};
+    // key is sessionId, cache items are resolved per session
+    // value is dictionary of following:
+    //     key   is threejs uuid of the buffer geometry,
+    //     value is { maxNodeName: string, geometryJsonText: string }
+    private _geometryCache: { [sessionId: string] : { [id: string] : any; }; } = {};
 
     constructor(@inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.IChecks) checks: IChecks,
@@ -29,14 +31,19 @@ class SceneGeometryEndpoint implements IEndpoint {
         }.bind(this));
 
         express.get('/scene/:sceneid/geometry/:uuid', async function (req, res) {
-            console.log(`GET on on /scene/${req.params.sceneid}/geometry/${req.params.uuid}`);
+            console.log(`GET on on /scene/${req.params.sceneid}/geometry/${req.params.uuid} with session: ${req.query.session}`);
 
-            if (this._geometryCache[req.params.uuid] === undefined) {
+            if (this._geometryCache[req.query.session][req.params.uuid] === undefined) {
                 res.end({ error: "geometry does not exist"});
                 return;
             }
 
-            res.end(this._geometryCache[req.params.uuid].geometryJsonText);
+            if (this._geometryCache[req.query.session][req.params.uuid] === undefined) {
+                res.end({ error: "geometry does not exist"});
+                return;
+            }
+
+            res.end(this._geometryCache[req.query.session][req.params.uuid].geometryJsonText);
         }.bind(this));
 
         express.post('/scene/:sceneid/geometry', async function (req, res) {
@@ -46,10 +53,10 @@ class SceneGeometryEndpoint implements IEndpoint {
             let geometryJsonText = LZString.decompressFromBase64(req.body.geometry);
             let geometryJson = JSON.parse(geometryJsonText);
 
-            if (this._geometryCache[ geometryJson.uuid ] !== undefined) {
+            if (this._geometryCache[req.body.session] !== undefined && this._geometryCache[req.body.session][ geometryJson.uuid ] !== undefined) {
                 // ok this geometry can be found in 3ds max scene by given name (id)
                 console.log("Given geometry already exists");
-                res.end({ id: this._geometryCache[ geometryJson.uuid ].maxNodeName, already_exists: true });
+                res.end({ id: this._geometryCache[req.body.session][ geometryJson.uuid ].maxNodeName, already_exists: true });
             } else {
                 // ok this geometry was never imported to 3ds max scene, let's do it now
 
@@ -58,7 +65,12 @@ class SceneGeometryEndpoint implements IEndpoint {
                     
                         //first cache it internally, so that 3ds max can download it
                         let maxNodeName = require('../utils/genRandomName')("geometry");
-                        this._geometryCache[ geometryJson.uuid ] = {
+
+                        if (this._geometryCache[req.body.session] === undefined) {
+                            this._geometryCache[req.body.session] = {};
+                        }
+
+                        this._geometryCache[req.body.session][ geometryJson.uuid ] = {
                             maxNodeName:      maxNodeName,
                             geometryJsonText: geometryJsonText
                         };
@@ -70,7 +82,7 @@ class SceneGeometryEndpoint implements IEndpoint {
                                 console.log("SceneGeometryEndpoint connected to maxscript client");
 
                                 let filename = `${maxNodeName}.json`;
-                                maxscriptClient.downloadJson(`https://192.168.0.200:8000/scene/0/geometry/${geometryJson.uuid}`, `C:\\\\Temp\\\\downloads\\\\${filename}`)
+                                maxscriptClient.downloadJson(`https://192.168.0.200:8000/scene/0/geometry/${geometryJson.uuid}?session=${req.body.session}`, `C:\\\\Temp\\\\downloads\\\\${filename}`)
                                     .then(function(value) {
                                         // as we have json file saved locally, now it is the time to import it
                                         console.log(`    OK | geometry file downloaded successfully`);

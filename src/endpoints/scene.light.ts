@@ -86,8 +86,6 @@ class SceneLightEndpoint implements IEndpoint {
 
                             spotlightJson.name = require('../utils/genRandomName')("spotlight");
 
-                            console.log(" >> spotlightJson: ", spotlightJson);
-
                             maxscriptClient.createSpotlight(spotlightJson)
                                 .then(function(value) {
                                     maxscriptClient.disconnect();
