@@ -146,7 +146,7 @@ class MaxscriptClient implements IMaxscriptClient {
                 reject(err);
             };
 
-            let maxscript = `$${nodeName}.name = $${newName}`;
+            let maxscript = `$${nodeName}.name = "${newName}"`;
 
             this._client.write(maxscript);
         }.bind(this));
@@ -277,6 +277,49 @@ class MaxscriptClient implements IMaxscriptClient {
             // now run command
             let maxscript = `aSkylight = Skylight name:"${skylightJson.name}" pos:[${skylightJson.position[0]},${skylightJson.position[2]},${skylightJson.position[1]}] `
                           + `isSelected:off; aSkylight.cast_Shadows = on; aSkylight.rays_per_sample = 15;`;
+
+            this._client.write(maxscript);
+        }.bind(this));
+    }
+
+    createSpotlight(spotlightJson: any): Promise<boolean> {
+
+        return new Promise<boolean>(function(resolve, reject) {
+            // prepare response handlers for the command
+            this._responseHandler = function(data) {
+                console.log("create spotlight returned: ", data.toString());
+                this._responseHandler = undefined;
+                resolve(true);
+            };
+
+            this._errorHandler = function(err) {
+                console.error("create spotlight error: ", err);
+                reject(err);
+            };
+
+            let m = spotlightJson.matrix;
+            let r = (spotlightJson.color >> 16) & 0xFF;
+            let g = (spotlightJson.color >> 8)  & 0xFF;
+            let b = (spotlightJson.color)       & 0xFF;
+
+            let hotspot = 180.0 / (Math.PI / spotlightJson.angle);
+            let falloff = hotspot + 5;
+
+            let t = spotlightJson.target;
+
+            let maxscript = `aTargetSpot = TargetSpot name: "${spotlightJson.name}" `
+                          + ` transform: (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}]) `
+                          + ` multiplier: ${spotlightJson.intensity} `
+                          + ` rgb: (color ${r} ${g} ${b}) `
+                          + ` hotspot: ${hotspot} `
+                          + ` falloff: ${falloff} `
+                          + ` target: (Targetobject transform: (matrix3 [${t[0]},${t[1]},${t[2]}] [${t[4]},${t[5]},${t[6]}] [${t[8]},${t[9]},${t[10]}] [${t[12]},${t[13]},${t[14]}])); `
+                          + ` aTargetSpot.shadowGenerator = shadowMap(); aTargetSpot.baseObject.castShadows = true; `;
+            if (spotlightJson.shadow && spotlightJson.shadow.mapsize > 0) {
+                maxscript += ` aTargetSpot.mapSize = ${spotlightJson.shadow.mapsize}; `;
+            }
+
+            console.log(" >> maxscript: ", maxscript);
 
             this._client.write(maxscript);
         }.bind(this));

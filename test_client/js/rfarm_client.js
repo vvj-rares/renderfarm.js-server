@@ -135,14 +135,45 @@ rfarm.createCamera = function(camera, onCameraReady) {
 }.bind(rfarm);
 
 //public
-rfarm.createLight = function(onCreated) {
-    console.log("Creating new light...");
-    //todo: implement it
+rfarm.createSkylight = function(onCreated) {
+    console.log("Creating new skylight...");
 
     $.ajax({
         url: this.baseUrl  + "/scene/0/skylight",
         data: { 
             session: this.sessionId, 
+        },
+        type: 'POST',
+        success: function(result) {
+            console.log(result);
+            if (onCreated) onCreated();
+        }.bind(this),
+        error: function(err) {
+            console.error(err);
+        }.bind(this)
+    });
+}.bind(rfarm);
+
+//public
+rfarm.createSpotlight = function(spotlight, spotlightTarget, onCreated) {
+    console.log("Creating new spotlight...");
+
+    spotlight.updateMatrix();
+    spotlight.updateMatrixWorld (true);
+
+    spotlightTarget.updateMatrix();
+    spotlightTarget.updateMatrixWorld (true);
+
+    var spotlightJson = spotlight.toJSON();
+    spotlightJson.object.target = spotlightTarget.matrixWorld.elements;
+    var spotlightText = JSON.stringify(spotlightJson.object);
+    var compressedSpotlightData = LZString144.compressToBase64(spotlightText);
+
+    $.ajax({
+        url: this.baseUrl  + "/scene/0/spotlight",
+        data: { 
+            session: this.sessionId,
+            spotlight: compressedSpotlightData
         },
         type: 'POST',
         success: function(result) {

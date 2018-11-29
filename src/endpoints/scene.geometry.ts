@@ -24,12 +24,12 @@ class SceneGeometryEndpoint implements IEndpoint {
 
     bind(express: express.Application) {
         express.get('/scene/:sceneid/geometry', async function (req, res) {
-            console.log(`GET on /scene/${req.body.sceneid}/geometry with session: ${req.body.session}`);
+            console.log(`GET on /scene/${req.params.sceneid}/geometry with session: ${req.body.session}`);
             res.end({});
         }.bind(this));
 
         express.get('/scene/:sceneid/geometry/:uuid', async function (req, res) {
-            console.log(`GET on on /scene/${req.body.sceneid}/geometry/${req.params.uuid}`);
+            console.log(`GET on on /scene/${req.params.sceneid}/geometry/${req.params.uuid}`);
 
             if (this._geometryCache[req.params.uuid] === undefined) {
                 res.end({ error: "geometry does not exist"});
@@ -40,7 +40,7 @@ class SceneGeometryEndpoint implements IEndpoint {
         }.bind(this));
 
         express.post('/scene/:sceneid/geometry', async function (req, res) {
-            console.log(`POST on /scene/${req.body.sceneid}/geometry with session: ${req.body.session}`);
+            console.log(`POST on /scene/${req.params.sceneid}/geometry with session: ${req.body.session}`);
 
             const LZString = require("lz-string");
             let geometryJsonText = LZString.decompressFromBase64(req.body.geometry);
@@ -110,13 +110,13 @@ class SceneGeometryEndpoint implements IEndpoint {
         }.bind(this));
 
         express.put('/scene/:sceneid/geometry/:uid', async function (req, res) {
-            console.log(`PUT on on /scene/${req.body.sceneid}/geometry/${req.params.uid}  with session: ${req.body.session}`);
+            console.log(`PUT on on /scene/${req.params.sceneid}/geometry/${req.params.uid}  with session: ${req.body.session}`);
             res.end({});
         }.bind(this));
 
         express.delete('/scene/:sceneid/geometry/:uid', async function (req, res) {
             let apiKey = req.body.api_key;
-            console.log(`DELETE on on /scene/${req.body.sceneid}/geometry/${req.params.uid}  with session: ${req.body.session}`);
+            console.log(`DELETE on on /scene/${req.params.sceneid}/geometry/${req.params.uid}  with session: ${req.body.session}`);
             res.end({});
         }.bind(this));
     }

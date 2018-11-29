@@ -19,17 +19,17 @@ class SceneMeshEndpoint implements IEndpoint {
 
     bind(express: express.Application) {
         express.get('/scene/:sceneid/mesh', async function (req, res) {
-            console.log(`GET on /scene/${req.body.sceneid}/mesh with session: ${req.body.session}`);
+            console.log(`GET on /scene/${req.params.sceneid}/mesh with session: ${req.body.session}`);
             res.end({});
         }.bind(this));
 
         express.get('/scene/:sceneid/mesh/:uuid', async function (req, res) {
-            console.log(`GET on on /scene/${req.body.sceneid}/mesh/${req.params.uuid}`);
+            console.log(`GET on on /scene/${req.params.sceneid}/mesh/${req.params.uuid}`);
             res.end({});
         }.bind(this));
 
         express.post('/scene/:sceneid/mesh', async function (req, res) {
-            console.log(`POST on /scene/${req.body.sceneid}/mesh with session: ${req.body.session}`);
+            console.log(`POST on /scene/${req.params.sceneid}/mesh with session: ${req.body.session}`);
 
             this._database.getWorker(req.body.session)
                 .then(function(worker){
@@ -113,13 +113,13 @@ class SceneMeshEndpoint implements IEndpoint {
         }.bind(this));
 
         express.put('/scene/:sceneid/mesh/:uid', async function (req, res) {
-            console.log(`PUT on on /scene/${req.body.sceneid}/mesh/${req.params.uid}  with session: ${req.body.session}`);
+            console.log(`PUT on on /scene/${req.params.sceneid}/mesh/${req.params.uid}  with session: ${req.body.session}`);
             res.end({});
         }.bind(this));
 
         express.delete('/scene/:sceneid/mesh/:uid', async function (req, res) {
             let apiKey = req.body.api_key;
-            console.log(`DELETE on on /scene/${req.body.sceneid}/mesh/${req.params.uid}  with session: ${req.body.session}`);
+            console.log(`DELETE on on /scene/${req.params.sceneid}/mesh/${req.params.uid}  with session: ${req.body.session}`);
             res.end({});
         }.bind(this));
     }

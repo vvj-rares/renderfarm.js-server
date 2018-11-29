@@ -83,7 +83,7 @@
 
                 controls = new THREE.OrbitControls(camera);
 
-                var spotLight = new THREE.SpotLight( 0xffffff );
+                var spotLight = new THREE.SpotLight( 0xffa0c0 );
                 spotLight.position.set( 10, 40, 10 );
                 spotLight.target.position.set( 0, 0, 0 );
                 spotLight.castShadow = true;
@@ -93,7 +93,9 @@
                 spotLight.shadow.camera.near = 10;
                 spotLight.shadow.camera.far = 50;
                 spotLight.shadow.camera.fov = 30;
+                spotLight.target.position.set(0.05,0,0.15);
                 scene.add(spotLight);
+                document.spotLight = spotLight;
 
                 var helper = new THREE.CameraHelper( spotLight.shadow.camera );
                 scene.add( helper );
@@ -179,7 +181,7 @@
                             rfarm.createMesh(plane, function(planeNodeName) {
                                 rfarm.createMesh(cone, function(coneNodeName) {
                                     rfarm.createMesh(cube, function(cubeNodeName) {
-                                        rfarm.createLight(function() {
+                                        rfarm.createSpotlight(spotLight, spotLight.target, function(spotLightName) {
                                             rfarm.createCamera(camera, function(cameraName) {
                                                 var width = $("#viewport").outerWidth();
                                                 var height = $("#viewport").outerHeight();
@@ -187,7 +189,7 @@
                                                 rfarm.render(cameraName, width, height, function(url) {
                                                     $('#viewport').css("display", "none");
                                                     $('#output').attr("src",url);
-                                                    // rfarm.closeSession(sessionId);
+                                                    rfarm.closeSession(sessionId);
                                                 });
                                             });
                                         });
@@ -198,7 +200,7 @@
                     });
                 };
 
-                animate();
+                // animate();
             }
         </script>
     </head>
@@ -206,6 +208,6 @@
         <canvas id="viewport"></canvas>
         <img id="output">
         <button onclick="renderScene()" style="position: fixed; left: 0; top:0;">render</button>
-        <button onclick="saveJson(document.geom.toJSON(), 'BufferGeometry.json')" style="position: fixed; left: 160; top:0;">save json</button>
+        <button onclick="saveJson(document.spotLight.toJSON(), 'BufferGeometry.json')" style="position: fixed; left: 160; top:0;">save json</button>
     </body>
 </html>

@@ -65,6 +65,7 @@ export interface IMaxscriptClient {
     updateTargetCamera(cameraJson: any): Promise<boolean>;
     deleteObjects(mask: string): Promise<boolean>;
 
+    createSpotlight(spotlightJson: any): Promise<boolean>;
     createSkylight(skylightJson: any): Promise<boolean>;
     createStandardMaterial(materialJson: any): Promise<boolean>;
 

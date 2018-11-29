@@ -19,17 +19,17 @@ class SceneCameraEndpoint implements IEndpoint {
 
     bind(express: express.Application) {
         express.get('/scene/:sceneid/camera', async function (req, res) {
-            console.log(`GET on /scene/${req.body.sceneid}/camera with session: ${req.body.session}`);
+            console.log(`GET on /scene/${req.params.sceneid}/camera with session: ${req.body.session}`);
             res.end({});
         }.bind(this));
 
         express.get('/scene/:sceneid/camera/:uid', async function (req, res) {
-            console.log(`GET on /scene/${req.body.sceneid}/camera/${req.params.uid} with session: ${req.body.session}`);
+            console.log(`GET on /scene/${req.params.sceneid}/camera/${req.params.uid} with session: ${req.body.session}`);
             res.end({});
         }.bind(this));
 
         express.post('/scene/:sceneid/camera', async function (req, res) {
-            console.log(`POST on /scene/${req.body.sceneid}/camera with session: ${req.body.session}`);
+            console.log(`POST on /scene/${req.params.sceneid}/camera with session: ${req.body.session}`);
 
             this._database.getWorker(req.body.session)
                 .then(function(worker){
@@ -38,8 +38,6 @@ class SceneCameraEndpoint implements IEndpoint {
                     let cameraJsonText = LZString.decompressFromBase64(req.body.camera);
                     let cameraJson: any = JSON.parse(cameraJsonText);
 
-                    console.log(" >> cameraJson: ", cameraJson);
-        
                     let maxscriptClient = this._maxscriptClientFactory.create();
                     maxscriptClient.connect(worker.ip)
                         .then(function(value) {
@@ -129,7 +127,7 @@ class SceneCameraEndpoint implements IEndpoint {
         }.bind(this));
 
         express.delete('/scene/:sceneid/camera/:uid', async function (req, res) {
-            console.log(`DELETE on /scene/${req.body.sceneid}/camera/${req.params.uid} with session: ${req.body.session}`);
+            console.log(`DELETE on /scene/${req.params.sceneid}/camera/${req.params.uid} with session: ${req.body.session}`);
             res.end({});
         }.bind(this));
     }
