@@ -180,6 +180,35 @@ class MaxscriptClient implements IMaxscriptClient {
         }.bind(this));
     }
 
+    setWorkspace(workspaceInfo: any): Promise<boolean> {
+
+        return new Promise<boolean>(function(resolve, reject) {
+            // prepare response handlers for the command
+            this._responseHandler = function(data) {
+                let response = data.toString();
+                console.log("workspace set returned: ", response);
+                this._responseHandler = undefined;
+
+                resolve(true);
+            };
+
+            this._errorHandler = function(err) {
+                console.error("workspace set error: ", err);
+                reject(err);
+            };
+
+            let w = workspaceInfo;
+
+            // now run command
+            let maxscript = ` for i=1 to pathConfig.mapPaths.count()  do ( pathConfig.mapPaths.delete 1 ) ; `
+                          + ` for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 ) ; `
+                          + ` pathConfig.mapPaths.add "\\\\\\\\${w.host}${w.homeDir}api_keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\maps" ; `
+                          + ` pathConfig.xrefPaths.add "\\\\\\\\${w.host}${w.homeDir}api_keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\xrefs" ; ` ;
+
+            this._client.write(maxscript);
+        }.bind(this));
+    }
+
     createTargetCamera(cameraJson: any): Promise<boolean> {
 
         return new Promise<boolean>(function(resolve, reject) {

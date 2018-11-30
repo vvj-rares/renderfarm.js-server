@@ -1,7 +1,6 @@
 "use strict";
 
 import * as express from "express";
-import { Project } from "./model/project";
 import { WorkerInfo } from "./model/worker_info";
 import { SessionInfo } from "./model/session_info";
 
@@ -21,11 +20,7 @@ export interface ThrowableWeapon {
 export interface IDatabase {
     connect(url: string): Promise<any>;
     getApiKey(apiKey: string): Promise<any>;
-
-    getProjects(apiKey: string): Promise<Project[]>;
-    getProject(apiKey: string, projectGuid: string): Promise<Project>;
-    updateProject(apiKey: string, project: Project): Promise<Project>;
-    deleteProject(apiKey: string, projectGuid: string): Promise<any>;
+    getWorkspace(apiKey: string, workspaceGuid: string): Promise<any>;
 
     storeWorker(workerInfo: WorkerInfo): Promise<WorkerInfo>;
     startWorkerSession(apiKey: string, sessionGuid: string): Promise<WorkerInfo>;
@@ -46,6 +41,7 @@ export interface IEndpoint {
 
 export interface IChecks {
     checkApiKey(res: any, database: IDatabase, apiKey: string): Promise<boolean>;
+    checkWorkspace(res: any, database: IDatabase, apiKey: string, workspaceGuid: string): Promise<boolean>;
 }
 
 export interface IMaxscriptClient {
@@ -60,6 +56,7 @@ export interface IMaxscriptClient {
     renameObject(nodeName: string, newName: string): Promise<boolean>;
 
     setSession(sessionGuid: string): Promise<boolean>;
+    setWorkspace(workspaceInfo: any): Promise<boolean>;
 
     createTargetCamera(cameraJson): Promise<boolean>;
     updateTargetCamera(cameraJson: any): Promise<boolean>;

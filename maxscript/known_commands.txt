@@ -75,3 +75,11 @@ getMaterialByName "MAT_1"
 // creating StandardMaterial
 // see here: http://docs.autodesk.com/3DSMAX/15/ENU/MAXScript-Help/index.html?url=files/GUID-23A6A316-7C51-430C-8A44-9236C837DB10.htm,topicNumber=d30e494083
 newmat = StandardMaterial name:"abc" diffuse:(color 149.94 149.94 149.94)
+
+//how to modify User Paths according to apiKey and workspace info provided?
+1. first remove all map mappings
+for i=1 to pathConfig.mapPaths.count() do ( pathConfig.mapPaths.delete 1 )
+2. now add one
+pathConfig.mapPaths.add "\\\\192.168.0.180\\rfarm\\api_keys\\75f5-4d53-b0f4\\workspaces\\55a0bd33-9f15-4bc0-a482-17899eb67af3\\maps"
+
+

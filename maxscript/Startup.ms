@@ -13,3 +13,21 @@ fn rayysFindMaterialByName findName = (
 	)
 	return false;
 )
+
+fn rayysGetAllMaterialNames = (
+	mats = #()
+	json = "["
+	jsonComma = 0;
+	for matClass in material.classes do
+	(
+		for m in (getclassinstances matClass processAllAnimatables:true processChildren:true) do (
+			if jsonComma > 0 then (
+				json = append json ", "
+			)
+			json = append json ("\\\"" + m.name + "\\\"")
+			jsonComma = jsonComma + 1;
+		)
+	)
+	json = append json "]"
+	return json
+)

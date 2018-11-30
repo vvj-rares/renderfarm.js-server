@@ -52,17 +52,22 @@ class SessionEndpoint implements IEndpoint {
 
         express.post('/session', async function (req, res) {
             let apiKey = req.body.api_key;
-            console.log(`POST on /session with api_key: ${apiKey}`);
+            let workspaceGuid = req.body.workspace;
+            console.log(`POST on /session with api_key: ${apiKey} with workspace: ${workspaceGuid}`);
             if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
+            if (!await this._checks.checkWorkspace(res, this._database, apiKey, workspaceGuid)) return;
 
             const uuidv4 = require('uuid/v4');
             let newSessionGuid = uuidv4();
 
             this._database.startWorkerSession(apiKey, newSessionGuid)
-                .then(function(value) {
+                .then(async function(value) {
                     
                     let workerInfo = WorkerInfo.fromJSON(value.worker);
                     console.log(`    OK | session ${value.session.guid} assigned to worker ${value.worker.mac}`);
+
+                    let workspaceInfo = await this._database.getWorkspace(apiKey, workspaceGuid);
+                    console.log(" >> workspaceInfo: ", workspaceInfo);
 
                     let maxscriptClient = this._maxscriptClientFactory.create();
                     maxscriptClient.connect(workerInfo.ip)
@@ -71,9 +76,21 @@ class SessionEndpoint implements IEndpoint {
 
                             maxscriptClient.setSession(newSessionGuid)
                                 .then(function(value) {
-                                    maxscriptClient.disconnect();
                                     console.log(`    OK | SessionGuid on worker was updated`);
-                                    res.end(JSON.stringify({ id: newSessionGuid }, null, 2));
+
+                                    maxscriptClient.setWorkspace(workspaceInfo)
+                                        .then(function(value) {
+                                            maxscriptClient.disconnect();
+                                            console.log(`    OK | workspace set`);
+                                            res.end(JSON.stringify({ id: newSessionGuid, workspace: workspaceInfo.name }, null, 2));
+                                        }.bind(this))
+                                        .catch(function(err) {
+                                            maxscriptClient.disconnect();
+                                            console.error(`  FAIL | failed to set workspace\n`, err);
+                                            res.status(500);
+                                            res.end(JSON.stringify({ error: "failed to set workspace" }, null, 2));
+                                        }.bind(this)); // end of maxscriptClient.setWorkspace promise
+
                                 }.bind(this))
                                 .catch(function(err) {
                                     maxscriptClient.disconnect();

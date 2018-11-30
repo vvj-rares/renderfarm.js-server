@@ -22,8 +22,7 @@ Also may be possible:
  saveAs(someSceneObjectName, "someFilename.max") // to save some object for future merge operation
 
 Additionally:
- + workspaces endpoint must be hosted separately from main api, because it must operate on the render farm side
- + workspaces are shared folders, render nodes can directly access all files for read and write
+ + physically workspaces are shared folders, render nodes can directly access all files for read and write
  + user can GET /workspace and retrieve workspace infos with urls to ftp
 
  + workspaces are created manually, each apiKey must be provided with some default workspace

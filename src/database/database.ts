@@ -5,9 +5,10 @@ import { injectable } from "inversify";
 import { IDatabase } from "../interfaces"
 
 import assert = require("assert");
-import { Project } from "../model/project";
 import { WorkerInfo } from "../model/worker_info";
 import { SessionInfo } from "../model/session_info";
+
+const settings = require("../settings");
 
 @injectable()
 class Database implements IDatabase {
@@ -29,118 +30,26 @@ class Database implements IDatabase {
     }
 
     async getApiKey(apiKey: string) {
-        let db = this._client.db("rfarmdb");
+        let db = this._client.db(settings.databaseName);
         assert.notEqual(db, null);
 
-        return db.collection("api-keys").findOneAndUpdate(
+        let apiKeyRec = await db.collection("api-keys").findOneAndUpdate(
             { apiKey: apiKey }, 
             { $set: { lastSeen : new Date() } },
             { returnOriginal: false });
+        return apiKeyRec.value;
     }
 
-    async getProjects(apiKey: string): Promise<Project[]> {
-        let db = this._client.db("rfarmdb");
+    async getWorkspace(apiKey: string, workspaceGuid: string) {
+        let db = this._client.db(settings.databaseName);
         assert.notEqual(db, null);
 
-        return new Promise<Project[]>(function (resolve, reject) {
-            db.collection("projects").find({ apiKey: apiKey }).toArray(function(err,arr) {
-                if (err) 
-                    reject(err);
-                else {
-                    resolve(arr.map(x => Project.fromJSON(x)));
-                }
-            });
-        }.bind(this));
-    }
+        let rec = await db.collection("workspaces").findOneAndUpdate(
+            { guid: workspaceGuid, apiKey: apiKey }, 
+            { $set: { lastSeen : new Date() } },
+            { returnOriginal: false });
 
-    async getProject(apiKey: string, projectGuid: string): Promise<Project> {
-        let db = this._client.db("rfarmdb");
-        assert.notEqual(db, null);
-
-        return new Promise<Project>(function (resolve, reject) {
-            db.collection("projects").findOneAndUpdate(
-                { apiKey: apiKey, guid: projectGuid },
-                { $set: { lastSeen : new Date() } },
-                { returnOriginal: false })
-                .then(function(obj) {
-                    if (obj.value) {
-                        resolve(Project.fromJSON(obj.value));
-                    } else {
-                        reject(`unable to find project with guid ${projectGuid}`);
-                    }
-                })
-                .catch(function(err) {
-                    reject(err);
-                });
-        }.bind(this));
-    }
-
-    async createProject(apiKey: string, name: string) {
-        let db = this._client.db("rfarmdb");
-        assert.notEqual(db, null);
-
-        return new Promise(function (resolve, reject) {
-            let project = new Project(name);
-            db.collection("projects").insertOne(project.toJSON(apiKey))
-                .then(function(res) {
-                    if (res.insertedCount === 1) {
-                        resolve(Project.fromJSON(res.ops[0]));
-                    } else {
-                        reject(`insertedCount is returned ${res.insertedCount}, expected =1`);
-                    }
-                })
-                .catch(function(err) {
-                    reject(err);
-                });
-        }.bind(this));
-    }
-
-    async updateProject(apiKey: string, project: Project): Promise<Project> {
-        let db = this._client.db("rfarmdb");
-        assert.notEqual(db, null);
-
-        return new Promise<Project>(function (resolve, reject) {
-            project.touch();
-
-            db.collection("projects").updateOne(
-                { apiKey: apiKey, guid: project.guid },
-                { $set: project.toJSON(apiKey) },
-                { upsert: false }
-            )
-            .then(function(res) {
-                if (res.modifiedCount === 1) {
-                    resolve(true);
-                } else {
-                    reject(`modifiedCount is returned ${res.modifiedCount}, expected =1`);
-                }
-            })
-            .catch(function(err) {
-                reject(err);
-            });
-        }.bind(this));
-    }
-
-    async deleteProject(apiKey: string, projectGuid: string): Promise<any> {
-        let db = this._client.db("rfarmdb");
-        assert.notEqual(db, null);
-
-        return new Promise<Project>(function (resolve, reject) {
-
-            db.collection("projects").deleteOne(
-                { apiKey: apiKey, guid: projectGuid }
-            )
-            .then(function(res) {
-                if (res.deletedCount === 1) {
-                    resolve(true);
-                } else {
-                    reject(`deletedCount is returned ${res.deletedCount}, expected =1`);
-                }
-            })
-            .catch(function(err) {
-                reject(err);
-            });
-
-        }.bind(this));
+        return rec.value;
     }
 
     async expireSessions(): Promise<SessionInfo[]> {
@@ -189,7 +98,7 @@ class Database implements IDatabase {
     }
 
     async startWorkerSession(apiKey: string, sessionGuid: string): Promise<WorkerInfo> {
-        let db = this._client.db("rfarmdb");
+        let db = this._client.db(settings.databaseName);
         assert.notEqual(db, null);
 
         return new Promise<WorkerInfo>(function (resolve, reject) {
@@ -262,7 +171,7 @@ class Database implements IDatabase {
     }
 
     async storeWorker(workerInfo: WorkerInfo): Promise<WorkerInfo> {
-        let db = this._client.db("rfarmdb");
+        let db = this._client.db(settings.databaseName);
         assert.notEqual(db, null);
 
         let workerJson = workerInfo.toDatabase();
@@ -287,7 +196,7 @@ class Database implements IDatabase {
 
     async getWorker(sessionGuid: string): Promise<WorkerInfo> {
 
-        let db = this._client.db("rfarmdb");
+        let db = this._client.db(settings.databaseName);
         assert.notEqual(db, null);
 
         return new Promise<WorkerInfo>(function (resolve, reject) {
@@ -342,7 +251,7 @@ class Database implements IDatabase {
     }
 
     async closeSession(sessionGuid: string): Promise<boolean> {
-        let db = this._client.db("rfarmdb");
+        let db = this._client.db(settings.databaseName);
         assert.notEqual(db, null);
 
         return new Promise<boolean>(function (resolve, reject) {
