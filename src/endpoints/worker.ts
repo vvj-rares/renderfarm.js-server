@@ -37,6 +37,7 @@ class WorkerEndpoint implements IEndpoint {
                 knownWorker.ramUsage = rec.ram_usage;
                 knownWorker.totalRam = rec.total_ram;
                 knownWorker.ip       = rinfo.address;
+                knownWorker.port     = rec.port;
                 knownWorker.touch();
 
                 await this._database.storeWorker(knownWorker);
