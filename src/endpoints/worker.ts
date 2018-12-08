@@ -31,7 +31,8 @@ class WorkerEndpoint implements IEndpoint {
 
         server.on('message', async function(msg, rinfo) {
             var rec = JSON.parse(msg.toString());
-            let knownWorker = this._workers[rec.mac];
+            var workerId = rec.mac + rec.port;
+            let knownWorker = this._workers[workerId];
             if (knownWorker !== undefined) { // update existing record
                 knownWorker.cpuUsage = rec.cpu_usage;
                 knownWorker.ramUsage = rec.ram_usage;
@@ -42,8 +43,8 @@ class WorkerEndpoint implements IEndpoint {
 
                 await this._database.storeWorker(knownWorker);
             } else {
-                let newWorker = new WorkerInfo(rec.mac);
-                this._workers[rec.mac] = newWorker;
+                let newWorker = new WorkerInfo(rec.mac, rinfo.address, rec.port);
+                this._workers[workerId] = newWorker;
 
                 await this._database.storeWorker(newWorker);
 
@@ -63,13 +64,13 @@ class WorkerEndpoint implements IEndpoint {
         express.get('/worker', async function (req, res) {
             let apiKey = req.query.api_key;
             console.log(`GET on /worker with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
+            if (!await this._checks.checkApiKeySync(res, this._database, apiKey)) return;
 
             let response = Object.keys(this._workers).map(function(key, index) {
                 return this._workers[key].toJSON();
             }.bind(this));
-
             res.end(JSON.stringify(response, null, 2));
+
         }.bind(this));
 
         express.get('/worker/:uid', async function (req, res) {

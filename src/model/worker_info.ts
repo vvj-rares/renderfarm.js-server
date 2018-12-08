@@ -6,11 +6,14 @@ class WorkerInfo {
     private _ramUsage: number;
     private _totalRam: number;
     private _ip: string;
+    private _port: number;
 
-    constructor(mac: string) {
+    constructor(mac: string, ip: string, port: number) {
         this._firstSeen = new Date();
         this._lastSeen = new Date();
         this._mac = mac;
+        this._ip = ip;
+        this._port = port;
     }
 
     public get firstSeen(): Date {
@@ -44,14 +47,19 @@ class WorkerInfo {
         this._ip = value;
     }
 
+    public get port(): number {
+        return this._port;
+    }
+    public set port(value: number) {
+        this._port = value;
+    }
+
     public touch(): void {
         this._lastSeen = new Date();
     }
 
     public static fromJSON(obj: any): WorkerInfo {
-        let res = new WorkerInfo(obj.mac);
-
-        res._ip        = obj.ip;
+        let res = new WorkerInfo(obj.mac, obj.ip, obj.port);
 
         res._firstSeen = new Date(obj.firstSeen);
         res._lastSeen  = new Date(obj.lastSeen);
@@ -66,6 +74,7 @@ class WorkerInfo {
     public toJSON(): any {
         return {
             ip:         this._ip,
+            port:       this._port,
             mac:        this._mac,
             firstSeen:  this._firstSeen.toISOString(),
             lastSeen:   this._lastSeen.toISOString(),
@@ -77,8 +86,9 @@ class WorkerInfo {
 
     public toDatabase(): any {
         return {
-            ip:         this._ip,
             mac:        this._mac,
+            ip:         this._ip,
+            port:       this._port,
             firstSeen:  this._firstSeen,
             lastSeen:   this._lastSeen,
             totalRam:   this._totalRam,

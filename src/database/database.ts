@@ -29,15 +29,25 @@ class Database implements IDatabase {
         }.bind(this));
     }
 
-    async getApiKey(apiKey: string) {
-        let db = this._client.db(settings.databaseName);
-        assert.notEqual(db, null);
+    async getApiKey(apiKey: string): Promise<any> {
+        if (apiKey) {
 
-        let apiKeyRec = await db.collection("api-keys").findOneAndUpdate(
-            { apiKey: apiKey }, 
-            { $set: { lastSeen : new Date() } },
-            { returnOriginal: false });
-        return apiKeyRec.value;
+            let db = this._client.db(settings.databaseName);
+            assert.notEqual(db, null);
+    
+            let apiKeyRec = db.collection("api-keys").findOneAndUpdate(
+                { apiKey: apiKey }, 
+                { $set: { lastSeen : new Date() } },
+                { returnOriginal: false });
+    
+            return apiKeyRec;
+            
+        } else {
+
+            return new Promise<any>(function(resolve, reject) {
+                reject();
+            });
+        }
     }
 
     async getWorkspace(apiKey: string, workspaceGuid: string) {
@@ -178,7 +188,7 @@ class Database implements IDatabase {
 
         return new Promise<WorkerInfo>(function (resolve, reject) {
             db.collection("workers").findOneAndUpdate(
-                { mac: workerInfo.mac },
+                { mac: workerInfo.mac, port: workerInfo.port },
                 { $set: workerJson },
                 { returnOriginal: false, upsert: true })
                 .then(function(obj) {

@@ -20,6 +20,7 @@ export interface ThrowableWeapon {
 export interface IDatabase {
     connect(url: string): Promise<any>;
     getApiKey(apiKey: string): Promise<any>;
+
     getWorkspace(apiKey: string, workspaceGuid: string): Promise<any>;
 
     storeWorker(workerInfo: WorkerInfo): Promise<WorkerInfo>;
@@ -41,6 +42,8 @@ export interface IEndpoint {
 
 export interface IChecks {
     checkApiKey(res: any, database: IDatabase, apiKey: string): Promise<boolean>;
+    checkApiKeySync(res: any, database: IDatabase, apiKey: string): Promise<boolean>;
+
     checkWorkspace(res: any, database: IDatabase, apiKey: string, workspaceGuid: string): Promise<boolean>;
 }
 

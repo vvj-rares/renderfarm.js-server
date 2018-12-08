@@ -11,23 +11,41 @@ class Checks implements IChecks {
 
     public async checkApiKey(res: any, database: IDatabase, apiKey: string): Promise<boolean> {
 
-        if (!settings.apiKeyCheck) {
-            return new Promise<boolean>(function(resolve, reject) {
-                resolve(true);
-            });
-        } else {
-            let apiKeyInfo = database.getApiKey(apiKey);
-            if (apiKeyInfo) {
-                console.log(`    OK | api_key ${apiKey} accepted`);
-                return true;
-            } else {
-                console.log(`  FAIL | api_key ${apiKey} declined`);
-                res.status(403);
-                res.end(JSON.stringify({ error: "api_key declined" }, null, 2));
-                return false;
-            }
-        }
+        return new Promise<boolean>(function(resolve, reject) {
 
+            if (!settings.apiKeyCheck) {
+                resolve(true);
+            } else {
+                database.getApiKey(apiKey)
+                    .then(function(apiKeyInfo) {
+                        if (apiKeyInfo.value) {
+                            console.log(" >> ", apiKeyInfo.value);
+                            console.log(`    OK | api_key ${apiKey} accepted`);
+                            resolve(apiKeyInfo);
+                        } else {
+                            console.log(`  FAIL | api_key ${apiKey} declined`);
+                            res.status(403);
+                            res.end(JSON.stringify({ error: "api_key declined" }, null, 2));
+                            reject(false);
+                        }
+                    })
+                    .catch(function(err) {
+                        console.log(`  FAIL | api_key ${apiKey} declined`);
+                        res.status(500);
+                        res.end(JSON.stringify({ error: "api_key declined" }, null, 2));
+                        reject(false);
+                    });
+            }
+
+        });
+    }
+
+    async checkApiKeySync(res: any, database: IDatabase, apiKey: string): Promise<boolean> {
+        try {
+            return await this.checkApiKey(res, database, apiKey);
+        } catch (exc) {
+            return false;
+        }
     }
 
     public async checkWorkspace(res: any, database: IDatabase, apiKey: string, workspaceGuid: string): Promise<boolean> {
