@@ -1,19 +1,16 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IChecks, IMaxscriptClientFactory } from "../interfaces";
+import { IEndpoint, IDatabase, IMaxscriptClientFactory } from "../interfaces";
 import { TYPES } from "../types";
 
 @injectable()
 class SceneCameraEndpoint implements IEndpoint {
     private _database: IDatabase;
-    private _checks: IChecks;
     private _maxscriptClientFactory: IMaxscriptClientFactory;
 
     constructor(@inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IChecks) checks: IChecks,
                 @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
         this._database = database;
-        this._checks = checks;
         this._maxscriptClientFactory = maxscriptClientFactory;
     }
 

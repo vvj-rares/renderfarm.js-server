@@ -1,20 +1,17 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IChecks, IMaxscriptClient, IMaxscriptClientFactory } from "../interfaces";
+import { IEndpoint, IDatabase, IMaxscriptClientFactory } from "../interfaces";
 import { TYPES } from "../types";
 import { WorkerInfo } from "../model/worker_info";
 
 @injectable()
 class SessionEndpoint implements IEndpoint {
     private _database: IDatabase;
-    private _checks: IChecks;
     private _maxscriptClientFactory: IMaxscriptClientFactory;
 
     constructor(@inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IChecks) checks: IChecks,
                 @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
         this._database = database;
-        this._checks = checks;
         this._maxscriptClientFactory = maxscriptClientFactory;
 
         //expire sessions by timer
@@ -33,29 +30,76 @@ class SessionEndpoint implements IEndpoint {
         }.bind(this), 5000);
     }
 
+    async checkApiKey(res: any, apiKey: string) {
+        try {
+            let apiKeyRec = await this._database.getApiKey(apiKey);
+            if (!apiKeyRec.value) {
+                console.error(`  FAIL | rejected api key: ${apiKey}\n`);
+
+                res.status(403);
+                res.end(JSON.stringify({ error: "api_key rejected" }, null, 2));
+                return false;
+            }
+
+            console.log(`    OK | accepted api key: ${apiKey}`);
+
+            return true;
+        }
+        catch(exc) {
+            console.error(`  FAIL | failed to check api key: ${apiKey}\n`, exc);
+
+            res.status(500);
+            res.end(JSON.stringify({ error: "failed to check api key" }, null, 2));
+            return false;
+        }
+    }
+
+    async checkWorkspace(res: any, apiKey: string, workspaceGuid: string) {
+        try {
+            let wsRec = await this._database.getWorkspace(apiKey, workspaceGuid);
+            if (!wsRec.value) {
+                console.error(`  FAIL | rejected workspace guid: ${workspaceGuid}\n`);
+
+                res.status(403);
+                res.end(JSON.stringify({ error: "workspace guid rejected" }, null, 2));
+                return false;
+            }
+
+            console.log(`    OK | accepted workspace guid: ${workspaceGuid}`);
+
+            return true;
+        }
+        catch(exc) {
+            console.error(`  FAIL | failed to check workspace guid: ${workspaceGuid}\n`, exc);
+
+            res.status(500);
+            res.end(JSON.stringify({ error: "failed to check workspace guid" }, null, 2));
+            return false;
+        }
+    }
+
     bind(express: express.Application) {
-        express.get('/session', async function (req, res) {
-            let apiKey = req.query.api_key;
-            console.log(`GET on /session with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
-            res.end(JSON.stringify({}, null, 2));
-        }.bind(this));
-
-        express.get('/session/:uid', async function (req, res) {
-            let apiKey = req.query.api_key;
-            console.log(`GET on /session/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
-            res.end(JSON.stringify({}, null, 2));
-        }.bind(this));
-
         express.post('/session', async function (req, res) {
             let apiKey = req.body.api_key;
+            if (!apiKey) {
+                console.log(`REJECT | api_key empty`);
+                res.status(400);
+                res.end(JSON.stringify({ error: "api_key is missing" }, null, 2));
+                return;
+            }
+
             let workspaceGuid = req.body.workspace;
+            if (!workspaceGuid) {
+                console.log(`REJECT | workspace guid is not provided`);
+                res.status(400);
+                res.end(JSON.stringify({ error: "workspace is missing" }, null, 2));
+                return;
+            }
+
             console.log(`POST on /session with api_key: ${apiKey} with workspace: ${workspaceGuid}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-            if (!await this._checks.checkWorkspace(res, this._database, apiKey, workspaceGuid)) return;
+
+            if (!await this.checkApiKey(res, apiKey)) return;
+            if (!await this.checkWorkspace(res, apiKey, workspaceGuid)) return;
 
             const uuidv4 = require('uuid/v4');
             let newSessionGuid = uuidv4();
@@ -67,6 +111,7 @@ class SessionEndpoint implements IEndpoint {
                     console.log(`    OK | session ${value.session.guid} assigned to worker ${value.worker.mac}`);
 
                     let workspaceInfo = await this._database.getWorkspace(apiKey, workspaceGuid);
+                    //todo: fix here, as workspaceInfo is now Promise
                     console.log(" >> workspaceInfo: ", workspaceInfo);
 
                     let maxscriptClient = this._maxscriptClientFactory.create();

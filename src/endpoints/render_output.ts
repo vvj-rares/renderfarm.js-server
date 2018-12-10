@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IChecks } from "../interfaces";
+import { IEndpoint, IDatabase } from "../interfaces";
 import { TYPES } from "../types";
 
 var multer  = require("multer");
@@ -11,23 +11,12 @@ const settings = require("../settings");
 @injectable()
 class RenderOutputEndpoint implements IEndpoint {
     private _database: IDatabase;
-    private _checks: IChecks;
 
-    constructor(@inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IChecks) checks: IChecks) {
+    constructor(@inject(TYPES.IDatabase) database: IDatabase) {
         this._database = database;
-        this._checks = checks;
     }
 
     bind(express: express.Application) {
-        express.get('/render_output', async function (req, res) {
-            let apiKey = req.query.api_key;
-            console.log(`GET on /render_output with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
-            res.end(JSON.stringify({}, null, 2));
-        }.bind(this));
-
         express.get('/render_output/:name', async function (req, res, next) {
             console.log(`GET on /render_output/${req.params.name}`);
 
@@ -78,32 +67,7 @@ class RenderOutputEndpoint implements IEndpoint {
                 success: true, 
                 filename: req.file.originalname 
             }, null, 2));
-
-            /*
-{ fieldname: 'somefile',
-  originalname: '2018-11-16 11_28_25-apple stocks - Google Search.png',
-  encoding: '7bit',
-  mimetype: 'image/png',
-  destination: 'C:\\Temp\\',
-  filename: 'cb40ae32ec32d9a363f0772bebc9b34e',
-  path: 'C:\\Temp\\cb40ae32ec32d9a363f0772bebc9b34e',
-  size: 36309 }
-            */
             
-        }.bind(this));
-
-        express.put('/render_output/:uid', async function (req, res) {
-            let apiKey = req.body.api_key;
-            console.log(`PUT on /render_output/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
-        }.bind(this));
-
-        express.delete('/render_output/:uid', async function (req, res) {
-            let apiKey = req.body.api_key;
-            console.log(`DELETE on /render_output/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
         }.bind(this));
     }
 }

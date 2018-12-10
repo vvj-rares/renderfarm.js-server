@@ -1,30 +1,23 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IChecks, IMaxscriptClientFactory } from "../interfaces";
+import { IEndpoint, IDatabase, IMaxscriptClientFactory } from "../interfaces";
 import { TYPES } from "../types";
 
 @injectable()
 class JobEndpoint implements IEndpoint {
     private _database: IDatabase;
-    private _checks: IChecks;
     private _maxscriptClientFactory: IMaxscriptClientFactory;
 
     constructor(@inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IChecks) checks: IChecks,
                 @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
         this._database = database;
-        this._checks = checks;
         this._maxscriptClientFactory = maxscriptClientFactory;
     }
 
     bind(express: express.Application) {
-        express.get('/job', async function (req, res) {
-            console.log(`GET on /job with session: ${req.body.session}`);
-            res.end({});
-        }.bind(this));
-
         express.get('/job/:uid', async function (req, res) {
             console.log(`GET on /job/${req.params.uid} with session: ${req.body.session}`);
+            //todo: let clients get current job info
             res.end({});
         }.bind(this));
 
@@ -84,11 +77,7 @@ class JobEndpoint implements IEndpoint {
 
         express.put('/job/:uid', async function (req, res) {
             console.log(`PUT on /job/${req.params.uid} with session: ${req.body.session}`);
-            res.end({});
-        }.bind(this));
-
-        express.delete('/job/:uid', async function (req, res) {
-            console.log(`DELETE on /job/${req.params.uid} with session: ${req.body.session}`);
+            //todo: let clients cancel jobs
             res.end({});
         }.bind(this));
     }

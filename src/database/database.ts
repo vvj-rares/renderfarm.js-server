@@ -35,12 +35,10 @@ class Database implements IDatabase {
             let db = this._client.db(settings.databaseName);
             assert.notEqual(db, null);
     
-            let apiKeyRec = db.collection("api-keys").findOneAndUpdate(
+            return db.collection("api-keys").findOneAndUpdate(
                 { apiKey: apiKey }, 
                 { $set: { lastSeen : new Date() } },
                 { returnOriginal: false });
-    
-            return apiKeyRec;
             
         } else {
 
@@ -50,16 +48,22 @@ class Database implements IDatabase {
         }
     }
 
-    async getWorkspace(apiKey: string, workspaceGuid: string) {
-        let db = this._client.db(settings.databaseName);
-        assert.notEqual(db, null);
+    async getWorkspace(apiKey: string, workspaceGuid: string): Promise<any> {
+        if (apiKey && workspaceGuid) {
+            let db = this._client.db(settings.databaseName);
+            assert.notEqual(db, null);
 
-        let rec = await db.collection("workspaces").findOneAndUpdate(
-            { guid: workspaceGuid, apiKey: apiKey }, 
-            { $set: { lastSeen : new Date() } },
-            { returnOriginal: false });
+            return db.collection("workspaces").findOneAndUpdate(
+                { guid: workspaceGuid, apiKey: apiKey }, 
+                { $set: { lastSeen : new Date() } },
+                { returnOriginal: false });
 
-        return rec.value;
+        } else {
+
+            return new Promise<any>(function(resolve, reject) {
+                reject();
+            });
+        }
     }
 
     async expireSessions(): Promise<SessionInfo[]> {

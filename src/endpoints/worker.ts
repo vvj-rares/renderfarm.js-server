@@ -1,19 +1,16 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IChecks } from "../interfaces";
+import { IEndpoint, IDatabase } from "../interfaces";
 import { TYPES } from "../types";
 import { WorkerInfo } from "../model/worker_info";
 
 @injectable()
 class WorkerEndpoint implements IEndpoint {
     private _database: IDatabase;
-    private _checks: IChecks;
     private _workers: { [id: string] : WorkerInfo; } = {};
 
-    constructor(@inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IChecks) checks: IChecks) {
+    constructor(@inject(TYPES.IDatabase) database: IDatabase) {
         this._database = database;
-        this._checks = checks;
 
         this._workers = {};
 
@@ -61,49 +58,29 @@ class WorkerEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get('/worker', async function (req, res) {
+        express.get('/worker', function (req, res) {
             let apiKey = req.query.api_key;
             console.log(`GET on /worker with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKeySync(res, this._database, apiKey)) return;
+            this._database.getApiKey(apiKey)
+                .then(function(apiKeyRec) {
+                    if (apiKeyRec.value) {
+                        let response = Object.keys(this._workers).map(function(key, index) {
+                            return this._workers[key].toJSON();
+                        }.bind(this));
+                        console.log(`    OK | api_key ${apiKey} accepted`);
+                        res.end(JSON.stringify(response, null, 2));
+                    } else {
+                        console.log(`  FAIL | api key declined: ${apiKey}`);
+                        res.status(403);
+                        res.end(JSON.stringify({ error: "api key declined" }, null, 2));
+                    }
+                })
+                .catch(function(err) {
+                    console.log(`  FAIL | failed to check api_key: ${apiKey}, `, err);
+                    res.status(500);
+                    res.end(JSON.stringify({ error: "failed to check api_key" }, null, 2));
+                });
 
-            let response = Object.keys(this._workers).map(function(key, index) {
-                return this._workers[key].toJSON();
-            }.bind(this));
-            res.end(JSON.stringify(response, null, 2));
-
-        }.bind(this));
-
-        express.get('/worker/:uid', async function (req, res) {
-            let apiKey = req.query.api_key;
-            console.log(`GET on /worker/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
-            res.end(JSON.stringify({}, null, 2));
-        }.bind(this));
-
-        express.post('/worker', async function (req, res) {
-            let apiKey = req.body.api_key;
-            console.log(`POST on /worker with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify({}, null, 2));
-        }.bind(this));
-
-        express.put('/worker/:uid', async function (req, res) {
-            let apiKey = req.body.api_key;
-            console.log(`PUT on /worker/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
-            res.end(JSON.stringify({}, null, 2));
-        }.bind(this));
-
-        express.delete('/worker/:uid', async function (req, res) {
-            let apiKey = req.body.api_key;
-            console.log(`DELETE on /worker/${req.params.uid} with api_key: ${apiKey}`);
-            if (!await this._checks.checkApiKey(res, this._database, apiKey)) return;
-
-            res.end(JSON.stringify({}, null, 2));
         }.bind(this));
     }
 }

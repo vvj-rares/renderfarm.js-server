@@ -1,12 +1,11 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IChecks, IMaxscriptClientFactory } from "../interfaces";
+import { IEndpoint, IDatabase, IMaxscriptClientFactory } from "../interfaces";
 import { TYPES } from "../types";
 
 @injectable()
 class SceneGeometryEndpoint implements IEndpoint {
     private _database: IDatabase;
-    private _checks: IChecks;
     private _maxscriptClientFactory: IMaxscriptClientFactory;
 
     // maps uuid of threejs buffer geometry to node name in 3ds max, that was imported from this buffer geometry
@@ -17,10 +16,8 @@ class SceneGeometryEndpoint implements IEndpoint {
     private _geometryCache: { [sessionId: string] : { [id: string] : any; }; } = {};
 
     constructor(@inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IChecks) checks: IChecks,
                 @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
         this._database = database;
-        this._checks = checks;
         this._maxscriptClientFactory = maxscriptClientFactory;
     }
 
@@ -96,8 +93,6 @@ class SceneGeometryEndpoint implements IEndpoint {
                         //todo: log error to console here
                         res.end(JSON.stringify({ error: "session is expired" }, null, 2));
                     }.bind(this)); // end of this._database.getWorker promise
-                
-                // res.end({ id: this._geometryCache[req.body.session][ geometryJson.uuid ].maxNodeName, already_exists: true });
             } else {
                 // ok this geometry was never imported to 3ds max scene, let's do it now
 
@@ -168,7 +163,6 @@ class SceneGeometryEndpoint implements IEndpoint {
         }.bind(this));
 
         express.delete('/scene/:sceneid/geometry/:uid', async function (req, res) {
-            let apiKey = req.body.api_key;
             console.log(`DELETE on on /scene/${req.params.sceneid}/geometry/${req.params.uid}  with session: ${req.body.session}`);
             res.end({});
         }.bind(this));

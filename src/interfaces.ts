@@ -40,13 +40,6 @@ export interface IEndpoint {
     bind(express: express.Application);
 }
 
-export interface IChecks {
-    checkApiKey(res: any, database: IDatabase, apiKey: string): Promise<boolean>;
-    checkApiKeySync(res: any, database: IDatabase, apiKey: string): Promise<boolean>;
-
-    checkWorkspace(res: any, database: IDatabase, apiKey: string, workspaceGuid: string): Promise<boolean>;
-}
-
 export interface IMaxscriptClient {
     connect(ip: string): Promise<boolean>;
     disconnect();

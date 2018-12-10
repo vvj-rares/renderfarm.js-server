@@ -1,12 +1,11 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IChecks, IMaxscriptClientFactory } from "../interfaces";
+import { IEndpoint, IDatabase, IMaxscriptClientFactory } from "../interfaces";
 import { TYPES } from "../types";
 
 @injectable()
 class SceneMaterialEndpoint implements IEndpoint {
     private _database: IDatabase;
-    private _checks: IChecks;
     private _maxscriptClientFactory: IMaxscriptClientFactory;
 
     // maps uuid of threejs material to material name in 3ds max
@@ -17,10 +16,8 @@ class SceneMaterialEndpoint implements IEndpoint {
     private _materialCache: { [sessionId: string] : { [id: string] : any; }; } = {};
 
     constructor(@inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IChecks) checks: IChecks,
                 @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
         this._database = database;
-        this._checks = checks;
         this._maxscriptClientFactory = maxscriptClientFactory;
     }
 
