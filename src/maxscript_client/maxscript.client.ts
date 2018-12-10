@@ -1,4 +1,4 @@
-import { injectable, inject } from "inversify";
+import { injectable } from "inversify";
 import { IMaxscriptClient } from "../interfaces";
 import { Socket } from "net";
 
@@ -202,8 +202,8 @@ class MaxscriptClient implements IMaxscriptClient {
             // now run command
             let maxscript = ` for i=1 to pathConfig.mapPaths.count()  do ( pathConfig.mapPaths.delete 1 ) ; `
                           + ` for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 ) ; `
-                          + ` pathConfig.mapPaths.add "\\\\\\\\${w.host}${w.homeDir}api_keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\maps" ; `
-                          + ` pathConfig.xrefPaths.add "\\\\\\\\${w.host}${w.homeDir}api_keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\xrefs" ; ` ;
+                          + ` pathConfig.mapPaths.add "\\\\\\\\${w.host}${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\maps" ; `
+                          + ` pathConfig.xrefPaths.add "\\\\\\\\${w.host}${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\xrefs" ; ` ;
 
             this._client.write(maxscript);
         }.bind(this));

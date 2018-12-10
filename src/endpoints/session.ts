@@ -110,47 +110,61 @@ class SessionEndpoint implements IEndpoint {
                     let workerInfo = WorkerInfo.fromJSON(value.worker);
                     console.log(`    OK | session ${value.session.guid} assigned to worker ${value.worker.mac}`);
 
-                    let workspaceInfo = await this._database.getWorkspace(apiKey, workspaceGuid);
-                    //todo: fix here, as workspaceInfo is now Promise
-                    console.log(" >> workspaceInfo: ", workspaceInfo);
+                    this._database.getWorkspace(apiKey, workspaceGuid)
+                        .then(function(workspaceInfo){
+                            console.log(" >> workspaceInfo: ", workspaceInfo);
+                            if (!workspaceInfo.value) {
+                                console.error(`  FAIL | workspace not found: ${workspaceGuid}`);
+                                res.status(500);
+                                res.end(JSON.stringify({ error: "workspace not found" }, null, 2));
+                                return;
+                            }
 
-                    let maxscriptClient = this._maxscriptClientFactory.create();
-                    maxscriptClient.connect(workerInfo.ip)
-                        .then(function(value) {
-                            console.log("SessionEndpoint connected to maxscript client, ", value);
-
-                            maxscriptClient.setSession(newSessionGuid)
+                            let maxscriptClient = this._maxscriptClientFactory.create();
+                            maxscriptClient.connect(workerInfo.ip)
                                 .then(function(value) {
-                                    console.log(`    OK | SessionGuid on worker was updated`);
-
-                                    maxscriptClient.setWorkspace(workspaceInfo)
+                                    console.log("SessionEndpoint connected to maxscript client, ", value);
+        
+                                    maxscriptClient.setSession(newSessionGuid)
                                         .then(function(value) {
-                                            maxscriptClient.disconnect();
-                                            console.log(`    OK | workspace set`);
-                                            res.end(JSON.stringify({ id: newSessionGuid, workspace: workspaceInfo.name }, null, 2));
+                                            console.log(`    OK | SessionGuid on worker was updated`);
+        
+                                            maxscriptClient.setWorkspace(workspaceInfo.value)
+                                                .then(function(value) {
+                                                    maxscriptClient.disconnect();
+                                                    console.log(`    OK | workspace set`);
+                                                    res.end(JSON.stringify({ id: newSessionGuid, workspace: workspaceInfo.name }, null, 2));
+                                                }.bind(this))
+                                                .catch(function(err) {
+                                                    maxscriptClient.disconnect();
+                                                    console.error(`  FAIL | failed to set workspace\n`, err);
+                                                    res.status(500);
+                                                    res.end(JSON.stringify({ error: "failed to set workspace" }, null, 2));
+                                                }.bind(this)); // end of maxscriptClient.setWorkspace promise
+        
                                         }.bind(this))
                                         .catch(function(err) {
                                             maxscriptClient.disconnect();
-                                            console.error(`  FAIL | failed to set workspace\n`, err);
+                                            console.error(`  FAIL | failed to assign session to worker\n`, err);
                                             res.status(500);
-                                            res.end(JSON.stringify({ error: "failed to set workspace" }, null, 2));
-                                        }.bind(this)); // end of maxscriptClient.setWorkspace promise
-
+                                            res.end(JSON.stringify({ error: "failed to assign session to worker" }, null, 2));
+                                        }.bind(this)); // end of maxscriptClient.setSession promise
+            
                                 }.bind(this))
                                 .catch(function(err) {
-                                    maxscriptClient.disconnect();
-                                    console.error(`  FAIL | failed to assign session to worker\n`, err);
+                                    console.error("SessionEndpoint failed to connect to maxscript client,\n", err);
                                     res.status(500);
-                                    res.end(JSON.stringify({ error: "failed to assign session to worker" }, null, 2));
-                                }.bind(this)); // end of maxscriptClient.setSession promise
-    
-                        }.bind(this))
-                        .catch(function(err) {
-                            console.error("SessionEndpoint failed to connect to maxscript client, ", err);
-                            res.status(500);
-                            res.end(JSON.stringify({ error: "failed to connect to maxscript client" }, null, 2));
-                        }.bind(this)); // end of maxscriptClient.connect promise
+                                    res.end(JSON.stringify({ error: "failed to connect to maxscript client" }, null, 2));
+                                }.bind(this)); // end of maxscriptClient.connect promise
 
+                        }.bind(this))
+                        .catch(function(err){
+                            console.error(`  FAIL | failed to get workspace: ${workspaceGuid}\n`, err);
+                            res.status(500);
+                            res.end(JSON.stringify({ error: "failed to get workspace" }, null, 2));
+                            return;
+                        }.bind(this)); // end of getWorkspace promise
+        
                 }.bind(this))
                 .catch(function(err) {
                     console.error(`  FAIL | failed to create session\n`, err);

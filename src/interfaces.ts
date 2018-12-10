@@ -46,6 +46,7 @@ export interface IMaxscriptClient {
 
     resetScene(sceneName): Promise<boolean>;
     createScene(sceneName): Promise<boolean>;
+    // todo: openScene(sceneFilename): Promise<boolean>;
 
     setObjectWorldMatrix(nodeName, matrixWorldArray): Promise<boolean>;
     linkToParent(nodeName: string, parentName: string): Promise<boolean>;
