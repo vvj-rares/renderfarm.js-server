@@ -1,6 +1,7 @@
 import { injectable } from "inversify";
 import { IMaxscriptClient } from "../interfaces";
 import { Socket } from "net";
+import { WorkspaceInfo } from "../model/workspace_info";
 
 @injectable()
 class MaxscriptClient implements IMaxscriptClient {
@@ -85,6 +86,31 @@ class MaxscriptClient implements IMaxscriptClient {
 
             // now run command
             this._client.write(`resetMaxFile #noPrompt; Dummy name:"${sceneName}"`);
+        }.bind(this));
+    }
+
+    openScene(sceneName: string, maxSceneFilename: string, workspace: WorkspaceInfo): Promise<boolean> {
+
+        return new Promise<boolean>(function(resolve, reject) {
+            // prepare response handlers for the command
+            this._responseHandler = function(data) {
+                console.log("open scene returned: ", data.toString());
+                this._responseHandler = undefined;
+                resolve(true);
+            };
+
+            this._errorHandler = function(err) {
+                console.error("open scene error: ", err);
+                reject(err);
+            };
+
+            let w = workspace;
+
+            let maxscript = `loadMaxFile "\\\\\\\\${w.host}${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\scenes\\\\${maxSceneFilename}" `
+                          + ` useFileUnits:true quiet:true `;
+
+            // now run command
+            this._client.write(maxscript);
         }.bind(this));
     }
 

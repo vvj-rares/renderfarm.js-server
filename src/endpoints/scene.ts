@@ -18,33 +18,64 @@ class SceneEndpoint implements IEndpoint {
         express.post('/scene', async function (req, res) {
             console.log(`POST on /scene with session: ${req.body.session}`);
 
-            this._database.getWorker(req.body.session)
+            let sessionGuid = req.body.session;
+
+            this._database.getWorker(sessionGuid)
                 .then(function(worker){
 
-                    let maxscriptClient = this._maxscriptClientFactory.create();
-                    maxscriptClient.connect(worker.ip)
-                        .then(function(value) {
-                            console.log("SceneEndpoint connected to maxscript client, ", value);
+                    this._database.getSessionWorkspace(sessionGuid)
+                        .then(function(workspaceInfo){
+                            console.log(`    OK | retrieved workspace by session`);
 
-                            let sceneName = require('../utils/genRandomName')("scene");
-
-                            maxscriptClient.createScene(sceneName)
+                            let maxscriptClient = this._maxscriptClientFactory.create();
+                            maxscriptClient.connect(worker.ip)
                                 .then(function(value) {
-                                    maxscriptClient.disconnect();
-                                    console.log(`    OK | scene reset`);
-                                    res.end(JSON.stringify({ id: sceneName }, null, 2));
+                                    console.log("SceneEndpoint connected to maxscript client, ", value);
+
+                                    let sceneName = require('../utils/genRandomName')("scene");
+
+                                    let maxSceneFilename = req.body.scene_filename;
+
+                                    if (maxSceneFilename) {
+
+                                        maxscriptClient.openScene(sceneName, maxSceneFilename, workspaceInfo)
+                                            .then(function(value) {
+                                                maxscriptClient.disconnect();
+                                                console.log(`    OK | scene open: ${maxSceneFilename}, `, value);
+                                                res.end(JSON.stringify({ id: sceneName }, null, 2));
+                                            }.bind(this))
+                                            .catch(function(err) {
+                                                maxscriptClient.disconnect();
+                                                console.error(`  FAIL | failed to open scene\n`, err);
+                                                res.status(500);
+                                                res.end(JSON.stringify({ error: "failed to open scene" }, null, 2));
+                                            }.bind(this));
+                                    } else {
+                                        maxscriptClient.createScene(sceneName)
+                                            .then(function(value) {
+                                                maxscriptClient.disconnect();
+                                                console.log(`    OK | scene reset`);
+                                                res.end(JSON.stringify({ id: sceneName }, null, 2));
+                                            }.bind(this))
+                                            .catch(function(err) {
+                                                maxscriptClient.disconnect();
+                                                console.error(`  FAIL | failed to reset scene\n`, err);
+                                                res.status(500);
+                                                res.end(JSON.stringify({ error: "failed to reset scene" }, null, 2));
+                                            }.bind(this));
+                                    }
+
                                 }.bind(this))
                                 .catch(function(err) {
-                                    maxscriptClient.disconnect();
-                                    console.error(`  FAIL | failed to reset scene\n`, err);
-                                    res.status(500);
-                                    res.end(JSON.stringify({ error: "failed to reset scene" }, null, 2));
-                                }.bind(this))
-            
+                                    console.error("SceneEndpoint failed to connect to maxscript client, ", err);
+                                }.bind(this)); // end of maxscriptClient.connect promise
+
                         }.bind(this))
-                        .catch(function(err) {
-                            console.error("SceneEndpoint failed to connect to maxscript client, ", err);
-                        }.bind(this)); // end of maxscriptClient.connect promise
+                        .catch(function(err){
+                            console.error(`  FAIL | failed to retrieve workspace by session\n`, err);
+                            res.status(500);
+                            res.end(JSON.stringify({ error: "failed to retrieve workspace by session" }, null, 2));
+                        }.bind(this)); // end of getSessionWorkspace promise
 
                 }.bind(this))
                 .catch(function(err){

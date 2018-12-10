@@ -7,6 +7,7 @@ import { IDatabase } from "../interfaces"
 import assert = require("assert");
 import { WorkerInfo } from "../model/worker_info";
 import { SessionInfo } from "../model/session_info";
+import { WorkspaceInfo } from "../model/workspace_info";
 
 const settings = require("../settings");
 
@@ -215,7 +216,7 @@ class Database implements IDatabase {
 
         return new Promise<WorkerInfo>(function (resolve, reject) {
             if (sessionGuid === undefined || sessionGuid === "" || sessionGuid === null) {
-                reject("session id is empty");
+                reject("getWorker: session id is empty");
             }
 
             // first find not closed sessions, and join each with corresponding workers
@@ -240,16 +241,16 @@ class Database implements IDatabase {
             ]).toArray(async function(err, res) {
                 if (err) {
                     console.error(err);
-                    reject(`failed to find worker by session guid: ${sessionGuid}`);
+                    reject(`getWorker: failed to find worker by session guid: ${sessionGuid}`);
                     return;
                 }
 
                 if (res.length > 1) {
-                    console.error(`Found more than one session with guid: ${sessionGuid}`);
+                    console.error(`getWorker: found more than one session with guid: ${sessionGuid}`);
                 }
 
                 if (res.length === 0) {
-                    console.log(`Session not found: ${sessionGuid}`);
+                    console.log(`getWorker: session not found: ${sessionGuid}`);
                     resolve(undefined);
                 }
 
@@ -258,8 +259,93 @@ class Database implements IDatabase {
                     { $set: { lastSeen : new Date() } });
 
                 let worker = WorkerInfo.fromJSON(res[0].worker);
-                console.log(`Found a worker for session ${sessionGuid}: ${JSON.stringify(worker)}`);
+                console.log(`getWorker: found a worker for session ${sessionGuid}: ${JSON.stringify(worker)}`);
                 resolve(worker);
+            }.bind(this));
+        }.bind(this));
+    }
+
+    async assignSessionWorkspace(sessionGuid: string, workspaceGuid: string): Promise<boolean> {
+        let db = this._client.db(settings.databaseName);
+        assert.notEqual(db, null);
+
+        return new Promise<boolean>(function (resolve, reject) {
+
+            db.collection("sessions").findOneAndUpdate(
+                { guid : sessionGuid },
+                { $set: { workspaceGuid: workspaceGuid, lastSeen : new Date() } },
+                { returnOriginal: false })
+                .then(function(obj) {
+                    if (obj.value) {
+                        resolve(true);
+                    } else {
+                        reject(`unable to find session with guid ${sessionGuid}`);
+                    }
+                })
+                .catch(function(err) {
+                    reject(err);
+                });
+        });
+    }
+
+    async getSessionWorkspace(sessionGuid: string): Promise<WorkspaceInfo> {
+
+        let db = this._client.db(settings.databaseName);
+        assert.notEqual(db, null);
+
+        return new Promise<WorkspaceInfo>(function (resolve, reject) {
+            if (sessionGuid === undefined || sessionGuid === "" || sessionGuid === null) {
+                reject("getSessionWorkspace: session id is empty");
+            }
+
+            // first find not closed sessions, and join each with corresponding workspace
+            db.collection("sessions").aggregate([
+                {
+                    $match: {
+                        guid: sessionGuid
+                    }
+                },
+                {
+                    $lookup:
+                      {
+                        from: "workspaces",
+                        localField: "workspaceGuid",
+                        foreignField: "guid",
+                        as: "workspace"
+                      }
+                },
+                { 
+                    $unwind : "$workspace" 
+                }
+            ]).toArray(async function(err, res) {
+                if (err) {
+                    console.error(err);
+                    reject(`getSessionWorkspace: failed to find workspace by session guid: ${sessionGuid}`);
+                    return;
+                }
+
+                if (res.length > 1) {
+                    console.error(`getSessionWorkspace: found more than one session with guid: ${sessionGuid}`);
+                }
+
+                if (res.length === 0) {
+                    console.log(`getSessionWorkspace: session not found: ${sessionGuid}`);
+                    resolve(undefined);
+                }
+
+                //todo: extract to method touchSession(guid)
+                await db.collection("sessions").updateOne(
+                    { guid: sessionGuid },
+                    { $set: { lastSeen : new Date() } });
+
+                //todo: extract to method touchWorkspace(guid)
+                await db.collection("workspaces").updateOne(
+                    { guid: res[0].workspace.guid },
+                    { $set: { lastSeen : new Date() } });
+                
+                let workspace = WorkspaceInfo.fromJSON(res[0].workspace);
+                console.log(`getSessionWorkspace: found a workspace for session ${sessionGuid}: ${JSON.stringify(workspace)}`);
+                resolve(workspace);
             }.bind(this));
         }.bind(this));
     }

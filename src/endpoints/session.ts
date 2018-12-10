@@ -120,42 +120,53 @@ class SessionEndpoint implements IEndpoint {
                                 return;
                             }
 
-                            let maxscriptClient = this._maxscriptClientFactory.create();
-                            maxscriptClient.connect(workerInfo.ip)
-                                .then(function(value) {
-                                    console.log("SessionEndpoint connected to maxscript client, ", value);
-        
-                                    maxscriptClient.setSession(newSessionGuid)
+                            this._database.assignSessionWorkspace(newSessionGuid, workspaceGuid)
+                                .then(function(){
+                                    console.log(`    OK | workspace ${workspaceGuid} was assigned to session ${newSessionGuid}`);
+
+                                    let maxscriptClient = this._maxscriptClientFactory.create();
+                                    maxscriptClient.connect(workerInfo.ip)
                                         .then(function(value) {
-                                            console.log(`    OK | SessionGuid on worker was updated`);
-        
-                                            maxscriptClient.setWorkspace(workspaceInfo.value)
+                                            console.log("SessionEndpoint connected to maxscript client, ", value);
+
+                                            maxscriptClient.setSession(newSessionGuid)
                                                 .then(function(value) {
-                                                    maxscriptClient.disconnect();
-                                                    console.log(`    OK | workspace set`);
-                                                    res.end(JSON.stringify({ id: newSessionGuid, workspace: workspaceInfo.name }, null, 2));
+                                                    console.log(`    OK | SessionGuid on worker was updated, `, value);
+
+                                                    maxscriptClient.setWorkspace(workspaceInfo.value)
+                                                        .then(function(value) {
+                                                            maxscriptClient.disconnect();
+                                                            console.log(`    OK | workspace set, `, value);
+                                                            res.end(JSON.stringify({ id: newSessionGuid, workspace: workspaceInfo.name }, null, 2));
+                                                        }.bind(this))
+                                                        .catch(function(err) {
+                                                            maxscriptClient.disconnect();
+                                                            console.error(`  FAIL | failed to set workspace\n`, err);
+                                                            res.status(500);
+                                                            res.end(JSON.stringify({ error: "failed to set workspace" }, null, 2));
+                                                        }.bind(this)); // end of maxscriptClient.setWorkspace promise
+
                                                 }.bind(this))
                                                 .catch(function(err) {
                                                     maxscriptClient.disconnect();
-                                                    console.error(`  FAIL | failed to set workspace\n`, err);
+                                                    console.error(`  FAIL | failed to assign session to worker\n`, err);
                                                     res.status(500);
-                                                    res.end(JSON.stringify({ error: "failed to set workspace" }, null, 2));
-                                                }.bind(this)); // end of maxscriptClient.setWorkspace promise
-        
+                                                    res.end(JSON.stringify({ error: "failed to assign session to worker" }, null, 2));
+                                                }.bind(this)); // end of maxscriptClient.setSession promise
+
                                         }.bind(this))
                                         .catch(function(err) {
-                                            maxscriptClient.disconnect();
-                                            console.error(`  FAIL | failed to assign session to worker\n`, err);
+                                            console.error("SessionEndpoint failed to connect to maxscript client,\n", err);
                                             res.status(500);
-                                            res.end(JSON.stringify({ error: "failed to assign session to worker" }, null, 2));
-                                        }.bind(this)); // end of maxscriptClient.setSession promise
-            
+                                            res.end(JSON.stringify({ error: "failed to connect to maxscript client" }, null, 2));
+                                        }.bind(this)); // end of maxscriptClient.connect promise
+
                                 }.bind(this))
-                                .catch(function(err) {
-                                    console.error("SessionEndpoint failed to connect to maxscript client,\n", err);
+                                .catch(function(err){
+                                    console.error("SessionEndpoint failed to assign workspace to session,\n", err);
                                     res.status(500);
-                                    res.end(JSON.stringify({ error: "failed to connect to maxscript client" }, null, 2));
-                                }.bind(this)); // end of maxscriptClient.connect promise
+                                    res.end(JSON.stringify({ error: "failed to assign workspace to session" }, null, 2));
+                                }.bind(this)); // end of assignSessionWorkspace promise
 
                         }.bind(this))
                         .catch(function(err){
