@@ -19,7 +19,7 @@ class WorkspaceFileEndpoint implements IEndpoint {
             var mimeType = mime.lookup(req.params.filename);
 
             var options = {
-                root: "C:\\Temp\\" + req.params[0],
+                root: "C:\\Temp\\" + req.params[0], todo: take root path from workspace info
                 dotfiles: 'deny',
                 headers: {
                     'x-timestamp': Date.now(),

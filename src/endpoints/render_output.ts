@@ -9,7 +9,7 @@ var upload = multer({ dest: "C:\\Temp\\" });
 const settings = require("../settings");
 
 @injectable()
-class RenderOutputEndpoint implements IEndpoint {
+class RenderOutputEndpoint implements IEndpoint { todo: remove this endpoint completely
     private _database: IDatabase;
 
     constructor(@inject(TYPES.IDatabase) database: IDatabase) {
@@ -42,6 +42,7 @@ class RenderOutputEndpoint implements IEndpoint {
   
         }.bind(this));
 
+        todo: remove post on render_output
         express.post('/render_output', upload.single('somefile'), function (req, res, next) {
             console.log(`POST on /render_output`);
 
