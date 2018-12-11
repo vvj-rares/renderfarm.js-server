@@ -49,513 +49,230 @@ class MaxscriptClient implements IMaxscriptClient {
         this._client.destroy();
     }
 
-    resetScene(): Promise<boolean> {
+    execMaxscript(maxscript: string, actionDesc: string, responseChecker: (resp: string) => boolean = null): Promise<boolean> {
 
         return new Promise<boolean>(function(resolve, reject) {
             // prepare response handlers for the command
             this._responseHandler = function(data) {
-                console.log("reset scene returned: ", data.toString());
+                console.log(`${actionDesc} returned: `, data.toString());
                 this._responseHandler = undefined;
-                resolve(true);
+                if (responseChecker) {
+                    if (responseChecker(data.toString())) {
+                        resolve(true);
+                    } else {
+                        reject(false);
+                    }
+                } else {
+                    resolve(true);
+                }
             };
 
             this._errorHandler = function(err) {
-                console.error("reset scene error: ", err);
+                console.error(`${actionDesc} error: `, err);
                 reject(err);
             };
 
-            // now run command
-            this._client.write(`resetMaxFile #noPrompt`);
+            if (maxscript) {
+                this._client.write(maxscript);
+            } else {
+                resolve(true);
+            }
+
         }.bind(this));
+    }
+
+    resetScene(): Promise<boolean> {
+        let maxscript = `resetMaxFile #noPrompt`;
+        return this.execMaxscript(maxscript, "resetScene");
     }
 
     createScene(sceneName): Promise<boolean> {
+        let maxscript = `resetMaxFile #noPrompt ; ` 
+                        + ` Dummy name:"${sceneName}" ; `
+                        + ` callbacks.addScript #preRender    "flipYZ($${sceneName})" id:#flipYZ   persistent:false ; `
+                        + ` callbacks.addScript #postRender "unflipYZ($${sceneName})" id:#unflipYZ persistent:false ; ` ;
 
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("create scene returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
-
-            this._errorHandler = function(err) {
-                console.error("create scene error: ", err);
-                reject(err);
-            };
-
-            // now run command
-            this._client.write(`resetMaxFile #noPrompt; Dummy name:"${sceneName}"`);
-        }.bind(this));
+        return this.execMaxscript(maxscript, "createScene");
     }
 
     openScene(sceneName: string, maxSceneFilename: string, workspace: WorkspaceInfo): Promise<boolean> {
+        let w = workspace;
 
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("open scene returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
+        let maxscript = `resetMaxFile #noPrompt ; `
+                        + ` loadMaxFile "\\\\\\\\${w.host}${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\scenes\\\\${maxSceneFilename}" `
+                        + ` useFileUnits:true quiet:true ; `
+                        + ` Dummy name:"${sceneName}" ; `
+                        + ` callbacks.addScript #preRender    "flipYZ($${sceneName})" id:#flipYZ   persistent:false ; `
+                        + ` callbacks.addScript #postRender "unflipYZ($${sceneName})" id:#unflipYZ persistent:false ; `;
 
-            this._errorHandler = function(err) {
-                console.error("open scene error: ", err);
-                reject(err);
-            };
-
-            let w = workspace;
-
-            let maxscript = `loadMaxFile "\\\\\\\\${w.host}${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\scenes\\\\${maxSceneFilename}" `
-                          + ` useFileUnits:true quiet:true `;
-
-            // now run command
-            this._client.write(maxscript);
-        }.bind(this));
+        return this.execMaxscript(maxscript, "openScene");
     }
 
     setObjectWorldMatrix(nodeName, matrixWorldArray): Promise<boolean> {
-
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("set object world matrix returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
-
-            this._errorHandler = function(err) {
-                console.error("set object world matrix error: ", err);
-                reject(err);
-            };
-
-            let m = matrixWorldArray;
-            let maxscript = `in coordsys world $${nodeName}.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}])`;
-
-            this._client.write(maxscript);
-        }.bind(this));
+        let m = matrixWorldArray;
+        let maxscript = `in coordsys world $${nodeName}.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}])`;
+        return this.execMaxscript(maxscript, "setObjectWorldMatrix");
     }
 
     linkToParent(nodeName: string, parentName: string): Promise<boolean> {
-
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("link to parent returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
-
-            this._errorHandler = function(err) {
-                console.error("link to parent error: ", err);
-                reject(err);
-            };
-
-            let maxscript = `$${nodeName}.parent = $${parentName}`;
-
-            this._client.write(maxscript);
-        }.bind(this));
+        let maxscript = `$${nodeName}.parent = $${parentName}`;
+        return this.execMaxscript(maxscript, "linkToParent");
     }
 
     renameObject(nodeName: string, newName: string): Promise<boolean> {
-
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("rename object returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
-
-            this._errorHandler = function(err) {
-                console.error("rename object error: ", err);
-                reject(err);
-            };
-
-            let maxscript = `$${nodeName}.name = "${newName}"`;
-
-            this._client.write(maxscript);
-        }.bind(this));
+        let maxscript = `$${nodeName}.name = "${newName}"`;
+        return this.execMaxscript(maxscript, "renameObject");
     }
 
     setSession(sessionGuid: string): Promise<boolean> {
-
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                let response = data.toString();
-                console.log("session set returned: ", response);
-                this._responseHandler = undefined;
-
-                if (response.indexOf("worker_busy") !== -1) {
-                    resolve(false);
-                }
-
-                resolve(true);
-            };
-
-            this._errorHandler = function(err) {
-                console.error("session set error: ", err);
-                reject(err);
-            };
-
-            // now run command
-            let maxscript = `SessionGuid = "${sessionGuid}"; resetMaxFile #noPrompt`;
-
-            this._client.write(maxscript);
-        }.bind(this));
+        let maxscript = `SessionGuid = "${sessionGuid}"`;
+        return this.execMaxscript(maxscript, "setSession");
     }
 
     setWorkspace(workspaceInfo: any): Promise<boolean> {
+        let w = workspaceInfo;
 
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                let response = data.toString();
-                console.log("workspace set returned: ", response);
-                this._responseHandler = undefined;
+        let maxscript = `for i=1 to pathConfig.mapPaths.count()  do ( pathConfig.mapPaths.delete 1 ) ; `
+                      + ` for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 ) ; `
+                      + ` pathConfig.mapPaths.add "\\\\\\\\${w.host}${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\maps" ; `
+                      + ` pathConfig.xrefPaths.add "\\\\\\\\${w.host}${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\xrefs" ; ` ;
 
-                resolve(true);
-            };
-
-            this._errorHandler = function(err) {
-                console.error("workspace set error: ", err);
-                reject(err);
-            };
-
-            let w = workspaceInfo;
-
-            // now run command
-            let maxscript = ` for i=1 to pathConfig.mapPaths.count()  do ( pathConfig.mapPaths.delete 1 ) ; `
-                          + ` for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 ) ; `
-                          + ` pathConfig.mapPaths.add "\\\\\\\\${w.host}${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\maps" ; `
-                          + ` pathConfig.xrefPaths.add "\\\\\\\\${w.host}${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\xrefs" ; ` ;
-
-            this._client.write(maxscript);
-        }.bind(this));
+        return this.execMaxscript(maxscript, "setWorkspace");
     }
 
     createTargetCamera(cameraJson: any): Promise<boolean> {
+        let m = cameraJson.matrix;
+        // now run command
+        let maxscript = `cam = FreeCamera fov:${cameraJson.fov} nearclip:1 farclip:1000 nearrange:0 farrange:1000 ` 
+                        + ` mpassEnabled:off mpassRenderPerPass:off ` 
+                        + ` isSelected:on name:"${cameraJson.name}" ; ` 
+                        + `cam.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}])`;
 
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("create camera returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
-
-            this._errorHandler = function(err) {
-                console.error("create camera error: ", err);
-                reject(err);
-            };
-
-            let m = cameraJson.matrix;
-            // now run command
-            let maxscript = `cam = FreeCamera fov:${cameraJson.fov} nearclip:1 farclip:1000 nearrange:0 farrange:1000 ` 
-                          + ` mpassEnabled:off mpassRenderPerPass:off ` 
-                          + ` isSelected:on name:"${cameraJson.name}"; ` 
-                          + `cam.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}])`;
-
-            this._client.write(maxscript);
-        }.bind(this));
+        return this.execMaxscript(maxscript, "createTargetCamera");
     }
 
     updateTargetCamera(cameraJson: any): Promise<boolean> {
 
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("update camera returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
+        let maxscript = "";
+        if (cameraJson.fov !== undefined)      
+            maxscript = maxscript + ` $${cameraJson.name}.fov = ${cameraJson.fov}; `;
 
-            this._errorHandler = function(err) {
-                console.error("update camera error: ", err);
-                reject(err);
-            };
+        if (cameraJson.position !== undefined) 
+            maxscript = maxscript + ` $${cameraJson.name}.pos = [${cameraJson.position[0]},${cameraJson.position[2]},${cameraJson.position[1]}]; `;
 
-            let maxscript = "";
-            if (cameraJson.fov !== undefined)      
-                maxscript = maxscript + ` $${cameraJson.name}.fov = ${cameraJson.fov}; `;
+        if (cameraJson.target !== undefined)   
+            maxscript = maxscript + ` $${cameraJson.name}.target.pos = [${cameraJson.target[0]},${cameraJson.target[2]},${cameraJson.target[1]}]; `;
 
-            if (cameraJson.position !== undefined) 
-                maxscript = maxscript + ` $${cameraJson.name}.pos = [${cameraJson.position[0]},${cameraJson.position[2]},${cameraJson.position[1]}]; `;
-
-            if (cameraJson.target !== undefined)   
-                maxscript = maxscript + ` $${cameraJson.name}.target.pos = [${cameraJson.target[0]},${cameraJson.target[2]},${cameraJson.target[1]}]; `;
-
-            if (maxscript !== "") {
-                this._client.write(maxscript);
-            } else {
-                resolve(true); // no changes, just resolve the promise
-            }
-        }.bind(this));
+        return this.execMaxscript(maxscript, "updateTargetCamera");
     }
 
     cloneInstance(nodeName: string, cloneName: string): Promise<boolean> {
-
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("instance clone returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
-
-            this._errorHandler = function(err) {
-                console.error("instance clone error: ", err);
-                reject(err);
-            };
-
-            let maxscript = `instance $${nodeName} name:"${cloneName}" transform: (matrix3 [1,0,0] [0,1,0] [0,0,1] [0,0,0])`;
-            this._client.write(maxscript);
-        }.bind(this));
+        let maxscript = `instance $${nodeName} name:"${cloneName}" transform: (matrix3 [1,0,0] [0,1,0] [0,0,1] [0,0,0])`;
+        return this.execMaxscript(maxscript, "cloneInstance");
     }
 
     deleteObjects(mask: string): Promise<boolean> {
-
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("delete objects returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
-
-            this._errorHandler = function(err) {
-                console.error("delete objects error: ", err);
-                reject(err);
-            };
-
-            let maxscript = `delete $${mask};`;
-            this._client.write(maxscript);
-        }.bind(this));
+        let maxscript = `delete $${mask}`;
+        return this.execMaxscript(maxscript, "deleteObjects");
     }
 
     createSkylight(skylightJson: any): Promise<boolean> {
+        let maxscript = `aSkylight = Skylight name:"${skylightJson.name}" pos:[${skylightJson.position[0]},${skylightJson.position[2]},${skylightJson.position[1]}] `
+                        + `isSelected:off; aSkylight.cast_Shadows = on; aSkylight.rays_per_sample = 15;`;
 
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("create skylight returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
-
-            this._errorHandler = function(err) {
-                console.error("create skylight error: ", err);
-                reject(err);
-            };
-
-            // now run command
-            let maxscript = `aSkylight = Skylight name:"${skylightJson.name}" pos:[${skylightJson.position[0]},${skylightJson.position[2]},${skylightJson.position[1]}] `
-                          + `isSelected:off; aSkylight.cast_Shadows = on; aSkylight.rays_per_sample = 15;`;
-
-            this._client.write(maxscript);
-        }.bind(this));
+        return this.execMaxscript(maxscript, "createSkylight");
     }
 
     createSpotlight(spotlightJson: any): Promise<boolean> {
+        let m = spotlightJson.matrix;
+        let r = (spotlightJson.color >> 16) & 0xFF;
+        let g = (spotlightJson.color >> 8)  & 0xFF;
+        let b = (spotlightJson.color)       & 0xFF;
 
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("create spotlight returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
+        let hotspot = 180.0 / (Math.PI / spotlightJson.angle);
+        let falloff = hotspot + 5;
 
-            this._errorHandler = function(err) {
-                console.error("create spotlight error: ", err);
-                reject(err);
-            };
+        let t = spotlightJson.target;
 
-            let m = spotlightJson.matrix;
-            let r = (spotlightJson.color >> 16) & 0xFF;
-            let g = (spotlightJson.color >> 8)  & 0xFF;
-            let b = (spotlightJson.color)       & 0xFF;
+        let maxscript = `aTargetSpot = TargetSpot name: "${spotlightJson.name}" `
+                        + ` transform: (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}]) `
+                        + ` multiplier: ${spotlightJson.intensity} `
+                        + ` rgb: (color ${r} ${g} ${b}) `
+                        + ` hotspot: ${hotspot} `
+                        + ` falloff: ${falloff} `
+                        + ` target: (Targetobject transform: (matrix3 [${t[0]},${t[1]},${t[2]}] [${t[4]},${t[5]},${t[6]}] [${t[8]},${t[9]},${t[10]}] [${t[12]},${t[13]},${t[14]}])); `
+                        + ` aTargetSpot.shadowGenerator = shadowMap(); aTargetSpot.baseObject.castShadows = true; `;
 
-            let hotspot = 180.0 / (Math.PI / spotlightJson.angle);
-            let falloff = hotspot + 5;
+        if (spotlightJson.shadow && spotlightJson.shadow.mapsize > 0) {
+            maxscript += ` aTargetSpot.mapSize = ${spotlightJson.shadow.mapsize}; `;
+        }
 
-            let t = spotlightJson.target;
-
-            let maxscript = `aTargetSpot = TargetSpot name: "${spotlightJson.name}" `
-                          + ` transform: (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}]) `
-                          + ` multiplier: ${spotlightJson.intensity} `
-                          + ` rgb: (color ${r} ${g} ${b}) `
-                          + ` hotspot: ${hotspot} `
-                          + ` falloff: ${falloff} `
-                          + ` target: (Targetobject transform: (matrix3 [${t[0]},${t[1]},${t[2]}] [${t[4]},${t[5]},${t[6]}] [${t[8]},${t[9]},${t[10]}] [${t[12]},${t[13]},${t[14]}])); `
-                          + ` aTargetSpot.shadowGenerator = shadowMap(); aTargetSpot.baseObject.castShadows = true; `;
-            if (spotlightJson.shadow && spotlightJson.shadow.mapsize > 0) {
-                maxscript += ` aTargetSpot.mapSize = ${spotlightJson.shadow.mapsize}; `;
-            }
-
-            this._client.write(maxscript);
-        }.bind(this));
+        return this.execMaxscript(maxscript, "createSkylight");
     }
 
     createMaterial(materialJson: any): Promise<boolean> {
+        let diffuse = {
+            r: (materialJson.color >> 16) & 0xFF,
+            g: (materialJson.color >> 8)  & 0xFF,
+            b: (materialJson.color)       & 0xFF
+        };
 
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("create default material returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
+        let specular = {
+            r: (materialJson.specular >> 16) & 0xFF,
+            g: (materialJson.specular >> 8)  & 0xFF,
+            b: (materialJson.specular)       & 0xFF
+        };
 
-            this._errorHandler = function(err) {
-                console.error("create default material error: ", err);
-                reject(err);
-            };
+        let emissive = {
+            r: (materialJson.emissive >> 16) & 0xFF,
+            g: (materialJson.emissive >> 8)  & 0xFF,
+            b: (materialJson.emissive)       & 0xFF
+        };
 
-            let diffuse = {
-                r: (materialJson.color >> 16) & 0xFF,
-                g: (materialJson.color >> 8)  & 0xFF,
-                b: (materialJson.color)       & 0xFF
-            };
+        let maxscript = `StandardMaterial name:"${materialJson.name}" ` 
+                        + ` diffuse: (color ${diffuse.r}  ${diffuse.g}  ${diffuse.b}) `
+                        + ` specular:(color ${specular.r} ${specular.g} ${specular.b}) `
+                        + ` emissive:(color ${emissive.r} ${emissive.g} ${emissive.b}) `
+                        + ` opacity: ${materialJson.opacity !== undefined ? 100 * materialJson.opacity : 100} `
+                        + ` glossiness: ${materialJson.shininess !== undefined ? materialJson.shininess : 30} `
+                        + ` specularLevel: 75 `
+                        + ` shaderType: 5 `; // for Phong
 
-            let specular = {
-                r: (materialJson.specular >> 16) & 0xFF,
-                g: (materialJson.specular >> 8)  & 0xFF,
-                b: (materialJson.specular)       & 0xFF
-            };
-
-            let emissive = {
-                r: (materialJson.emissive >> 16) & 0xFF,
-                g: (materialJson.emissive >> 8)  & 0xFF,
-                b: (materialJson.emissive)       & 0xFF
-            };
-
-            // now run command
-            let maxscript = `StandardMaterial name:"${materialJson.name}" ` 
-                          + ` diffuse: (color ${diffuse.r}  ${diffuse.g}  ${diffuse.b}) `
-                          + ` specular:(color ${specular.r} ${specular.g} ${specular.b}) `
-                          + ` emissive:(color ${emissive.r} ${emissive.g} ${emissive.b}) `
-                          + ` opacity: ${materialJson.opacity !== undefined ? 100 * materialJson.opacity : 100} `
-                          + ` glossiness: ${materialJson.shininess !== undefined ? materialJson.shininess : 30} `
-                          + ` specularLevel: 75 `
-                          + ` shaderType: 5 `; // for Phong
-
-            this._client.write(maxscript);
-        }.bind(this));
+        return this.execMaxscript(maxscript, "createMaterial");
     }
 
     downloadJson(url: string, path: string): Promise<boolean> {
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("download json returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
-
-            this._errorHandler = function(err) {
-                console.error("download json  error: ", err);
-                reject(err);
-            };
-
-            // now run command
-            const curlPath = "C:\\\\bin\\\\curl";
-            let maxscript = `cmdexRun "${curlPath} -k -s -H \\\"Accept: application/json\\\" \\\"${url}\\\" -o \\\"${path}\\\" "`;
-
-            this._client.write(maxscript);
-        }.bind(this));
+        const curlPath = "C:\\\\bin\\\\curl";
+        let maxscript = `cmdexRun "${curlPath} -k -s -H \\\"Accept: application/json\\\" \\\"${url}\\\" -o \\\"${path}\\\" "`;
+        return this.execMaxscript(maxscript, "downloadJson");
     }
 
     importMesh(path: string, nodeName: string): Promise<boolean> {
-
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("download json returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
-
-            this._errorHandler = function(err) {
-                console.error("download json  error: ", err);
-                reject(err);
-            };
-
-            // now run command
-            let maxscript = `threejsImportBufferGeometry \"${path}\" \"${nodeName}\"`;
-            this._client.write(maxscript);
-        }.bind(this));
+        let maxscript = `threejsImportBufferGeometry \"${path}\" \"${nodeName}\"`;
+        return this.execMaxscript(maxscript, "importMesh");
     }
 
     assignMaterial(nodeName: string, materialName: string): Promise<boolean> {
+        let maxscript = `mat = rayysFindMaterialByName "${materialName}"; `
+                        + `if (mat != false) then (`
+                        + `  $${nodeName}.Material = mat`
+                        + `) `;
 
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("assign material returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
-
-            this._errorHandler = function(err) {
-                console.error("assign material error: ", err);
-                reject(err);
-            };
-
-            // now run command
-            let maxscript = `mat = rayysFindMaterialByName "${materialName}"; `
-                          + `if (mat != false) then (`
-                          + `  $${nodeName}.Material = mat`
-                          + `) `;
-
-            this._client.write(maxscript);
-        }.bind(this));
+        return this.execMaxscript(maxscript, "assignMaterial");
     }
 
     renderScene(camera: string, size: number[], filename: string): Promise<boolean> {
+        let maxscript = `render camera:$${camera} outputSize: [${size[0]},${size[1]}] ` 
+                        + `outputfile: "${filename}" vfb: false`;
 
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("renderScene returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
-
-            this._errorHandler = function(err) {
-                console.error("renderScene error: ", err);
-                reject(err);
-            };
-
-            // now run command
-            let maxscript = `render camera:$${camera} outputSize: [${size[0]},${size[1]}] ` 
-                          + `outputfile: "${filename}" vfb: false`;
-
-            this._client.write(maxscript);
-        }.bind(this));
+        return this.execMaxscript(maxscript, "renderScene");
     }
 
     uploadPng(path: string, url: string): Promise<boolean> {
-        return new Promise<boolean>(function(resolve, reject) {
-            // prepare response handlers for the command
-            this._responseHandler = function(data) {
-                console.log("download json returned: ", data.toString());
-                this._responseHandler = undefined;
-                resolve(true);
-            };
+        const curlPath = "C:\\\\bin\\\\curl";
+        let maxscript = `cmdexRun "${curlPath} -k -F \\\"somefile=@${path}\\\" \\\"${url}\\\" "`;
 
-            this._errorHandler = function(err) {
-                console.error("download json  error: ", err);
-                reject(err);
-            };
-
-            // now run command
-            const curlPath = "C:\\\\bin\\\\curl";
-            let maxscript = `cmdexRun "${curlPath} -k -F \\\"somefile=@${path}\\\" \\\"${url}\\\" "`;
-
-            this._client.write(maxscript);
-        }.bind(this));
+        return this.execMaxscript(maxscript, "uploadPng");
     }
 }
 
