@@ -15,19 +15,27 @@ fn rayysFindMaterialByName findName = (
 )
 
 fn rayysGetAllMaterialNames = (
-mats = #()
-json = "["
-jsonComma = 0;
-for matClass in material.classes do
-(
-	for m in (getclassinstances matClass processAllAnimatables:true processChildren:true) do (
-		if jsonComma > 0 then (
-			json = append json ", "
+    mats = #()
+    json = "["
+    jsonComma = 0;
+    for matClass in material.classes do
+    (
+		for m in (getclassinstances matClass processAllAnimatables:true processChildren:true) do (
+			if jsonComma > 0 then (
+				json = append json ", "
+			)
+			json = append json ("\"" + m.name + "\"")
+			jsonComma = jsonComma + 1;
 		)
-		json = append json ("\"" + m.name + "\"")
-		jsonComma = jsonComma + 1;
-	)
+    )
+    json = append json "]"
+    return json
 )
-json = append json "]"
-return json
+
+fn flipYZ sceneRoot = (
+	-- todo: make scene root rotation
+)
+
+fn unflipYZ sceneRoot = (
+	-- todo: undo scene root rotation
 )
