@@ -9,6 +9,7 @@
     "https": "^1.0.0",
     "inversify": "^5.0.1",
     "lz-string": "^1.4.4",
+    "mime-types": "^2.1.21",
     "mongodb": "^3.1.9",
     "multer": "^1.4.1",
     "reflect-metadata": "^0.1.12",
