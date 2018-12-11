@@ -61,8 +61,31 @@ rfarm.closeSession = function(sessionGuid, onClosed) {
 }.bind(rfarm);
 
 // public
-rfarm.createScene = function(sceneObj, maxSceneFilename, onComplete) {
+rfarm.createScene = function(sceneObj, onComplete) {
     console.log("Creating new scene...");
+
+    $.ajax({
+        url: this.baseUrl  + "/scene",
+        data: {
+            session: this.sessionId
+        },
+        type: 'POST',
+        success: function(result) {
+            console.log(result);
+
+            let sceneRootNodeName = result.id;
+            this.nodes[ sceneObj.uuid ] = new rfarm._rfarmNode(sceneObj, sceneRootNodeName);
+
+            if (onComplete) onComplete(result.id);
+        }.bind(this),
+        error: function(err) {
+            console.error(err);
+        }.bind(this)
+    });
+}.bind(rfarm);
+
+rfarm.openScene = function(sceneObj, maxSceneFilename, onComplete) {
+    console.log("Opening scene from workspace...");
 
     $.ajax({
         url: this.baseUrl  + "/scene",

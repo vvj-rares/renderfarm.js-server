@@ -177,7 +177,7 @@
 
                 document.renderScene = function() {
                     rfarm.createSession(function(sessionId) {
-                        rfarm.createScene(scene, "studio1.max", function(sceneNodeName) {
+                        rfarm.openScene(scene, "studio1.max", function(sceneNodeName) {
                             // rfarm.createMesh(plane, function(planeNodeName) {
                                 rfarm.createMesh(cone, function(coneNodeName) {
                                     rfarm.createMesh(cube, function(cubeNodeName) {
