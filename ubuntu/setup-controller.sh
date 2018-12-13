@@ -80,3 +80,7 @@ sudo systemctl start smbd.service
 
 #How to remove Samba session in Windows?
 # For example: NET USE \\192.168.0.149\everyone /DELETE
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ClientForNFS\CurrentVersion\Default]
+"AnonymousUid"=dword:000003e8
+"AnonymousGid"=dword:000003e8
