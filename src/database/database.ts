@@ -49,13 +49,13 @@ class Database implements IDatabase {
         }
     }
 
-    async getWorkspace(apiKey: string, workspaceGuid: string): Promise<any> {
-        if (apiKey && workspaceGuid) {
+    async getWorkspace(workspaceGuid: string): Promise<any> {
+        if (workspaceGuid) {
             let db = this._client.db(settings.databaseName);
             assert.notEqual(db, null);
 
             return db.collection("workspaces").findOneAndUpdate(
-                { guid: workspaceGuid, apiKey: apiKey }, 
+                { guid: workspaceGuid }, 
                 { $set: { lastSeen : new Date() } },
                 { returnOriginal: false });
 

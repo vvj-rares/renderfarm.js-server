@@ -6,6 +6,7 @@ module.exports = {
     databaseName: 'rfarmdb',
     sslKey: "../ssl/key.pem",
     sslCert: "../ssl/cert.pem",
+    renderOutputDir: "./renderoutput/",
     apiKeyCheck: true,
     workspaceCheck: true
 };

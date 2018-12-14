@@ -3,6 +3,8 @@ import * as express from "express";
 import { IEndpoint, IDatabase } from "../interfaces";
 import { TYPES } from "../types";
 
+const settings = require("../settings");
+
 @injectable()
 class WorkspaceFileEndpoint implements IEndpoint {
     private _database: IDatabase;
@@ -12,34 +14,57 @@ class WorkspaceFileEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        // express.get('/workspace/:guid/file/*/:filename', async function (req, res) {
-        //     console.log(`GET on /workspace/${req.params.guid}/file/${req.params[0]}/${req.params.filename}`);
+        express.get('/workspace/:guid/file/*/:filename', async function (req, res) {
+            console.log(`GET on /workspace/${req.params.guid}/file/${req.params[0]}/${req.params.filename}`);
 
-        //     var mime = require('mime-types');
-        //     var mimeType = mime.lookup(req.params.filename);
+            let workspaceGuid = req.params.guid;
 
-        //     var options = {
-        //         root: "C:\\Temp\\" + req.params[0], todo: take root path from workspace info
-        //         dotfiles: 'deny',
-        //         headers: {
-        //             'x-timestamp': Date.now(),
-        //             'x-sent': true,
-        //             'Content-type': mimeType
-        //         }
-        //     };
+            this._database.getWorkspace(workspaceGuid)
+                .then(function(workspaceInfo){
+                    console.log(" >> workspaceInfo: ", workspaceInfo);
+                    if (!workspaceInfo.value) {
+                        console.error(`  FAIL | workspace not found: ${workspaceGuid}`);
+                        res.status(404);
+                        res.end(JSON.stringify({ error: "workspace not found" }, null, 2));
+                        return;
+                    }
 
-        //     var fileName = req.params.filename;
-        //     res.sendFile(fileName, options, function (err) {
-        //         if (err) {
-        //             console.error(err);
-        //             res.status(404);
-        //             res.end();
-        //         } else {
-        //             console.log('Sent:', fileName);
-        //         }
-        //     });
+                    let mime = require('mime-types');
+                    let mimeType = mime.lookup(req.params.filename);
 
-        // }.bind(this));
+                    let rootDir = `${settings.homeDir}` + req.params[0];
+
+                    console.log(` >> Looking up file ${req.params.filename} in folder ${rootDir}`)
+
+                    let options = {
+                        root: rootDir,
+                        dotfiles: 'deny',
+                        headers: {
+                            'x-timestamp': Date.now(),
+                            'x-sent': true,
+                            'Content-type': mimeType
+                        }
+                    };
+
+                    let fileName = req.params.filename;
+                    res.sendFile(fileName, options, function (err) {
+                        if (err) {
+                            console.error(err);
+                            res.status(404);
+                            res.end();
+                        } else {
+                            console.log('Sent:', fileName);
+                        }
+                    });
+
+                }.bind(this))
+                .catch(function(err){
+                    console.error(`  FAIL | failed to get workspace: ${workspaceGuid}, \n`, err);
+                    res.status(500);
+                    res.end(JSON.stringify({ error: "failed to get workspace" }, null, 2));
+                }.bind(this));
+
+        }.bind(this));
     }
 }
 
