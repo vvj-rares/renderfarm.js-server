@@ -12,34 +12,34 @@ class WorkspaceFileEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get('/workspace/:guid/file/*/:filename', async function (req, res) {
-            console.log(`GET on /workspace/${req.params.guid}/file/${req.params[0]}/${req.params.filename}`);
+        // express.get('/workspace/:guid/file/*/:filename', async function (req, res) {
+        //     console.log(`GET on /workspace/${req.params.guid}/file/${req.params[0]}/${req.params.filename}`);
 
-            var mime = require('mime-types');
-            var mimeType = mime.lookup(req.params.filename);
+        //     var mime = require('mime-types');
+        //     var mimeType = mime.lookup(req.params.filename);
 
-            var options = {
-                root: "C:\\Temp\\" + req.params[0], todo: take root path from workspace info
-                dotfiles: 'deny',
-                headers: {
-                    'x-timestamp': Date.now(),
-                    'x-sent': true,
-                    'Content-type': mimeType
-                }
-            };
+        //     var options = {
+        //         root: "C:\\Temp\\" + req.params[0], todo: take root path from workspace info
+        //         dotfiles: 'deny',
+        //         headers: {
+        //             'x-timestamp': Date.now(),
+        //             'x-sent': true,
+        //             'Content-type': mimeType
+        //         }
+        //     };
 
-            var fileName = req.params.filename;
-            res.sendFile(fileName, options, function (err) {
-                if (err) {
-                    console.error(err);
-                    res.status(404);
-                    res.end();
-                } else {
-                    console.log('Sent:', fileName);
-                }
-            });
+        //     var fileName = req.params.filename;
+        //     res.sendFile(fileName, options, function (err) {
+        //         if (err) {
+        //             console.error(err);
+        //             res.status(404);
+        //             res.end();
+        //         } else {
+        //             console.log('Sent:', fileName);
+        //         }
+        //     });
 
-        }.bind(this));
+        // }.bind(this));
     }
 }
 

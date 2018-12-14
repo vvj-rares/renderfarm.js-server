@@ -88,9 +88,11 @@ class MaxscriptClient implements IMaxscriptClient {
 
     createScene(sceneName): Promise<boolean> {
         let maxscript = `resetMaxFile #noPrompt ; ` 
-                        + ` Dummy name:"${sceneName}" ; `
-                        + ` callbacks.addScript #preRender    "flipYZ($${sceneName})" id:#flipYZ   persistent:false ; `
-                        + ` callbacks.addScript #postRender "unflipYZ($${sceneName})" id:#unflipYZ persistent:false ; ` ;
+                        + ` threejsSceneRoot = Dummy name:"${sceneName}" ; `
+                        + ` callbacks.removeScripts id:#flipYZ ; `
+                        + ` callbacks.removeScripts id:#unflipYZ ; `
+                        + ` callbacks.addScript #preRender    "rayysFlipYZ($${sceneName})" id:#flipYZ   persistent:false ; `
+                        + ` callbacks.addScript #postRender "rayysUnflipYZ($${sceneName})" id:#unflipYZ persistent:false ; ` ;
 
         return this.execMaxscript(maxscript, "createScene");
     }
@@ -99,11 +101,13 @@ class MaxscriptClient implements IMaxscriptClient {
         let w = workspace;
 
         let maxscript = `resetMaxFile #noPrompt ; `
-                        + ` loadMaxFile "\\\\\\\\${w.host}${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\scenes\\\\${maxSceneFilename}" `
+                        + ` loadMaxFile "${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\scenes\\\\${maxSceneFilename}" `
                         + ` useFileUnits:true quiet:true ; `
-                        + ` Dummy name:"${sceneName}" ; `
-                        + ` callbacks.addScript #preRender    "flipYZ($${sceneName})" id:#flipYZ   persistent:false ; `
-                        + ` callbacks.addScript #postRender "unflipYZ($${sceneName})" id:#unflipYZ persistent:false ; `;
+                        + ` threejsSceneRoot = Dummy name:"${sceneName}" ; `
+                        + ` callbacks.removeScripts id:#flipYZ ; `
+                        + ` callbacks.removeScripts id:#unflipYZ ; `
+                        + ` callbacks.addScript #preRender    "rayysFlipYZ($${sceneName})" id:#flipYZ   persistent:false ; `
+                        + ` callbacks.addScript #postRender "rayysUnflipYZ($${sceneName})" id:#unflipYZ persistent:false ; `;
 
         return this.execMaxscript(maxscript, "openScene");
     }
@@ -143,10 +147,11 @@ class MaxscriptClient implements IMaxscriptClient {
     createTargetCamera(cameraJson: any): Promise<boolean> {
         let m = cameraJson.matrix;
         // now run command
-        let maxscript = `cam = FreeCamera fov:${cameraJson.fov} nearclip:1 farclip:1000 nearrange:0 farrange:1000 ` 
+        let maxscript = `aFreeCamera = FreeCamera fov:${cameraJson.fov} nearclip:1 farclip:1000 nearrange:0 farrange:1000 ` 
                         + ` mpassEnabled:off mpassRenderPerPass:off ` 
                         + ` isSelected:on name:"${cameraJson.name}" ; ` 
-                        + `cam.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}])`;
+                        + ` aFreeCamera.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}]) ; `
+                        + ` aFreeCamera.parent = threejsSceneRoot; `;
 
         return this.execMaxscript(maxscript, "createTargetCamera");
     }
@@ -176,13 +181,6 @@ class MaxscriptClient implements IMaxscriptClient {
         return this.execMaxscript(maxscript, "deleteObjects");
     }
 
-    createSkylight(skylightJson: any): Promise<boolean> {
-        let maxscript = `aSkylight = Skylight name:"${skylightJson.name}" pos:[${skylightJson.position[0]},${skylightJson.position[2]},${skylightJson.position[1]}] `
-                        + `isSelected:off; aSkylight.cast_Shadows = on; aSkylight.rays_per_sample = 15;`;
-
-        return this.execMaxscript(maxscript, "createSkylight");
-    }
-
     createSpotlight(spotlightJson: any): Promise<boolean> {
         let m = spotlightJson.matrix;
         let r = (spotlightJson.color >> 16) & 0xFF;
@@ -201,7 +199,9 @@ class MaxscriptClient implements IMaxscriptClient {
                         + ` hotspot: ${hotspot} `
                         + ` falloff: ${falloff} `
                         + ` target: (Targetobject transform: (matrix3 [${t[0]},${t[1]},${t[2]}] [${t[4]},${t[5]},${t[6]}] [${t[8]},${t[9]},${t[10]}] [${t[12]},${t[13]},${t[14]}])); `
-                        + ` aTargetSpot.shadowGenerator = shadowMap(); aTargetSpot.baseObject.castShadows = true; `;
+                        + ` aTargetSpot.shadowGenerator = shadowMap(); aTargetSpot.baseObject.castShadows = true; `
+                        + ` aTargetSpot.parent = threejsSceneRoot; `
+                        + ` aTargetSpot.target.parent = threejsSceneRoot; `;
 
         if (spotlightJson.shadow && spotlightJson.shadow.mapsize > 0) {
             maxscript += ` aTargetSpot.mapSize = ${spotlightJson.shadow.mapsize}; `;
@@ -242,8 +242,13 @@ class MaxscriptClient implements IMaxscriptClient {
     }
 
     downloadJson(url: string, path: string): Promise<boolean> {
+        console.log(" >> Downloading json from:\n" + url);
+
         const curlPath = "C:\\\\bin\\\\curl";
         let maxscript = `cmdexRun "${curlPath} -k -s -H \\\"Accept: application/json\\\" \\\"${url}\\\" -o \\\"${path}\\\" "`;
+
+        console.log(" >> maxscript: " + maxscript);
+
         return this.execMaxscript(maxscript, "downloadJson");
     }
 
@@ -266,13 +271,6 @@ class MaxscriptClient implements IMaxscriptClient {
                         + `outputfile: "${filename}" vfb: false`;
 
         return this.execMaxscript(maxscript, "renderScene");
-    }
-
-    uploadPng(path: string, url: string): Promise<boolean> {
-        const curlPath = "C:\\\\bin\\\\curl";
-        let maxscript = `cmdexRun "${curlPath} -k -F \\\"somefile=@${path}\\\" \\\"${url}\\\" "`;
-
-        return this.execMaxscript(maxscript, "uploadPng");
     }
 }
 

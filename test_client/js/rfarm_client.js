@@ -1,7 +1,7 @@
 var rfarm = {
     apiKey: "75f5-4d53-b0f4",
     workspace: "55a0bd33-9f15-4bc0-a482-17899eb67af3",
-    baseUrl: "https://localhost:8000",
+    baseUrl: "https://mel.mbnsay.com:8000",
 
     geometries: {},  // here we map scene geometry uuid <==> backend geometry resource
     materials: {},   // here we map scene material uuid <==> backend material resource
@@ -131,7 +131,7 @@ rfarm.createMesh = function(obj, onComplete) {
 
 //public
 rfarm.createCamera = function(camera, onCameraReady) {
-    console.log("Creating new scene...");
+    console.log("Creating new camera...");
 
     camera.updateMatrix();
     camera.updateMatrixWorld (true);
@@ -142,7 +142,7 @@ rfarm.createCamera = function(camera, onCameraReady) {
     var compressedCameraData = LZString144.compressToBase64(cameraText);
 
     $.ajax({
-        url: "https://localhost:8000/scene/0/camera",
+        url: this.baseUrl  + "/scene/0/camera",
         data: { 
             session: this.sessionId,
             camera: compressedCameraData 

@@ -3,6 +3,8 @@ import * as express from "express";
 import { IEndpoint, IDatabase, IMaxscriptClientFactory } from "../interfaces";
 import { TYPES } from "../types";
 
+const settings = require("../settings");
+
 @injectable()
 class SceneGeometryEndpoint implements IEndpoint {
     private _database: IDatabase;
@@ -117,8 +119,11 @@ class SceneGeometryEndpoint implements IEndpoint {
                             .then(function(socket) {
                                 console.log("SceneGeometryEndpoint connected to maxscript client");
 
+                                let downloadUrl = `https://${settings.host}:${settings.port}/scene/0/geometry/${geometryJson.uuid}?session=${req.body.session}`;
+                                console.log(downloadUrl);
+
                                 let filename = `${maxNodeName}.json`;
-                                maxscriptClient.downloadJson(`https://192.168.0.200:8000/scene/0/geometry/${geometryJson.uuid}?session=${req.body.session}`, `C:\\\\Temp\\\\downloads\\\\${filename}`)
+                                maxscriptClient.downloadJson(downloadUrl, `C:\\\\Temp\\\\downloads\\\\${filename}`)
                                     .then(function(value) {
                                         // as we have json file saved locally, now it is the time to import it
                                         console.log(`    OK | geometry file downloaded successfully`);

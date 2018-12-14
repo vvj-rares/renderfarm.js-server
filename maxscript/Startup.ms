@@ -1,5 +1,5 @@
-logInfo "MAXScript" "Greetings from log2console.dlx"
-threejsApiStart 29207 "192.168.0.200"
+--logInfo "MAXScript" "Greetings from log2console.dlx"
+--threejsApiStart 29207 "192.168.0.200"
 
 fn rayysFindMaterialByName findName = (
 	for matClass in material.classes do
@@ -32,10 +32,10 @@ fn rayysGetAllMaterialNames = (
     return json
 )
 
-fn flipYZ sceneRoot = (
-	-- todo: make scene root rotation
+fn rayysFlipYZ sceneRoot = (
+	rotate sceneRoot (eulerangles 90 0 0)
 )
 
-fn unflipYZ sceneRoot = (
-	-- todo: undo scene root rotation
+fn rayysUnflipYZ sceneRoot = (
+	rotate sceneRoot (eulerangles -90 0 0)
 )

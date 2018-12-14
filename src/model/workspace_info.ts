@@ -1,8 +1,8 @@
 class WorkspaceInfo {
     private _apiKey: string;
     private _guid: string;
-    private _host: string;
     private _homeDir: string;
+    private _renderOutputDir: string;
     private _name: string;
     private _lastSeen: Date;
 
@@ -20,12 +20,12 @@ class WorkspaceInfo {
         return this._guid;
     }
 
-    public get host(): string {
-        return this._host;
-    }
-
     public get homeDir(): string {
         return this._homeDir;
+    }
+
+    public get renderOutputDir(): string {
+        return this._renderOutputDir;
     }
 
     public get name(): string {
@@ -39,8 +39,8 @@ class WorkspaceInfo {
     public static fromJSON(obj: any): WorkspaceInfo {
         let res = new WorkspaceInfo(obj.apiKey, obj.guid);
 
-        res._host = obj.host;
         res._homeDir  = obj.homeDir;
+        res._renderOutputDir = obj.renderOutputDir;
         res._name  = obj.name;
         res._lastSeen  = new Date(obj.lastSeen);
 
@@ -52,8 +52,8 @@ class WorkspaceInfo {
             apiKey:        this._apiKey,
             guid:          this._guid,
 
-            host:          this._host,
             homeDir:       this._homeDir,
+            renderOutputDir: this._renderOutputDir,
             name:          this._name,
             lastSeen:      this._lastSeen.toISOString(),
         }
@@ -64,8 +64,8 @@ class WorkspaceInfo {
             apiKey:     this._apiKey,
             guid:       this._guid,
 
-            host:       this._host,
             homeDir:    this._homeDir,
+            renderOutputDir: this._renderOutputDir,
             name:       this._name,
             lastSeen:   this._lastSeen,
         }

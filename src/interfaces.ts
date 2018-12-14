@@ -65,7 +65,6 @@ export interface IMaxscriptClient {
     cloneInstance(nodeName: string, cloneName: string): Promise<boolean>;
 
     createSpotlight(spotlightJson: any): Promise<boolean>;
-    createSkylight(skylightJson: any): Promise<boolean>;
     createMaterial(materialJson: any): Promise<boolean>;
 
     downloadJson(url: string, path: string): Promise<boolean>;
@@ -74,8 +73,6 @@ export interface IMaxscriptClient {
     assignMaterial(nodeName: string, materialName: string): Promise<boolean>;
 
     renderScene(camera: string, size: number[], filename: string): Promise<boolean>;
-
-    uploadPng(path: string, url: string): Promise<boolean>;
 }
 
 export interface IMaxscriptClientFactory {

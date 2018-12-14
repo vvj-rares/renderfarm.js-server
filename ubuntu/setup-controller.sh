@@ -72,6 +72,12 @@ sudo systemctl start smbd.service
 #How to remove Samba session in Windows?
 # For example: NET USE \\192.168.0.149\everyone /DELETE
 
+sudo nano /etc/exports
+sudo systemctl restart nfs-kernel-server
+
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ClientForNFS\CurrentVersion\Default]
 "AnonymousUid"=dword:000003e8
 "AnonymousGid"=dword:000003e8
+
+mount -o mtype=hard \\192.168.88.196\home\rfarm-admin\Dropbox\rfarm X:
+mount -o mtype=hard \\192.168.88.196\home\rfarm-admin\renderoutput R:
