@@ -56,7 +56,7 @@ class SessionEndpoint implements IEndpoint {
 
     async checkWorkspace(res: any, apiKey: string, workspaceGuid: string) {
         try {
-            let wsRec = await this._database.getWorkspace(apiKey, workspaceGuid);
+            let wsRec = await this._database.getWorkspace(workspaceGuid);
             if (!wsRec.value) {
                 console.error(`  FAIL | rejected workspace guid: ${workspaceGuid}\n`);
 
