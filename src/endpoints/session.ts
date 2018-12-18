@@ -110,7 +110,7 @@ class SessionEndpoint implements IEndpoint {
                     let workerInfo = WorkerInfo.fromJSON(value.worker);
                     console.log(`    OK | session ${value.session.guid} assigned to worker ${value.worker.mac}`);
 
-                    this._database.getWorkspace(apiKey, workspaceGuid)
+                    this._database.getWorkspace(workspaceGuid)
                         .then(function(workspaceInfo){
                             console.log(" >> workspaceInfo: ", workspaceInfo);
                             if (!workspaceInfo.value) {
