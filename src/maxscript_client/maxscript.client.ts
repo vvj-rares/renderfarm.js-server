@@ -272,8 +272,12 @@ class MaxscriptClient implements IMaxscriptClient {
     }
 
     renderScene(camera: string, size: number[], filename: string): Promise<boolean> {
-        let maxscript = `render camera:$${camera} outputSize: [${size[0]},${size[1]}] ` 
-                        + `outputfile: "${filename}" vfb: false`;
+        let maxscript =   ` pngio.settype(#true24) ; `  // enums: {#paletted|#true24|#true48|#gray8|#gray16} 
+                        + ` pngio.setAlpha false ; `
+                        + ` render camera:$${camera} outputSize: [${size[0]},${size[1]}] ` 
+                        + ` outputfile: "${filename}" vfb: false`;
+
+        // can also use: JPEG.setQuality(5); JPEG.setSmoothing(1);
 
         return this.execMaxscript(maxscript, "renderScene");
     }
