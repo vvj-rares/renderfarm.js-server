@@ -53,7 +53,7 @@ class JobEndpoint implements IEndpoint {
                                     .then(function(value) {
                                         console.log(`    OK | image rendered`);
                                         maxscriptClient.disconnect();
-                                        res.end(JSON.stringify({ url: `https://${settings.host}/renderoutput/${fileId}.png` }, null, 2));
+                                        res.end(JSON.stringify({ url: `${settings.publicUrl}/renderoutput/${fileId}.png` }, null, 2));
 
                                     }.bind(this))
                                     .catch(function(err) {
