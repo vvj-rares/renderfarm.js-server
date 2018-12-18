@@ -8,6 +8,7 @@ module.exports = {
     sslKey: "../ssl/key.pem",
     sslCert: "../ssl/cert.pem",
     renderOutputDir: "\\\\192.168.0.1\\renderoutput", // where to save render output?
+    renderOutputLocal: "/home/rfarm-api/renderoutput", // how to find render output files locally?
     apiKeyCheck: true,
     workspaceCheck: true,
     workgroup: "default" // it helps to resolve which workers belong to which api instance

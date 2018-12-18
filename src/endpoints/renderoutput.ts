@@ -14,10 +14,10 @@ class RenderOutputEndpoint implements IEndpoint {
             let mime = require('mime-types');
             let mimeType = mime.lookup(req.params.filename);
 
-            console.log(` >> Looking up file ${req.params.filename} in folder ${settings.renderOutputDir}`);
+            console.log(` >> Looking up file ${req.params.filename} in folder ${settings.renderOutputLocal}`);
 
             let options = {
-                root: settings.renderOutputDir,
+                root: settings.renderOutputLocal,
                 dotfiles: 'deny',
                 headers: {
                     'x-timestamp': Date.now(),
