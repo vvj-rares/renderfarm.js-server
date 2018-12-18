@@ -7,7 +7,7 @@ module.exports = {
     databaseName: 'rfarmdb',
     sslKey: "../ssl/key.pem",
     sslCert: "../ssl/cert.pem",
-    renderOutputDir: "\\\\192.168.0.1\\renderoutput", // where to save render output?
+    renderOutputDir: '\\\\\\\\192.168.0.1\\\\renderoutput', // where to save render output?
     renderOutputLocal: "/home/rfarm-api/renderoutput", // how to find render output files locally?
     apiKeyCheck: true,
     workspaceCheck: true,
