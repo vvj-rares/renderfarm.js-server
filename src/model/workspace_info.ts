@@ -2,7 +2,6 @@ class WorkspaceInfo {
     private _apiKey: string;
     private _guid: string;
     private _homeDir: string;
-    private _renderOutputDir: string;
     private _name: string;
     private _lastSeen: Date;
 
@@ -24,10 +23,6 @@ class WorkspaceInfo {
         return this._homeDir;
     }
 
-    public get renderOutputDir(): string {
-        return this._renderOutputDir;
-    }
-
     public get name(): string {
         return this._name;
     }
@@ -40,7 +35,6 @@ class WorkspaceInfo {
         let res = new WorkspaceInfo(obj.apiKey, obj.guid);
 
         res._homeDir  = obj.homeDir;
-        res._renderOutputDir = obj.renderOutputDir;
         res._name  = obj.name;
         res._lastSeen  = new Date(obj.lastSeen);
 
@@ -53,7 +47,6 @@ class WorkspaceInfo {
             guid:          this._guid,
 
             homeDir:       this._homeDir,
-            renderOutputDir: this._renderOutputDir,
             name:          this._name,
             lastSeen:      this._lastSeen.toISOString(),
         }
@@ -65,7 +58,6 @@ class WorkspaceInfo {
             guid:       this._guid,
 
             homeDir:    this._homeDir,
-            renderOutputDir: this._renderOutputDir,
             name:       this._name,
             lastSeen:   this._lastSeen,
         }

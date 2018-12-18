@@ -48,12 +48,12 @@ class JobEndpoint implements IEndpoint {
 
                                 const fileId = require('../utils/genRandomName')("render");
 
-                                const outputPath = `${workspaceInfo.renderOutputDir}\\\\${fileId}.png`;
+                                const outputPath = `${settings.renderOutputDir}\\\\${fileId}.png`;
                                 maxscriptClient.renderScene(camera, [width, height], outputPath)
                                     .then(function(value) {
                                         console.log(`    OK | image rendered`);
                                         maxscriptClient.disconnect();
-                                        res.end(JSON.stringify({ url: `https://${settings.host}:${settings.port}/renderoutput/${fileId}.png` }, null, 2));
+                                        res.end(JSON.stringify({ url: `https://${settings.host}/renderoutput/${fileId}.png` }, null, 2));
 
                                     }.bind(this))
                                     .catch(function(err) {
