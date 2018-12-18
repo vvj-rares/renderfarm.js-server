@@ -4,6 +4,8 @@ import { IEndpoint, IDatabase } from "../interfaces";
 import { TYPES } from "../types";
 import { WorkerInfo } from "../model/worker_info";
 
+const settings = require("../settings");
+
 @injectable()
 class WorkerEndpoint implements IEndpoint {
     private _database: IDatabase;
@@ -36,11 +38,14 @@ class WorkerEndpoint implements IEndpoint {
                 knownWorker.totalRam = rec.total_ram;
                 knownWorker.ip       = rinfo.address;
                 knownWorker.port     = rec.port;
+                // all who report into this api belongs to current workgroup
+                knownWorker.workgroup = settings.workgroup;
                 knownWorker.touch();
 
                 await this._database.storeWorker(knownWorker);
             } else {
-                let newWorker = new WorkerInfo(rec.mac, rinfo.address, rec.port);
+                 // all who report into this api belongs to current workgroup
+                let newWorker = new WorkerInfo(rec.mac, rinfo.address, rec.port, settings.workgroup);
                 this._workers[workerId] = newWorker;
 
                 await this._database.storeWorker(newWorker);

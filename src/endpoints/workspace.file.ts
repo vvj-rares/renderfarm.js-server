@@ -21,7 +21,7 @@ class WorkspaceFileEndpoint implements IEndpoint {
 
             this._database.getWorkspace(workspaceGuid)
                 .then(function(workspaceInfo){
-                    console.log(" >> workspaceInfo: ", workspaceInfo);
+
                     if (!workspaceInfo.value) {
                         console.error(`  FAIL | workspace not found: ${workspaceGuid}`);
                         res.status(404);

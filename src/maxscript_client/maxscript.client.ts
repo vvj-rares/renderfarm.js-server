@@ -18,14 +18,14 @@ class MaxscriptClient implements IMaxscriptClient {
         return new Promise<boolean>(function(resolve, reject) {
 
             this._client = new Socket();
+
             this._client.on('data', function(data) {
-                console.log(data.toString());
                 if (this._responseHandler) {
                     this._responseHandler(data);
                 }
             }.bind(this));
+
             this._client.on('error', function(err) {
-                console.error(err);
                 if (this._errorHandler) {
                     this._errorHandler(err);
                 }
@@ -33,12 +33,11 @@ class MaxscriptClient implements IMaxscriptClient {
             }.bind(this));
 
             this._client.on('close', function() {
-                console.log(`Client disconnected from maxscript endpoint: ${ip}`);
+                // just ok
             }.bind(this));
 
             // now connect and test a connection with some simple command
             this._client.connect(port, ip, function() {
-                console.log(`Client connected to remote maxscript endpoint: ${ip}`);
                 resolve(true);
             }.bind(this));
 
@@ -54,10 +53,15 @@ class MaxscriptClient implements IMaxscriptClient {
         return new Promise<boolean>(function(resolve, reject) {
             // prepare response handlers for the command
             this._responseHandler = function(data) {
-                console.log(`${actionDesc} returned: `, data.toString());
+                let maxscriptResp = data.toString();
+                if (maxscriptResp && maxscriptResp !== "OK") {
+                    console.log(`       >> maxscript = ${maxscript}`);
+                    console.log(`   LOG | MaxscriptClient.${actionDesc} returned: ${maxscriptResp}` );
+                }
+
                 this._responseHandler = undefined;
                 if (responseChecker) {
-                    if (responseChecker(data.toString())) {
+                    if (responseChecker(maxscriptResp)) {
                         resolve(true);
                     } else {
                         reject(false);
@@ -68,7 +72,8 @@ class MaxscriptClient implements IMaxscriptClient {
             };
 
             this._errorHandler = function(err) {
-                console.error(`${actionDesc} error: `, err);
+                console.log ( `      >> maxscript = ${maxscript}`);
+                console.error(`  FAIL | MaxscriptClient.${actionDesc} error: `, err);
                 reject(err);
             };
 
@@ -138,8 +143,8 @@ class MaxscriptClient implements IMaxscriptClient {
 
         let maxscript = `for i=1 to pathConfig.mapPaths.count()  do ( pathConfig.mapPaths.delete 1 ) ; `
                       + ` for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 ) ; `
-                      + ` pathConfig.mapPaths.add "\\\\\\\\${w.host}${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\maps" ; `
-                      + ` pathConfig.xrefPaths.add "\\\\\\\\${w.host}${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\xrefs" ; ` ;
+                      + ` pathConfig.mapPaths.add "${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\maps" ; `
+                      + ` pathConfig.xrefPaths.add "${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\xrefs" ; ` ;
 
         return this.execMaxscript(maxscript, "setWorkspace");
     }
@@ -242,12 +247,12 @@ class MaxscriptClient implements IMaxscriptClient {
     }
 
     downloadJson(url: string, path: string): Promise<boolean> {
-        console.log(" >> Downloading json from:\n" + url);
+        // console.log(" >> Downloading json from:\n" + url);
 
         const curlPath = "C:\\\\bin\\\\curl";
         let maxscript = `cmdexRun "${curlPath} -k -s -H \\\"Accept: application/json\\\" \\\"${url}\\\" -o \\\"${path}\\\" "`;
 
-        console.log(" >> maxscript: " + maxscript);
+        // console.log(" >> maxscript: " + maxscript);
 
         return this.execMaxscript(maxscript, "downloadJson");
     }

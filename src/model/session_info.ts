@@ -1,15 +1,15 @@
 class SessionInfo {
     private _apiKey: string;
     private _guid: string;
-    private _workerMac: string;
+    private _workerEndpoint: string;
 
     private _firstSeen: Date;
     private _lastSeen: Date;
 
-    constructor(apiKey: string, guid: string, workerMac: string) {
+    constructor(apiKey: string, guid: string, workerEndpoint: string) {
         this._apiKey = apiKey;
         this._guid = guid;
-        this._workerMac = workerMac;
+        this._workerEndpoint = workerEndpoint;
 
         this._firstSeen = new Date();
         this._lastSeen = new Date();
@@ -31,8 +31,8 @@ class SessionInfo {
         return this._guid;
     }
 
-    public get workerMac(): string {
-        return this._workerMac;
+    public get workerEndpoint(): string {
+        return this._workerEndpoint;
     }
 
     public touch(): void {
@@ -40,7 +40,7 @@ class SessionInfo {
     }
 
     public static fromJSON(obj: any): SessionInfo {
-        let res = new SessionInfo(obj.apiKey, obj.guid, obj.workerMac);
+        let res = new SessionInfo(obj.apiKey, obj.guid, obj.workerEndpoint);
 
         res._firstSeen = new Date(obj.firstSeen);
         res._lastSeen  = new Date(obj.lastSeen);
@@ -52,7 +52,7 @@ class SessionInfo {
         return {
             apiKey:     this._apiKey,
             guid:       this._guid,
-            workerMac:  this._workerMac,
+            workerEndpoint:  this._workerEndpoint,
 
             firstSeen:  this._firstSeen.toISOString(),
             lastSeen:   this._lastSeen.toISOString()
@@ -63,7 +63,7 @@ class SessionInfo {
         return {
             apiKey:     this._apiKey,
             guid:       this._guid,
-            workerMac:  this._workerMac,
+            workerEndpoint: this._workerEndpoint,
 
             firstSeen:  this._firstSeen,
             lastSeen:   this._lastSeen

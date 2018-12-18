@@ -8,5 +8,6 @@ module.exports = {
     sslCert: "../ssl/cert.pem",
     renderOutputDir: "./renderoutput/",
     apiKeyCheck: true,
-    workspaceCheck: true
+    workspaceCheck: true,
+    workgroup: "default" // it helps to resolve what workers belong to which api instance
 };

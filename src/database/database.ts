@@ -8,6 +8,7 @@ import assert = require("assert");
 import { WorkerInfo } from "../model/worker_info";
 import { SessionInfo } from "../model/session_info";
 import { WorkspaceInfo } from "../model/workspace_info";
+import { Worker } from "cluster";
 
 const settings = require("../settings");
 
@@ -112,6 +113,7 @@ class Database implements IDatabase {
         });
     }
 
+    // assign free worker to given session
     async startWorkerSession(apiKey: string, sessionGuid: string): Promise<WorkerInfo> {
         let db = this._client.db(settings.databaseName);
         assert.notEqual(db, null);
@@ -130,8 +132,8 @@ class Database implements IDatabase {
                     $lookup:
                       {
                         from: "workers",
-                        localField: "workerMac",
-                        foreignField: "mac",
+                        localField: "workerEndpoint",
+                        foreignField: "endpoint",
                         as: "worker"
                       }
                 },
@@ -146,19 +148,21 @@ class Database implements IDatabase {
                 }
 
                 // now make a collection of busy mac addresses
-                let busyWorkersMac = res.map(s => s.worker.mac);
+                let busyWorkersEndpoints = res.map(s => s.worker.endpoint);
 
                 let recentOnlineDate = new Date(Date.now() - 3*1000); // pick the ones who were seen not less than 3 seconds ago
                 //now find one worker, whose mac does not belong to busyWorkersMac
                 db.collection("workers").findOne(
                     { 
-                        mac: { $nin: busyWorkersMac },
+                        endpoint: { $nin: busyWorkersEndpoints },
+                        workgroup: { $eq: settings.workgroup },
                         lastSeen : { $gte: recentOnlineDate },
                     })
                     .then(function(obj) {
 
                         if (obj) {
-                            let newSession = new SessionInfo(apiKey, sessionGuid, obj.mac);
+                            let worker = WorkerInfo.fromJSON(obj);
+                            let newSession = new SessionInfo(apiKey, sessionGuid, worker.endpoint);
                             db.collection("sessions").insertOne(newSession.toDatabase())
                                 .then(function(value){
                                     if (value.insertedCount === 1) {
@@ -209,6 +213,7 @@ class Database implements IDatabase {
         }.bind(this));
     }
 
+    // find worker assigned to given session
     async getWorker(sessionGuid: string): Promise<WorkerInfo> {
 
         let db = this._client.db(settings.databaseName);
@@ -230,8 +235,8 @@ class Database implements IDatabase {
                     $lookup:
                       {
                         from: "workers",
-                        localField: "workerMac",
-                        foreignField: "mac",
+                        localField: "workerEndpoint",
+                        foreignField: "endpoint",
                         as: "worker"
                       }
                 },

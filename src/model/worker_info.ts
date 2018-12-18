@@ -7,13 +7,15 @@ class WorkerInfo {
     private _totalRam: number;
     private _ip: string;
     private _port: number;
+    private _workgroup: string;
 
-    constructor(mac: string, ip: string, port: number) {
+    constructor(mac: string, ip: string, port: number, workgroup: string) {
         this._firstSeen = new Date();
         this._lastSeen = new Date();
         this._mac = mac;
         this._ip = ip;
         this._port = port;
+        this._workgroup = workgroup;
     }
 
     public get firstSeen(): Date {
@@ -54,12 +56,23 @@ class WorkerInfo {
         this._port = value;
     }
 
+    public get workgroup(): string {
+        return this._workgroup;
+    }
+    public set workgroup(value: string) {
+        this._workgroup = value;
+    }
+
+    public get endpoint(): string {
+        return `${this._ip}:${this._port}`;
+    }
+
     public touch(): void {
         this._lastSeen = new Date();
     }
 
     public static fromJSON(obj: any): WorkerInfo {
-        let res = new WorkerInfo(obj.mac, obj.ip, obj.port);
+        let res = new WorkerInfo(obj.mac, obj.ip, obj.port, obj.workgroup);
 
         res._firstSeen = new Date(obj.firstSeen);
         res._lastSeen  = new Date(obj.lastSeen);
@@ -76,6 +89,8 @@ class WorkerInfo {
             ip:         this._ip,
             port:       this._port,
             mac:        this._mac,
+            endpoint:   this.endpoint,
+            workgroup:  this.workgroup,
             firstSeen:  this._firstSeen.toISOString(),
             lastSeen:   this._lastSeen.toISOString(),
             cpuUsage:   this._cpuUsage,
@@ -89,6 +104,8 @@ class WorkerInfo {
             mac:        this._mac,
             ip:         this._ip,
             port:       this._port,
+            endpoint:   this.endpoint,
+            workgroup:  this.workgroup,
             firstSeen:  this._firstSeen,
             lastSeen:   this._lastSeen,
             totalRam:   this._totalRam,

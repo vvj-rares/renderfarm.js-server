@@ -112,7 +112,7 @@ class SessionEndpoint implements IEndpoint {
 
                     this._database.getWorkspace(workspaceGuid)
                         .then(function(workspaceInfo){
-                            console.log(" >> workspaceInfo: ", workspaceInfo);
+
                             if (!workspaceInfo.value) {
                                 console.error(`  FAIL | workspace not found: ${workspaceGuid}`);
                                 res.status(500);
@@ -122,21 +122,21 @@ class SessionEndpoint implements IEndpoint {
 
                             this._database.assignSessionWorkspace(newSessionGuid, workspaceGuid)
                                 .then(function(){
-                                    console.log(`    OK | workspace ${workspaceGuid} was assigned to session ${newSessionGuid}`);
+                                    console.log(`    OK | workspace ${workspaceGuid} assigned to session ${newSessionGuid}`);
 
                                     let maxscriptClient = this._maxscriptClientFactory.create();
                                     maxscriptClient.connect(workerInfo.ip, workerInfo.port)
                                         .then(function(value) {
-                                            console.log("SessionEndpoint connected to maxscript client, ", value);
+                                            console.log(`    OK | SessionEndpoint connected to maxscript client`);
 
                                             maxscriptClient.setSession(newSessionGuid)
                                                 .then(function(value) {
-                                                    console.log(`    OK | SessionGuid on worker was updated, `, value);
+                                                    console.log(`    OK | SessionGuid on worker was updated`);
 
                                                     maxscriptClient.setWorkspace(workspaceInfo.value)
                                                         .then(function(value) {
                                                             maxscriptClient.disconnect();
-                                                            console.log(`    OK | workspace set, `, value);
+                                                            console.log(`    OK | workspace ${workspaceGuid} set to worker: ${workerInfo.ip}:${workerInfo.port}`);
                                                             res.end(JSON.stringify({ id: newSessionGuid, workspace: workspaceInfo.name }, null, 2));
                                                         }.bind(this))
                                                         .catch(function(err) {
@@ -178,7 +178,7 @@ class SessionEndpoint implements IEndpoint {
         
                 }.bind(this))
                 .catch(function(err) {
-                    console.error(`  FAIL | failed to create session\n`, err);
+                    console.error(`  FAIL | failed to create session: `, err);
                     res.status(500);
                     res.end(JSON.stringify({ error: "failed to create session", reason: err }, null, 2));
                 }.bind(this)); // end of this._database.startWorkerSession promise
