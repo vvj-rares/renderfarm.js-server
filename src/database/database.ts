@@ -8,7 +8,6 @@ import assert = require("assert");
 import { WorkerInfo } from "../model/worker_info";
 import { SessionInfo } from "../model/session_info";
 import { WorkspaceInfo } from "../model/workspace_info";
-import { Worker } from "cluster";
 
 const settings = require("../settings");
 
@@ -56,7 +55,7 @@ class Database implements IDatabase {
             assert.notEqual(db, null);
 
             return db.collection("workspaces").findOneAndUpdate(
-                { guid: workspaceGuid }, 
+                { guid: workspaceGuid, workgroup: settings.workgroup }, 
                 { $set: { lastSeen : new Date() } },
                 { returnOriginal: false });
 
