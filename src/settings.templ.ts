@@ -1,5 +1,5 @@
 module.exports = {
-    version: "1.0.1",
+    version: "1.0.2",
     host: "192.168.0.1", // where the api is hosted in local network?
     port: 8000,          // internal tcp port
     publicUrl: "https://example.com", //how to access rest api from outside?
