@@ -32,7 +32,7 @@ class SceneLightEndpoint implements IEndpoint {
                 .then(function(worker){
 
                     let maxscriptClient = this._maxscriptClientFactory.create();
-                    maxscriptClient.connect(worker.ip)
+                    maxscriptClient.connect(worker.ip, worker.port)
                         .then(function(value) {
                             console.log("SceneLightEndpoint connected to maxscript client, ", value);
 
@@ -73,7 +73,7 @@ class SceneLightEndpoint implements IEndpoint {
                 .then(function(worker){
 
                     let maxscriptClient = this._maxscriptClientFactory.create();
-                    maxscriptClient.connect(worker.ip)
+                    maxscriptClient.connect(worker.ip, worker.port)
                         .then(function(value) {
                             console.log("SceneLightEndpoint connected to maxscript client, ", value);
 

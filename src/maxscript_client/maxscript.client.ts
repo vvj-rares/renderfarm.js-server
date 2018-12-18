@@ -13,7 +13,7 @@ class MaxscriptClient implements IMaxscriptClient {
     constructor() {
     }
 
-    connect(ip: string): Promise<boolean> {
+    connect(ip: string, port: number): Promise<boolean> {
 
         return new Promise<boolean>(function(resolve, reject) {
 
@@ -37,7 +37,7 @@ class MaxscriptClient implements IMaxscriptClient {
             }.bind(this));
 
             // now connect and test a connection with some simple command
-            this._client.connect(29207, ip, function() {
+            this._client.connect(port, ip, function() {
                 console.log(`Client connected to remote maxscript endpoint: ${ip}`);
                 resolve(true);
             }.bind(this));

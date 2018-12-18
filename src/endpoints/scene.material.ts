@@ -66,7 +66,7 @@ class SceneMaterialEndpoint implements IEndpoint {
                         };
         
                         let maxscriptClient = this._maxscriptClientFactory.create();
-                        maxscriptClient.connect(worker.ip)
+                        maxscriptClient.connect(worker.ip, worker.port)
                             .then(function(value) {
                                 console.log("SceneMaterialEndpoint connected to maxscript client, ", value);
 

@@ -28,7 +28,7 @@ class SceneEndpoint implements IEndpoint {
                             console.log(`    OK | retrieved workspace by session`);
 
                             let maxscriptClient = this._maxscriptClientFactory.create();
-                            maxscriptClient.connect(worker.ip)
+                            maxscriptClient.connect(worker.ip, worker.port)
                                 .then(function(value) {
                                     console.log("SceneEndpoint connected to maxscript client, ", value);
 

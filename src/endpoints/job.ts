@@ -42,7 +42,7 @@ class JobEndpoint implements IEndpoint {
                         let height = req.body.height;
 
                         let maxscriptClient = this._maxscriptClientFactory.create();
-                        maxscriptClient.connect(worker.ip)
+                        maxscriptClient.connect(worker.ip, worker.port)
                             .then(function(value) {
                                 console.log("JobEndpoint connected to maxscript client, ", value);
 

@@ -125,7 +125,7 @@ class SessionEndpoint implements IEndpoint {
                                     console.log(`    OK | workspace ${workspaceGuid} was assigned to session ${newSessionGuid}`);
 
                                     let maxscriptClient = this._maxscriptClientFactory.create();
-                                    maxscriptClient.connect(workerInfo.ip)
+                                    maxscriptClient.connect(workerInfo.ip, workerInfo.port)
                                         .then(function(value) {
                                             console.log("SessionEndpoint connected to maxscript client, ", value);
 
@@ -198,7 +198,7 @@ class SessionEndpoint implements IEndpoint {
                     .then(function(worker){
     
                         let maxscriptClient = this._maxscriptClientFactory.create();
-                        maxscriptClient.connect(worker.ip)
+                        maxscriptClient.connect(worker.ip, worker.port)
                             .then(function(value) {
                                 console.log("SessionEndpoint connected to maxscript client, ", value);
 

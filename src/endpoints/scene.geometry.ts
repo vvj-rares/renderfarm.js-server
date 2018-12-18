@@ -67,7 +67,7 @@ class SceneGeometryEndpoint implements IEndpoint {
 
                         // now let maxscript request it from me
                         let maxscriptClient = this._maxscriptClientFactory.create();
-                        maxscriptClient.connect(worker.ip)
+                        maxscriptClient.connect(worker.ip, worker.port)
                             .then(function(socket) {
                                 console.log("SceneGeometryEndpoint connected to maxscript client");
 
@@ -115,7 +115,7 @@ class SceneGeometryEndpoint implements IEndpoint {
 
                         // now let maxscript request it from me
                         let maxscriptClient = this._maxscriptClientFactory.create();
-                        maxscriptClient.connect(worker.ip)
+                        maxscriptClient.connect(worker.ip, worker.port)
                             .then(function(socket) {
                                 console.log("SceneGeometryEndpoint connected to maxscript client");
 

@@ -41,7 +41,7 @@ class SceneMeshEndpoint implements IEndpoint {
 
                     // now let maxscript request it from me
                     let maxscriptClient = this._maxscriptClientFactory.create();
-                    maxscriptClient.connect(worker.ip)
+                    maxscriptClient.connect(worker.ip, worker.port)
                         .then(function(socket) {
                             console.log("SceneMeshEndpoint connected to maxscript client");
 

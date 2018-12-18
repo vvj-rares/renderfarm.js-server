@@ -1,7 +1,7 @@
 var rfarm = {
     apiKey: "75f5-4d53-b0f4",
     workspace: "55a0bd33-9f15-4bc0-a482-17899eb67af3",
-    baseUrl: "https://mel.mbnsay.com:8000",
+    baseUrl: "https://mel.mbnsay.com",
 
     geometries: {},  // here we map scene geometry uuid <==> backend geometry resource
     materials: {},   // here we map scene material uuid <==> backend material resource

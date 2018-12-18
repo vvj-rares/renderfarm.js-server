@@ -36,7 +36,7 @@ class SceneCameraEndpoint implements IEndpoint {
                     let cameraJson: any = JSON.parse(cameraJsonText);
 
                     let maxscriptClient = this._maxscriptClientFactory.create();
-                    maxscriptClient.connect(worker.ip)
+                    maxscriptClient.connect(worker.ip, worker.port)
                         .then(function(value) {
                             console.log("SceneCameraEndpoint connected to maxscript client, ", value);
         
@@ -86,7 +86,7 @@ class SceneCameraEndpoint implements IEndpoint {
                     let cameraJson: any = JSON.parse(cameraJsonText);
         
                     let maxscriptClient = this._maxscriptClientFactory.create();
-                    maxscriptClient.connect(worker.ip)
+                    maxscriptClient.connect(worker.ip, worker.port)
                         .then(function(value) {
                             console.log("SceneCameraEndpoint connected to maxscript client, ", value);
         
