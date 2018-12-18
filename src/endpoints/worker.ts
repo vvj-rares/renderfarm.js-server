@@ -74,12 +74,12 @@ class WorkerEndpoint implements IEndpoint {
                         res.status(403);
                         res.end(JSON.stringify({ error: "api key declined" }, null, 2));
                     }
-                })
+                }.bind(this))
                 .catch(function(err) {
                     console.log(`  FAIL | failed to check api_key: ${apiKey}, `, err);
                     res.status(500);
                     res.end(JSON.stringify({ error: "failed to check api_key" }, null, 2));
-                });
+                }.bind(this));
 
         }.bind(this));
     }
