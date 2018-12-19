@@ -1,5 +1,6 @@
 class JobInfo {
     private _guid: string;
+    private _workerMac: string;
     private _workerEndpoint: string;
 
     private _firstSeen: Date;
@@ -9,9 +10,10 @@ class JobInfo {
 
     private _url: string;
 
-    constructor(guid: string, workerEndpoint: string) {
+    constructor(guid: string, workerEndpoint: string, workerMac: string) {
         this._guid = guid;
         this._workerEndpoint = workerEndpoint;
+        this._workerMac = workerMac;
 
         this._firstSeen = new Date();
         this._updatedAt = new Date();
@@ -29,6 +31,10 @@ class JobInfo {
 
     public get guid(): string {
         return this._guid;
+    }
+
+    public get workerMac(): string {
+        return this._workerMac;
     }
 
     public get workerEndpoint(): string {
@@ -83,7 +89,7 @@ class JobInfo {
     }
 
     public static fromJSON(obj: any): JobInfo {
-        let res = new JobInfo(obj.guid, obj.workerEndpoint);
+        let res = new JobInfo(obj.guid, obj.workerEndpoint, obj.workerMac);
 
         res._firstSeen = new Date(obj.firstSeen);
         res._updatedAt = new Date(obj.lastSeen);
@@ -99,9 +105,10 @@ class JobInfo {
         return {
             guid:       this._guid,
             workerEndpoint:  this._workerEndpoint,
+            workerMac:  this._workerMac,
 
             firstSeen:  this._firstSeen.toISOString(),
-            lastSeen:   this._updatedAt.toISOString(),
+            updatedAt:  this._updatedAt.toISOString(),
 
             status:     this._status,
 
@@ -113,9 +120,10 @@ class JobInfo {
         return {
             guid:       this._guid,
             workerEndpoint: this._workerEndpoint,
+            workerMac:  this._workerMac,
 
             firstSeen:  this._firstSeen,
-            lastSeen:   this._updatedAt,
+            updatedAt:  this._updatedAt,
 
             status:     this._status,
 

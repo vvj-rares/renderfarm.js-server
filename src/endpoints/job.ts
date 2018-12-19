@@ -51,7 +51,7 @@ class JobEndpoint implements IEndpoint {
                             .then(function(value) {
                                 console.log("JobEndpoint connected to maxscript client, ", value);
 
-                                let jobInfo = new JobInfo(jobGuid, worker.endpoint);
+                                let jobInfo = new JobInfo(jobGuid, worker.endpoint, worker.mac);
                                 jobInfo.rendering();
 
                                 //now save job in database
