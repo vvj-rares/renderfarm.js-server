@@ -53,7 +53,7 @@ class JobInfo {
         this.touch();
     }
 
-    public render(): void {
+    public rendering(): void {
         this._status = "rendering";
         this.touch();
     }

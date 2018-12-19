@@ -52,6 +52,7 @@ class JobEndpoint implements IEndpoint {
                                 console.log("JobEndpoint connected to maxscript client, ", value);
 
                                 let jobInfo = new JobInfo(jobGuid, worker.endpoint);
+                                jobInfo.rendering();
 
                                 //now save job in database
                                 //if it was successful, - then only start render
@@ -121,7 +122,7 @@ class JobEndpoint implements IEndpoint {
                 }.bind(this))
                 .catch(function(err){
                     console.error("this._database.getSessionWorkspace promise rejected", err);
-                    res.status(500);
+                    res.status(403);
                     res.end(JSON.stringify({ error: "session is expired" }, null, 2));
                 }.bind(this)); // end of this._database.getSessionWorkspace promise
     
