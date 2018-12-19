@@ -76,7 +76,7 @@ export interface IMaxscriptClient {
 
     assignMaterial(nodeName: string, materialName: string): Promise<boolean>;
 
-    renderScene(camera: string, size: number[], filename: string): Promise<boolean>;
+    renderScene(camera: string, size: number[], filename: string, vraySettings: any): Promise<boolean>;
 }
 
 export interface IMaxscriptClientFactory {

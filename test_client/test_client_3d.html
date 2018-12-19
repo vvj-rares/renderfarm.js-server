@@ -23,6 +23,10 @@
                 padding: 0;
                 margin: 0;
             }
+            #progress {
+                font-family: monospace;
+                margin-left: 24px;
+            }
         </style>
 
         <script src="js/rfarm_client.js"></script>
@@ -74,7 +78,7 @@
                 renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
                 //todo: PUT vray settings
 
-                document.body.appendChild(renderer.domElement);
+                // document.body.appendChild(renderer.domElement);
 
                 camera.position.x = 5;
                 camera.position.y = 6;
@@ -178,7 +182,7 @@
 
                 document.renderScene = function() {
                     rfarm.createSession(function(sessionId) {
-                        rfarm.openScene(scene, "vray_caustics_1.max", function(sceneNodeName) {
+                        rfarm.openScene(scene, "vray_simple_1.max", function(sceneNodeName) {
                             rfarm.createMesh(cone, function(coneNodeName) {
                                 rfarm.createMesh(cube, function(cubeNodeName) {
                                     rfarm.createMesh(cube2, function(cube2NodeName) {
@@ -188,11 +192,16 @@
                                                     var width = $("#viewport").outerWidth();
                                                     var height = $("#viewport").outerHeight();
 
-                                                    rfarm.render(cameraName, width, height, function(url) {
-                                                        $('#viewport').css("display", "none");
-                                                        $('#output').attr("src",url);
-                                                        // rfarm.closeSession(sessionId);
-                                                    });
+                                                    rfarm.render(cameraName, width, height, 
+                                                        function(progress, elapsed) {
+                                                            $("#progress").text("Progress: " + (100 * progress).toFixed(1) + "%, Elapsed: " + (elapsed * 60).toFixed(1) + " sec.");
+                                                        }, 
+                                                        function(url) {
+                                                            $('#viewport').css("display", "none");
+                                                            $('#output').attr("src",url);
+                                                            $('#progress').css("display", "none");
+                                                            // rfarm.closeSession(sessionId);
+                                                        });
                                                 });
                                             });
                                         });
@@ -210,7 +219,8 @@
     <body>
         <canvas id="viewport"></canvas>
         <img id="output">
-        <button onclick="renderScene()" style="position: fixed; left: 0; top:0;">render</button>
-        <button onclick="saveJson(document.spotLight.toJSON(), 'BufferGeometry.json')" style="position: fixed; left: 160; top:0;">save json</button>
+        <button id="render" onclick="renderScene()" style="position: fixed; left: 0; top:0;">render</button>
+        <button id="save" onclick="saveJson(document.spotLight.toJSON(), 'spotLight.json')" style="position: fixed; left: 160; top:0;">save json</button>
+        <div id="progress"></div>
     </body>
 </html>

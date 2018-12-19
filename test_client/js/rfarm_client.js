@@ -212,8 +212,33 @@ rfarm.createSpotlight = function(spotlight, spotlightTarget, onCreated) {
 }.bind(rfarm);
 
 //public
-rfarm.render = function(cameraName, width, height, onImageReady) {
+rfarm.render = function(cameraName, width, height, onProgress, onImageReady) {
     console.log("Creating new render job...");
+
+    var checkJobStatus = function(guid) {
+        $.ajax({
+            url: this.baseUrl  + "/job/" + guid,
+            type: 'GET',
+            success: function(result) {
+                console.log(result);
+                if (result.status === "rendering") {
+                    if (result.progress > 0) {
+                        onProgress(result.progress, result.elapsed);
+                    }
+
+                    setTimeout(function() {
+                        checkJobStatus(guid);
+                    }, 1000);
+
+                } else if (result.status === "succeeded") {
+                    onImageReady(result.url);
+                }
+            }.bind(this),
+            error: function(err) {
+                console.error(err);
+            }.bind(this)
+        });
+    }.bind(this);
 
     $.ajax({
         url: this.baseUrl  + "/job",
@@ -221,12 +246,14 @@ rfarm.render = function(cameraName, width, height, onImageReady) {
             session: this.sessionId,
             width: width, 
             height: height, 
-            camera: cameraName 
+            camera: cameraName,
+            progressiveMaxRenderTime: 2.5,
+            progressiveNoiseThreshold: 0.001
         },
         type: 'POST',
         success: function(result) {
             console.log(result);
-            onImageReady(result.url);
+            checkJobStatus(result.guid);
         }.bind(this),
         error: function(err) {
             console.error(err);

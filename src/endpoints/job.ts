@@ -20,9 +20,23 @@ class JobEndpoint implements IEndpoint {
 
     bind(express: express.Application) {
         express.get('/job/:uid', async function (req, res) {
-            console.log(`GET on /job/${req.params.uid} with session: ${req.body.session}`);
-            //todo: let clients get current job info
-            res.end({});
+            // this resource is spammy, don't log anything
+            // console.log(`GET on /job/${req.params.uid}`);
+
+            let jobGuid = req.params.uid;
+
+            this._database.getJob(jobGuid)
+                .then(function(value){
+                    let jobInfo = JobInfo.fromJSON(value);
+                    res.end(JSON.stringify(jobInfo.toJSON(), null, 2));
+                }.bind(this))
+                .catch(function(err){
+                    // console.error(`  FAIL | job not found: ${jobGuid}, `, err);
+                    res.status(404);
+                    res.end(JSON.stringify({ error: "job not found" }, null, 2));
+                }.bind(this)); // end of this._database.getJob(jobGuid) promise
+
+            
         }.bind(this));
 
         express.post('/job', async function (req, res) {
@@ -51,7 +65,10 @@ class JobEndpoint implements IEndpoint {
                             .then(function(value) {
                                 console.log("JobEndpoint connected to maxscript client, ", value);
 
+                                const sanityCheck = require('../utils/sanityCheck');
                                 let jobInfo = new JobInfo(jobGuid, worker.endpoint, worker.mac);
+                                jobInfo.progressiveMaxRenderTime  = sanityCheck.checkProgressiveMaxRenderTime(  req.body.progressiveMaxRenderTime);
+                                jobInfo.progressiveNoiseThreshold = sanityCheck.checkProgressiveNoiseThreshold( req.body.progressiveNoiseThreshold);
                                 jobInfo.rendering();
 
                                 //now save job in database
@@ -62,7 +79,11 @@ class JobEndpoint implements IEndpoint {
                                         const outputPath = `${settings.renderOutputDir}\\\\${fileId}.png`;
 
                                         this._renderingClients[ jobGuid ] = maxscriptClient;
-                                        maxscriptClient.renderScene(camera, [width, height], outputPath)
+                                        let vraySettings = {
+                                            progressiveMaxRenderTime: jobInfo.progressiveMaxRenderTime,
+                                            progressiveNoiseThreshold: jobInfo.progressiveNoiseThreshold
+                                        };
+                                        maxscriptClient.renderScene(camera, [width, height], outputPath, vraySettings)
                                             .then(function(value) {
                                                 maxscriptClient.disconnect();
                                                 delete this._renderingClients[ jobGuid ];

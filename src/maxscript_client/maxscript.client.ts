@@ -271,9 +271,12 @@ class MaxscriptClient implements IMaxscriptClient {
         return this.execMaxscript(maxscript, "assignMaterial");
     }
 
-    renderScene(camera: string, size: number[], filename: string): Promise<boolean> {
+    renderScene(camera: string, size: number[], filename: string, vraySettings: any): Promise<boolean> {
         let maxscript =   ` pngio.settype(#true24) ; `  // enums: {#paletted|#true24|#true48|#gray8|#gray16} 
                         + ` pngio.setAlpha false ; `
+                        + ` vr = renderers.current ; `
+                        + ` vr.progressive_max_render_time = ${vraySettings.progressiveMaxRenderTime} ; `
+                        + ` vr.progressive_noise_threshold = ${vraySettings.progressiveNoiseThreshold} ; `
                         + ` render camera:$${camera} outputSize: [${size[0]},${size[1]}] ` 
                         + ` outputfile: "${filename}" vfb: false`;
 
