@@ -18,7 +18,7 @@ class RenderOutputEndpoint implements IEndpoint {
             console.log(` >> Looking up file ${req.params.filename} in folder ${settings.renderOutputLocal}`);
 
             let fileName = req.params.filename;
-            fs.readFile(`${settings.renderOutputLocal}\\${fileName}`, function(err, content) {
+            fs.readFile(`${settings.renderOutputLocal}/${fileName}`, function(err, content) {
                 if (err) {
                     console.error(err);
                     res.status(404);
