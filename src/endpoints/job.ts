@@ -51,40 +51,65 @@ class JobEndpoint implements IEndpoint {
                             .then(function(value) {
                                 console.log("JobEndpoint connected to maxscript client, ", value);
 
-                                //todo: now save job in database
-                                // if it was successful, - start render
+                                let jobInfo = new JobInfo(jobGuid, worker.endpoint);
 
-                                const fileId = require('../utils/genRandomName')("render");
-                                const outputPath = `${settings.renderOutputDir}\\\\${fileId}.png`;
+                                //now save job in database
+                                //if it was successful, - then only start render
+                                this._database.storeJob(jobInfo)
+                                    .then(function(value){
+                                        const fileId = require('../utils/genRandomName')("render");
+                                        const outputPath = `${settings.renderOutputDir}\\\\${fileId}.png`;
 
-                                this._renderingClients[ jobGuid ] = maxscriptClient;
-                                maxscriptClient.renderScene(camera, [width, height], outputPath)
-                                    .then(function(value) {
-                                        maxscriptClient.disconnect();
-                                        // todo: remove from rendering clients
-                                        // todo: update job in database
+                                        this._renderingClients[ jobGuid ] = maxscriptClient;
+                                        maxscriptClient.renderScene(camera, [width, height], outputPath)
+                                            .then(function(value) {
+                                                maxscriptClient.disconnect();
+                                                delete this._renderingClients[ jobGuid ];
 
-                                        console.log(`    OK | image rendered, ${value}`);
-                                        // res.end(JSON.stringify({ url: `https://${settings.host}:${settings.port}/renderoutput/${fileId}.png` }, null, 2));
+                                                jobInfo.url = `${settings.publicUrl}/renderoutput/${fileId}.png`;
+                                                jobInfo.success();
+                                                
+                                                this._database.storeJob(jobInfo)
+                                                    .then(function(value){
+                                                        console.log(`    OK | completed job saved: ${jobInfo.guid}`);
+                                                    }.bind(this))
+                                                    .catch(function(err){
+                                                        console.error(`  FAIL | failed to save completed job, `, err);
+                                                    }.bind(this)); // end of this._database.storeJob promise
+
+                                                console.log(`    OK | image rendered, ${value}`);
+                                            }.bind(this))
+                                            .catch(function(err) {
+                                                maxscriptClient.disconnect();
+                                                delete this._renderingClients[ jobGuid ];
+
+                                                jobInfo.fail();
+                                                
+                                                this._database.storeJob(jobInfo)
+                                                    .then(function(value){
+                                                        console.log(`    OK | failed job saved: ${jobInfo.guid}`);
+                                                    }.bind(this))
+                                                    .catch(function(err){
+                                                        console.error(`  FAIL | failed to save failed job, `, err);
+                                                    }.bind(this)); // end of this._database.storeJob promise
+
+                                                console.error(`  FAIL | failed to render image\n`, err);
+                                            }.bind(this));
+
+                                        res.end(JSON.stringify({ guid: jobGuid }, null, 2));
                                     }.bind(this))
-                                    .catch(function(err) {
-                                        maxscriptClient.disconnect();
-                                        // todo: remove from rendering clients
-                                        // todo: update job in database
-
-                                        console.error(`  FAIL | failed to render image\n`, err);
-                                        // res.status(500);
-                                        // res.end(JSON.stringify({ error: "failed to render image" }, null, 2));
-                                    }.bind(this));
-                                
-                                res.end(JSON.stringify({ guid: jobGuid }, null, 2));
+                                    .catch(function(err){
+                                        console.error(`  FAIL | failed to save new job, `, err);
+                                        res.status(500);
+                                        res.end(JSON.stringify({ error: "failed to save new job" }, null, 2));
+                                    }.bind(this)); // end of this._database.storeJob promise
 
                             }.bind(this))
                             .catch(function(err) {
                                 console.error("JobEndpoint failed to connect to maxscript client, ", err);
                                 res.status(500);
                                 res.end(JSON.stringify({ error: "failed to connect to maxscript client" }, null, 2));
-                            }.bind(this));
+                            }.bind(this)); // end of maxscriptClient.connect promise
 
                     }.bind(this))
                     .catch(function(err){
