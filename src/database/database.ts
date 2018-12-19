@@ -8,6 +8,7 @@ import assert = require("assert");
 import { WorkerInfo } from "../model/worker_info";
 import { SessionInfo } from "../model/session_info";
 import { WorkspaceInfo } from "../model/workspace_info";
+import { JobInfo } from "../model/job_info";
 
 const settings = require("../settings");
 
@@ -375,6 +376,57 @@ class Database implements IDatabase {
                     reject(err);
                 });
         });
+    }
+
+    //todo: this method is not tested
+    async storeJob(jobInfo: JobInfo): Promise<JobInfo> {
+        let db = this._client.db(settings.databaseName);
+        assert.notEqual(db, null);
+
+        let jobJson = jobInfo.toDatabase();
+
+        return new Promise<JobInfo>(function (resolve, reject) {
+            db.collection("jobs").findOneAndUpdate(
+                { guid: jobInfo.guid },
+                { $set: jobJson },
+                { returnOriginal: false, upsert: true })
+                .then(function(obj) {
+                    if (obj.value) {
+                        resolve(WorkerInfo.fromJSON(obj.value));
+                    } else {
+                        reject(`unable to find job with guid ${jobInfo.guid}`);
+                    }
+                })
+                .catch(function(err) {
+                    reject(err);
+                });
+        }.bind(this));
+    }
+
+    //todo: this method is not tested
+    async getJob(jobGuid: string): Promise<JobInfo> {
+        let db = this._client.db(settings.databaseName);
+        assert.notEqual(db, null);
+
+        return new Promise<JobInfo>(function (resolve, reject) {
+            db.collection("jobs").findOne(
+                { 
+                    guid: jobGuid
+                })
+                .then(function(obj) {
+                    if (obj) {
+                        let jobInfo = JobInfo.fromJSON(obj);
+                        resolve(jobInfo);
+                    } else {
+                        reject(`unable to find job with guid ${jobGuid}`);
+                    }
+                }.bind(this))
+                .catch(function(err) {
+                    console.error(err);
+                    reject(`failed to query available workers`);
+                    return
+                }.bind(this)); // end of db.collection("jobs").findOne promise
+        }.bind(this));
     }
 }
 

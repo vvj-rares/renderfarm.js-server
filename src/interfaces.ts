@@ -4,6 +4,7 @@ import * as express from "express";
 import { WorkerInfo } from "./model/worker_info";
 import { SessionInfo } from "./model/session_info";
 import { WorkspaceInfo } from "./model/workspace_info";
+import { JobInfo } from "./model/job_info";
 
 export interface Warrior {
     fight(): string;
@@ -32,6 +33,9 @@ export interface IDatabase {
     getSessionWorkspace(sessionGuid: string): Promise<WorkspaceInfo>;
     expireSessions(): Promise<SessionInfo[]>;
     closeSession(sessionGuid: string): Promise<boolean>;
+
+    storeJob(jobInfo: JobInfo): Promise<JobInfo>;
+    getJob(jobGuid: string): Promise<JobInfo>;
 }
 
 export interface IApp {
