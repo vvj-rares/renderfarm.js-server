@@ -49,6 +49,28 @@ class App implements IApp {
             res.send(JSON.stringify({ version: settings.version }, null, 2));
         });
 
+        this._express.get('/favicon.ico', function (req, res) {
+            console.log(`GET on /favicon.ico`);
+
+            let mimeType = "image/x-icon";
+
+            const fs = require('fs');
+            fs.readFile("favicon.ico", function(err, content) {
+                if (err) {
+                    console.error(err);
+                    res.status(404);
+                    res.end();
+                } else {
+                    res.writeHead(200, { 
+                        'Content-Type': mimeType, 
+                        'x-timestamp': Date.now(), 
+                        'x-sent': true 
+                    });
+                    res.end(content);
+                }
+            });
+        });
+
         for (let endp of endpoints) {
             endp.bind(this._express);
         }

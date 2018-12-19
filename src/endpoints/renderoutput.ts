@@ -2,7 +2,6 @@ import { injectable } from "inversify";
 import * as express from "express";
 import { IEndpoint } from "../interfaces";
 
-const fs = require('fs');
 const settings = require("../settings");
 
 @injectable()
@@ -18,6 +17,7 @@ class RenderOutputEndpoint implements IEndpoint {
             console.log(` >> Looking up file ${req.params.filename} in folder ${settings.renderOutputLocal}`);
 
             let fileName = req.params.filename;
+            const fs = require('fs');
             fs.readFile(`${settings.renderOutputLocal}/${fileName}`, function(err, content) {
                 if (err) {
                     console.error(err);
