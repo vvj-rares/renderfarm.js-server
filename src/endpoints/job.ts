@@ -51,11 +51,13 @@ class JobEndpoint implements IEndpoint {
                             .then(function(value) {
                                 console.log("JobEndpoint connected to maxscript client, ", value);
 
+                                //todo: now save job in database
+                                // if it was successful, - start render
+
                                 const fileId = require('../utils/genRandomName')("render");
+                                const outputPath = `${settings.renderOutputDir}\\\\${fileId}.png`;
 
                                 this._renderingClients[ jobGuid ] = maxscriptClient;
-
-                                const outputPath = `${settings.renderOutputDir}\\\\${fileId}.png`;
                                 maxscriptClient.renderScene(camera, [width, height], outputPath)
                                     .then(function(value) {
                                         maxscriptClient.disconnect();
