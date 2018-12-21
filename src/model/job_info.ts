@@ -13,6 +13,12 @@ class JobInfo {
 
     private _url: string;
 
+    public static Rendering: string = "rendering";
+    public static Canceled:  string = "canceled";
+    public static Succeeded: string = "succeeded";
+    public static Failed:    string = "failed";
+    public static Expired:   string = "expired";
+
     constructor(guid: string, workerEndpoint: string, workerMac: string) {
         this._guid = guid;
         this._workerEndpoint = workerEndpoint;
@@ -84,27 +90,27 @@ class JobInfo {
     }
 
     public rendering(): void {
-        this._status = "rendering";
+        this._status = JobInfo.Rendering;
         this.touch();
     }
 
     public cancel(): void {
-        this._status = "canceled";
+        this._status = JobInfo.Canceled;
         this.touch();
     }
 
     public success(): void {
-        this._status = "succeeded";
+        this._status = JobInfo.Succeeded;
         this.touch();
     }
 
     public fail(): void {
-        this._status = "failed";
+        this._status = JobInfo.Failed;
         this.touch();
     }
 
     public expire(): void {
-        this._status = "expired"; // this is set when session is expired and all renders are being interrupted
+        this._status = JobInfo.Expired; // this is set when session is expired and all renders are being interrupted
         this.touch();
     }
 

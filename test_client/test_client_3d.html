@@ -193,6 +193,9 @@
                                                     var height = $("#viewport").outerHeight();
 
                                                     rfarm.render(cameraName, width, height, 
+                                                        function(jobGuid) {
+                                                            document.jobGuid = jobGuid;
+                                                        },
                                                         function(progress, elapsed) {
                                                             $("#progress").text("Progress: " + (100 * progress).toFixed(1) + "%, Elapsed: " + (elapsed * 60).toFixed(1) + " sec.");
                                                         }, 
@@ -212,6 +215,12 @@
                     });
                 };
 
+                document.cancelRender = function() {
+                    rfarm.cancelRender( document.jobGuid, function(res) {
+                        console.log(res);
+                    });
+                };
+
                 animate();
             }
         </script>
@@ -220,7 +229,8 @@
         <canvas id="viewport"></canvas>
         <img id="output">
         <button id="render" onclick="renderScene()" style="position: fixed; left: 0; top:0;">render</button>
-        <button id="save" onclick="saveJson(document.spotLight.toJSON(), 'spotLight.json')" style="position: fixed; left: 160; top:0;">save json</button>
+        <button id="cancel" onclick="cancelRender()" style="position: fixed; left: 70px; top:0;">cancel</button>
+        <button id="save" onclick="saveJson(document.spotLight.toJSON(), 'spotLight.json')" style="position: fixed; left: 560px; top:0;">save json</button>
         <div id="progress"></div>
     </body>
 </html>

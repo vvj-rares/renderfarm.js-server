@@ -212,7 +212,7 @@ rfarm.createSpotlight = function(spotlight, spotlightTarget, onCreated) {
 }.bind(rfarm);
 
 //public
-rfarm.render = function(cameraName, width, height, onProgress, onImageReady) {
+rfarm.render = function(cameraName, width, height, onStarted, onProgress, onImageReady) {
     console.log("Creating new render job...");
 
     var checkJobStatus = function(guid) {
@@ -253,6 +253,7 @@ rfarm.render = function(cameraName, width, height, onProgress, onImageReady) {
         type: 'POST',
         success: function(result) {
             console.log(result);
+            onStarted(result.guid);
             checkJobStatus(result.guid);
         }.bind(this),
         error: function(err) {
@@ -261,7 +262,26 @@ rfarm.render = function(cameraName, width, height, onProgress, onImageReady) {
     });
 }.bind(rfarm);
 
-// private
+rfarm.cancelRender = function(jobGuid, onCanceled) {
+    console.log("Cancelling job...");
+
+    $.ajax({
+        url: this.baseUrl  + "/job/" + jobGuid,
+        data: { 
+            status: "canceled"
+        },
+        type: 'PUT',
+        success: function(result) {
+            console.log(result);
+            onCanceled(result);
+        }.bind(this),
+        error: function(err) {
+            console.error(err);
+        }.bind(this)
+    });
+}.bind(rfarm);
+
+//=== private =
 rfarm._postGeometry = function(geometry, onComplete) {
     console.log("Importing geometry...");
 

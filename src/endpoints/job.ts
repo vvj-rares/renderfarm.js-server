@@ -5,6 +5,7 @@ import { TYPES } from "../types";
 import { JobInfo } from "../model/job_info";
 
 const settings = require("../settings");
+const http = require('http');
 
 @injectable()
 class JobEndpoint implements IEndpoint {
@@ -150,9 +151,81 @@ class JobEndpoint implements IEndpoint {
         }.bind(this));
 
         express.put('/job/:uid', async function (req, res) {
-            console.log(`PUT on /job/${req.params.uid} with session: ${req.body.session}`);
-            //todo: let clients cancel jobs
-            res.end({});
+            console.log(`PUT on /job/${req.params.uid}`);
+
+            let newJobStatus = req.body.status;
+
+            if (!newJobStatus) {
+                res.status(400);
+                res.end(JSON.stringify({ error: `status is missing` }, null, 2));
+                return;
+            }
+
+            if (newJobStatus !== JobInfo.Canceled) {
+                res.status(403);
+                res.end(JSON.stringify({ error: `can not update job with status ${newJobStatus}` }, null, 2));
+                return;
+            }
+
+            let jobGuid = req.params.uid;
+
+            this._database.getJob(jobGuid)
+                .then(function(value){
+                    let jobInfo = JobInfo.fromJSON(value);
+                    if (jobInfo.status == JobInfo.Rendering) {
+                        //first cancel job in database,
+                        jobInfo.cancel();
+                        this._database.storeJob(jobInfo)
+                            .then(function(value){
+                                // now kill worker of this job
+                                let parts = jobInfo.workerEndpoint.split(":");
+                                const data = JSON.stringify({});
+                                
+                                const options = {
+                                    hostname: parts,
+                                    port: Number.parseInt(parts[1]),
+                                    path: '/worker',
+                                    method: 'DELETE',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Content-Length': data.length
+                                    }
+                                };
+                                console.log(" >> options: ", options);
+                                
+                                const req = http.request(options, function(resp) {
+                                    console.log(` >> statusCode: ${resp.statusCode}`);
+                                
+                                    resp.on('data', (responseData) => {
+                                        console.log(` >> responseData: `, responseData);
+                                        res.end(JSON.stringify({ success: true }, null, 2));
+                                    })
+                                }.bind(this));
+                                
+                                req.on('error', function(reqError) {
+                                    console.error(" >> reqError: ", reqError);
+                                }.bind(this));
+                                
+                                req.write(data);
+                                req.end();
+
+                            }.bind(this))
+                            .catch(function(err){
+                                console.error(`  FAIL | cant update job ${jobInfo.guid}, `, err);
+                                res.status(500);
+                                res.end(JSON.stringify({ error: `can not update ${jobInfo.status} job with status ${newJobStatus}` }, null, 2));
+                            }.bind(this)); // end of this._database.storeJob(jobInfo) promise
+                    } else {
+                        res.status(403);
+                        res.end(JSON.stringify({ error: `can not update ${jobInfo.status} job with status ${newJobStatus}` }, null, 2));
+                    }
+                }.bind(this))
+                .catch(function(err){
+                    // console.error(`  FAIL | job not found: ${jobGuid}, `, err);
+                    res.status(404);
+                    res.end(JSON.stringify({ error: "job not found" }, null, 2));
+                }.bind(this)); // end of this._database.getJob(jobGuid) promise
+
         }.bind(this));
     }
 }
