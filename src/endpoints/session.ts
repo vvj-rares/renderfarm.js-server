@@ -7,12 +7,9 @@ import { WorkerInfo } from "../model/worker_info";
 @injectable()
 class SessionEndpoint implements IEndpoint {
     private _database: IDatabase;
-    private _maxscriptClientFactory: IMaxscriptClientFactory;
 
-    constructor(@inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
+    constructor(@inject(TYPES.IDatabase) database: IDatabase) {
         this._database = database;
-        this._maxscriptClientFactory = maxscriptClientFactory;
 
         //expire sessions by timer
         setInterval(async function() {
@@ -30,7 +27,7 @@ class SessionEndpoint implements IEndpoint {
         }.bind(this), 5000);
     }
 
-    async checkApiKey(res: any, apiKey: string) {
+    async checkApiKey(res: any, apiKey: string): Promise<boolean> {
         try {
             let apiKeyRec = await this._database.getApiKey(apiKey);
             if (!apiKeyRec.value) {
@@ -54,7 +51,7 @@ class SessionEndpoint implements IEndpoint {
         }
     }
 
-    async checkWorkspace(res: any, apiKey: string, workspaceGuid: string) {
+    async checkWorkspace(res: any, apiKey: string, workspaceGuid: string): Promise<boolean> {
         try {
             let wsRec = await this._database.getWorkspace(workspaceGuid);
             if (!wsRec.value) {
