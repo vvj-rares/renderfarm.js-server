@@ -36,6 +36,7 @@ export interface IDatabase {
 
     storeJob(jobInfo: JobInfo): Promise<JobInfo>;
     getJob(jobGuid: string): Promise<JobInfo>;
+    getSessionActiveJobs(sessionGuid: string): Promise<JobInfo[]>;
 }
 
 export interface IApp {

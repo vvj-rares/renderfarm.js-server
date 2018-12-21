@@ -150,15 +150,19 @@ class Database implements IDatabase {
                 // now make a collection of busy mac addresses
                 let busyWorkersEndpoints = res.map(s => s.worker.endpoint);
 
-                let recentOnlineDate = new Date(Date.now() - 3*1000); // pick the ones who were seen not less than 3 seconds ago
+                let recentOnlineDate = new Date(Date.now() - 2*1000); // pick the ones who were seen not less than 2 seconds ago
+
                 //now find one worker, whose mac does not belong to busyWorkersMac
-                db.collection("workers").findOne(
+                db.collection("workers").find(
                     { 
                         endpoint: { $nin: busyWorkersEndpoints },
                         workgroup: { $eq: settings.workgroup },
                         lastSeen : { $gte: recentOnlineDate },
-                    })
+                    }
+                ).sort({cpuUsage: 1}).limit(1).toArray()
                     .then(function(obj) {
+
+                        console.log(" >> .sort({cpuUsage: 1}).limit(1).toArray() returned: ", obj);
 
                         if (obj) {
                             let worker = WorkerInfo.fromJSON(obj);
@@ -174,19 +178,22 @@ class Database implements IDatabase {
                                 .catch(function(err){
                                     console.error(err);
                                     reject(`failed to insert new session`);
-                                }.bind(this))
+                                }.bind(this)); // end of db.collection("sessions").insertOne promise
+
                         } else {
                             reject(`all workers are busy`);
                         }
+
                     }.bind(this))
                     .catch(function(err) {
                         console.error(err);
                         reject(`failed to query available workers`);
                         return
-                    }.bind(this));
+                    }.bind(this)); // end of db.collection("workers").find promise
 
-            }.bind(this));
-        }.bind(this));
+            }.bind(this)); // end of db.collection("sessions").aggregate promise
+
+        }.bind(this)); // return this promise
     }
 
     async storeWorker(workerInfo: WorkerInfo): Promise<WorkerInfo> {
@@ -428,6 +435,16 @@ class Database implements IDatabase {
                 }.bind(this)); // end of db.collection("jobs").findOne promise
         }.bind(this));
     }
+
+    //todo: we need to kill pending and running jobs when session is expired or closed
+    async getSessionActiveJobs(sessionGuid: string): Promise<JobInfo[]> {
+        let db = this._client.db(settings.databaseName);
+        assert.notEqual(db, null);
+
+        return new Promise<JobInfo[]>(function (resolve, reject) {
+            //todo: implement it
+        });
+    };
 }
 
 export { Database };

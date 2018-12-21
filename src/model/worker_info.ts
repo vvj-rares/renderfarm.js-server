@@ -108,6 +108,8 @@ class WorkerInfo {
             workgroup:  this.workgroup,
             firstSeen:  this._firstSeen,
             lastSeen:   this._lastSeen,
+            cpuUsage:   this._cpuUsage,
+            ramUsage:   this._ramUsage,
             totalRam:   this._totalRam,
         }
     }
