@@ -23,7 +23,8 @@ export interface IDatabase {
     connect(url: string): Promise<any>;
     getApiKey(apiKey: string): Promise<any>;
 
-    getWorkspace(workspaceGuid: string): Promise<any>;
+    getWorkspace(workspaceGuid: string): Promise<any>; // todo: return WorkspaceInfo
+    getSession(sessionGuid: string): Promise<SessionInfo>;
 
     storeWorker(workerInfo: WorkerInfo): Promise<WorkerInfo>;
     getWorker(sessionGuid: string): Promise<WorkerInfo>;

@@ -158,6 +158,8 @@ class MaxscriptClient implements IMaxscriptClient {
                         + ` aFreeCamera.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}]) ; `
                         + ` aFreeCamera.parent = threejsSceneRoot; `;
 
+        console.log(" >> CAMERA: ", maxscript);
+
         return this.execMaxscript(maxscript, "createTargetCamera");
     }
 
@@ -276,10 +278,16 @@ class MaxscriptClient implements IMaxscriptClient {
         let maxscript =   ` pngio.settype(#true24) ; `  // enums: {#paletted|#true24|#true48|#gray8|#gray16} 
                         + ` pngio.setAlpha false ; `
                         + ` vr = renderers.current ; `
-                        + ` vr.progressive_max_render_time = ${vraySettings.progressiveMaxRenderTime} ; `
-                        + ` vr.progressive_noise_threshold = ${vraySettings.progressiveNoiseThreshold} ; `
-                        + ` render camera:$${camera} outputSize: [${size[0]},${size[1]}] ` 
-                        + ` outputfile: "${filename}" vfb: true quiet: true`;
+                        //+ ` vr.progressive_max_render_time = ${vraySettings.progressiveMaxRenderTime} ; `
+                        //+ ` vr.progressive_noise_threshold = ${vraySettings.progressiveNoiseThreshold} ; `
+                        + ` viewport.setLayout #layout_1 ; `
+                        + ` viewport.setCamera $${camera} ; `
+                        + ` renderWidth  = ${size[0]} ; `
+                        + ` renderHeight = ${size[1]} ; `
+                        + ` rendUseActiveView = false ; `
+                        + ` rendSaveFile = true ; `
+                        + ` rendOutputFilename = "${filename}" ; `
+                        + ` max quick render `;
 
         // see here: http://help.autodesk.com/view/3DSMAX/2018/ENU/?guid=__files_GUID_9175301C_13E6_488B_ABA6_D27CD804B205_htm
         // can also use: JPEG.setQuality(5); JPEG.setSmoothing(1);

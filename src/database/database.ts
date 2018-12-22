@@ -68,13 +68,42 @@ class Database implements IDatabase {
         }
     }
 
+    async getSession(sessionGuid: string): Promise<SessionInfo> {
+        return new Promise<SessionInfo>(function(resolve, reject) {
+            if (sessionGuid) {
+                let db = this._client.db(settings.databaseName);
+                assert.notEqual(db, null);
+
+                db.collection("sessions").findOneAndUpdate(
+                    { guid: sessionGuid, closed: { $ne: true } },
+                    { $set: { lastSeen : new Date() } },
+                    { returnOriginal: false })
+                    .then(function(obj) {
+                        if (obj.value) {
+                            let sessionInfo = SessionInfo.fromJSON(obj.value);
+                            resolve(sessionInfo);
+                        } else {
+                            reject("session expired");
+                        }
+
+                    }.bind(this))
+                    .catch(function(err) {
+                        console.log(" >> failed to find session: ", err);
+                        reject("failed to find session");
+                    }.bind(this)); // end of db.collection("sessions").findOneAndUpdate promise
+            } else {
+                reject("session guid empty");
+            }
+        }.bind(this));
+    }
+
     async expireSessions(): Promise<SessionInfo[]> {
         let db = this._client.db("rfarmdb");
         assert.notEqual(db, null);
 
         return new Promise<SessionInfo[]>(function (resolve, reject) {
-            // first expire sessions which have not been updated since 15 seconds
-            let expirationDate = new Date(Date.now() - 15*1000); // 5*60*1000
+            // first expire sessions which have not been updated since 3 minutes
+            let expirationDate = new Date(Date.now() - 3*60*1000); // 3*60*1000
 
             db.collection("sessions").find(
                 { 
@@ -149,6 +178,7 @@ class Database implements IDatabase {
 
                 // now make a collection of busy mac addresses
                 let busyWorkersEndpoints = res.map(s => s.worker.endpoint);
+                console.log(" >> busyWorkersEndpoints: ", busyWorkersEndpoints);
 
                 let recentOnlineDate = new Date(Date.now() - 2*1000); // pick the ones who were seen not less than 2 seconds ago
 
@@ -162,7 +192,7 @@ class Database implements IDatabase {
                 ).sort({cpuUsage: 1}).limit(1).toArray()
                     .then(function(obj) {
 
-                        console.log(" >> .sort({cpuUsage: 1}).limit(1).toArray() returned: ", obj);
+                        console.log(" >> .sort({cpuUsage: 1}).limit(1).toArray() returned: \r\n", obj);
 
                         if (obj && obj.length === 1) {
                             let workerInfo = WorkerInfo.fromJSON(obj[0]);

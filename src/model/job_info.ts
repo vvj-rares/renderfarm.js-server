@@ -1,13 +1,11 @@
 class JobInfo {
     private _guid: string;
+    private _sessionGuid: string;
     private _workerMac: string;
     private _workerEndpoint: string;
 
     private _firstSeen: Date;
     private _updatedAt: Date;
-
-    private _progressiveMaxRenderTime: number;
-    private _progressiveNoiseThreshold: number;
 
     private _status: string;
 
@@ -19,8 +17,9 @@ class JobInfo {
     public static Failed:    string = "failed";
     public static Expired:   string = "expired";
 
-    constructor(guid: string, workerEndpoint: string, workerMac: string) {
+    constructor(guid: string, sessionGuid: string, workerEndpoint: string, workerMac: string) {
         this._guid = guid;
+        this._sessionGuid = sessionGuid;
         this._workerEndpoint = workerEndpoint;
         this._workerMac = workerMac;
 
@@ -28,9 +27,6 @@ class JobInfo {
         this._updatedAt = new Date();
 
         this._status = "pending";
-
-        this._progressiveMaxRenderTime = 5; // 5 minutes by default
-        this._progressiveNoiseThreshold = 0.005;
     }
 
     public get firstSeen(): Date {
@@ -43,6 +39,10 @@ class JobInfo {
 
     public get guid(): string {
         return this._guid;
+    }
+
+    public get sessionGuid(): string {
+        return this._sessionGuid;
     }
 
     public get workerMac(): string {
@@ -62,23 +62,7 @@ class JobInfo {
         this.touch();
     }
 
-    public get progressiveMaxRenderTime(): number {
-        return this._progressiveMaxRenderTime;
-    }
-
-    public set progressiveMaxRenderTime(value: number) {
-        this._progressiveMaxRenderTime = value;
-        this.touch();
-    }
-
-    public get progressiveNoiseThreshold(): number {
-        return this._progressiveNoiseThreshold;
-    }
-
-    public set progressiveNoiseThreshold(value: number) {
-        this._progressiveNoiseThreshold = value;
-        this.touch();
-    }
+    public vrayProgress: string;
 
     public get url(): string {
         return this._url;
@@ -119,16 +103,12 @@ class JobInfo {
     }
 
     public static fromJSON(obj: any): JobInfo { // this will be used to parse obj from database into JobInfo instance
-        let res = new JobInfo(obj.guid, obj.workerEndpoint, obj.workerMac);
+        let res = new JobInfo(obj.guid, obj.sessionGuid, obj.workerEndpoint, obj.workerMac);
 
         res._firstSeen = new Date(obj.firstSeen);
         res._updatedAt = new Date(obj.updatedAt);
 
-        res._progressiveMaxRenderTime  = obj.progressiveMaxRenderTime;
-        res._progressiveNoiseThreshold = obj.progressiveNoiseThreshold;
-
         res._status    = obj.status;
-
         res._url       = obj.url;
 
         return res;
@@ -140,48 +120,28 @@ class JobInfo {
         let timeDiffMs = (new Date().getTime() - this._firstSeen.getTime());
         let elapsed = Math.round( fix * timeDiffMs / 1000 / 60 ) / fix;
 
-        let progress = this._progressiveMaxRenderTime > 0 
-                ? elapsed / this._progressiveMaxRenderTime 
-                : undefined;
-
-        if (progress) {
-            progress = Math.round(fix * progress) / fix;
-        }
-
-        if (progress && progress >= 0.9995) {
-            progress = 0.9995
-        }
-
-        if (this._status === "succeeded") {
-            progress = 1.0;
-        }
-
         return {
-            guid:       this._guid,
-            firstSeen:  this._firstSeen.toISOString(),
-            updatedAt:  this._updatedAt.toISOString(),
-            elapsed:    elapsed,
-            progress:   progress,
-            status:     this._status,
-            url:        this._url ? this._url : undefined
+            guid:           this._guid,
+            sessionGuid:    this._sessionGuid,
+            firstSeen:      this._firstSeen.toISOString(),
+            updatedAt:      this._updatedAt.toISOString(),
+            elapsed:        elapsed,
+            status:         this._status,
+            vrayProgress:   this.vrayProgress,
+            url:            this._url ? this._url : undefined
         }
     }
 
     public toDatabase(): any { // convert JobInfo instance into json object to be saved in database
         return {
-            guid:       this._guid,
+            guid:           this._guid,
+            sessionGuid:    this._sessionGuid,
             workerEndpoint: this._workerEndpoint,
-            workerMac:  this._workerMac,
-
-            firstSeen:  this._firstSeen,
-            updatedAt:  this._updatedAt,
-
-            progressiveMaxRenderTime: this._progressiveMaxRenderTime,
-            progressiveNoiseThreshold: this._progressiveNoiseThreshold,
-
-            status:     this._status,
-
-            url:        this._url
+            workerMac:      this._workerMac,
+            firstSeen:      this._firstSeen,
+            updatedAt:      this._updatedAt,
+            status:         this._status,
+            url:            this._url
         }
     }
 }

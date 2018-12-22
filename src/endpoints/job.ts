@@ -30,28 +30,60 @@ class JobEndpoint implements IEndpoint {
                 .then(function(value){
                     let jobInfo = JobInfo.fromJSON(value);
 
-                    const request = require('request');
-                    let parts = jobInfo.workerEndpoint.split(":");
-                    let workerHost = parts[0];
+                    console.log(" >> updating session: ", jobInfo.sessionGuid);
+                    this._database.getSession(jobInfo.sessionGuid)
+                        .then(function(jobSession){
 
-                    let workerManagerUrl = `http://${workerHost}:${settings.workerManagerPort}/worker`;
-                    console.log(" >> worker manager request: ", workerManagerUrl);
+                            const request = require('request');
+                            let parts = jobInfo.workerEndpoint.split(":");
+                            if (parts.length <= 1) {
+                                console.error(" >> wrong jobInfo.workerEndpoint: ", jobInfo.workerEndpoint);
+                                res.status(500);
+                                res.end(JSON.stringify({ error: "job missing worker endpoint info" }, null, 2));
+                                return;
+                            }
+                            let workerHost = parts[0];
+                            let workerPort = parseInt(parts[1]);
 
-                    request(workerManagerUrl, function (error, response, body) {
-                        console.log('error:', error); // Print the error if one occurred
-                        console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-                        console.log('body:', body); // Print the HTML for the Google homepage.
+                            let workerManagerUrl = `http://${workerHost}:${settings.workerManagerPort}/worker`;
+                            console.log(" >> requesting: ", workerManagerUrl);
+                            request(workerManagerUrl, function (error, response, body) {
+                                if (error) {
+                                    console.log(" >> error: ", error);
+                                    res.end(JSON.stringify(jobInfo.toJSON(), null, 2));
+                                    return;
+                                }
+                                if (response && response.statusCode === 200) {
+                                    let allWorkersDetails = JSON.parse(body);
+                                    // console.log(" >> allWorkersDetails: ", allWorkersDetails);
+                                    // console.log("         ? workerPort: ", workerPort);
 
-                        res.end(JSON.stringify(jobInfo.toJSON(), null, 2));
-                    });
+                                    let activeWorkerDetails = allWorkersDetails.find((el) => {
+                                        return el.port === workerPort;
+                                    });
+                                    // console.log(" >> activeWorkerDetails: ", activeWorkerDetails);
+
+                                    if (activeWorkerDetails && activeWorkerDetails.vray_progress) {
+                                        jobInfo.vrayProgress = activeWorkerDetails.vray_progress;
+                                    }
+                                }
+                                res.end(JSON.stringify(jobInfo.toJSON(), null, 2));
+                            }.bind(this)); // end of request
+
+                        }.bind(this))
+                        .catch(function(err){
+                            console.log(" >> ", err);
+                            res.status(404);
+                            res.end(JSON.stringify({ error: "session expired" }, null, 2));
+                        }.bind(this)); // end of this._database.getSession promise
                     
                 }.bind(this))
                 .catch(function(err){
-                    // console.error(`  FAIL | job not found: ${jobGuid}, `, err);
+                    console.error(`  FAIL | job not found: ${jobGuid}, `, err);
                     res.status(404);
                     res.end(JSON.stringify({ error: "job not found" }, null, 2));
                 }.bind(this)); // end of this._database.getJob(jobGuid) promise
-            
+
         }.bind(this));
 
         express.post('/job', async function (req, res) {
@@ -68,92 +100,89 @@ class JobEndpoint implements IEndpoint {
 
                     console.log(workspaceInfo);
 
-                    this._database.getWorker(req.body.session)
-                    .then(function(worker){
+                    this._database.getWorker(sessionGuid)
+                        .then(function(worker){
 
-                        let camera = req.body.camera;
-                        let width = req.body.width;
-                        let height = req.body.height;
+                            let camera = req.body.camera;
+                            let width = req.body.width;
+                            let height = req.body.height;
 
-                        let maxscriptClient = this._maxscriptClientFactory.create();
-                        maxscriptClient.connect(worker.ip, worker.port)
-                            .then(function(value) {
-                                console.log("JobEndpoint connected to maxscript client, ", value);
+                            let maxscriptClient = this._maxscriptClientFactory.create();
+                            maxscriptClient.connect(worker.ip, worker.port)
+                                .then(function(value) {
+                                    console.log("JobEndpoint connected to maxscript client, ", value);
 
-                                const sanityCheck = require('../utils/sanityCheck');
-                                let jobInfo = new JobInfo(jobGuid, worker.endpoint, worker.mac);
-                                jobInfo.progressiveMaxRenderTime  = sanityCheck.checkProgressiveMaxRenderTime(  req.body.progressiveMaxRenderTime);
-                                jobInfo.progressiveNoiseThreshold = sanityCheck.checkProgressiveNoiseThreshold( req.body.progressiveNoiseThreshold);
-                                jobInfo.rendering();
+                                    const sanityCheck = require('../utils/sanityCheck');
+                                    let jobInfo = new JobInfo(jobGuid, sessionGuid, worker.endpoint, worker.mac);
+                                    jobInfo.rendering();
 
-                                //now save job in database
-                                //if it was successful, - then only start render
-                                this._database.storeJob(jobInfo)
-                                    .then(function(value){
-                                        const fileId = require('../utils/genRandomName')("render");
-                                        const outputPath = `${settings.renderOutputDir}\\\\${fileId}.png`;
+                                    //now save job in database
+                                    //if it was successful, - then only start render
+                                    this._database.storeJob(jobInfo)
+                                        .then(function(value){
+                                            const fileId = require('../utils/genRandomName')("render");
+                                            const outputPath = `${settings.renderOutputDir}\\\\${fileId}.png`;
 
-                                        this._renderingClients[ jobGuid ] = maxscriptClient;
-                                        let vraySettings = {
-                                            progressiveMaxRenderTime: jobInfo.progressiveMaxRenderTime,
-                                            progressiveNoiseThreshold: jobInfo.progressiveNoiseThreshold
-                                        };
-                                        maxscriptClient.renderScene(camera, [width, height], outputPath, vraySettings)
-                                            .then(function(value) {
-                                                maxscriptClient.disconnect();
-                                                delete this._renderingClients[ jobGuid ];
+                                            this._renderingClients[ jobGuid ] = maxscriptClient;
+                                            let vraySettings = {
+                                                //todo: you can pass any vray settings here
+                                            };
+                                            maxscriptClient.renderScene(camera, [width, height], outputPath, vraySettings)
+                                                .then(function(value) {
+                                                    maxscriptClient.disconnect();
+                                                    delete this._renderingClients[ jobGuid ];
 
-                                                jobInfo.url = `${settings.publicUrl}/renderoutput/${fileId}.png`;
-                                                jobInfo.success();
-                                                
-                                                this._database.storeJob(jobInfo)
-                                                    .then(function(value){
-                                                        console.log(`    OK | completed job saved: ${jobInfo.guid}`);
-                                                    }.bind(this))
-                                                    .catch(function(err){
-                                                        console.error(`  FAIL | failed to save completed job, `, err);
-                                                    }.bind(this)); // end of this._database.storeJob promise
+                                                    jobInfo.url = `${settings.publicUrl}/renderoutput/${fileId}.png`;
+                                                    jobInfo.success();
+                                                    
+                                                    this._database.storeJob(jobInfo)
+                                                        .then(function(value){
+                                                            console.log(`    OK | completed job saved: ${jobInfo.guid}`);
+                                                        }.bind(this))
+                                                        .catch(function(err){
+                                                            console.error(`  FAIL | failed to save completed job, `, err);
+                                                        }.bind(this)); // end of this._database.storeJob promise
 
-                                                console.log(`    OK | image rendered, ${value}`);
-                                            }.bind(this))
-                                            .catch(function(err) {
-                                                maxscriptClient.disconnect();
-                                                delete this._renderingClients[ jobGuid ];
+                                                    console.log(`    OK | image rendered, ${value}`);
+                                                }.bind(this))
+                                                .catch(function(err) {
+                                                    maxscriptClient.disconnect();
+                                                    delete this._renderingClients[ jobGuid ];
 
-                                                jobInfo.fail();
-                                                
-                                                this._database.storeJob(jobInfo)
-                                                    .then(function(value){
-                                                        console.log(`    OK | failed job saved: ${jobInfo.guid}`);
-                                                    }.bind(this))
-                                                    .catch(function(err){
-                                                        console.error(`  FAIL | failed to save failed job, `, err);
-                                                    }.bind(this)); // end of this._database.storeJob promise
+                                                    jobInfo.fail();
+                                                    
+                                                    this._database.storeJob(jobInfo)
+                                                        .then(function(value){
+                                                            console.log(`    OK | failed job saved: ${jobInfo.guid}`);
+                                                        }.bind(this))
+                                                        .catch(function(err){
+                                                            console.error(`  FAIL | failed to save failed job, `, err);
+                                                        }.bind(this)); // end of this._database.storeJob promise
 
-                                                console.error(`  FAIL | failed to render image\n`, err);
-                                            }.bind(this));
+                                                    console.error(`  FAIL | failed to render image\n`, err);
+                                                }.bind(this));
 
-                                        res.end(JSON.stringify({ guid: jobGuid }, null, 2));
-                                    }.bind(this))
-                                    .catch(function(err){
-                                        console.error(`  FAIL | failed to save new job, `, err);
-                                        res.status(500);
-                                        res.end(JSON.stringify({ error: "failed to save new job" }, null, 2));
-                                    }.bind(this)); // end of this._database.storeJob promise
+                                            res.end(JSON.stringify({ guid: jobGuid }, null, 2));
+                                        }.bind(this))
+                                        .catch(function(err){
+                                            console.error(`  FAIL | failed to save new job, `, err);
+                                            res.status(500);
+                                            res.end(JSON.stringify({ error: "failed to save new job" }, null, 2));
+                                        }.bind(this)); // end of this._database.storeJob promise
 
-                            }.bind(this))
-                            .catch(function(err) {
-                                console.error("JobEndpoint failed to connect to maxscript client, ", err);
-                                res.status(500);
-                                res.end(JSON.stringify({ error: "failed to connect to maxscript client" }, null, 2));
-                            }.bind(this)); // end of maxscriptClient.connect promise
+                                }.bind(this))
+                                .catch(function(err) {
+                                    console.error("JobEndpoint failed to connect to maxscript client, ", err);
+                                    res.status(500);
+                                    res.end(JSON.stringify({ error: "failed to connect to maxscript client" }, null, 2));
+                                }.bind(this)); // end of maxscriptClient.connect promise
 
-                    }.bind(this))
-                    .catch(function(err){
-                        console.error("this._database.getWorker promise rejected, ", err);
-                        res.status(403);
-                        res.end(JSON.stringify({ error: "session is expired" }, null, 2));
-                    }.bind(this)); // end of this._database.getWorker promise
+                        }.bind(this))
+                        .catch(function(err){
+                            console.error("this._database.getWorker promise rejected, ", err);
+                            res.status(403);
+                            res.end(JSON.stringify({ error: "session is expired" }, null, 2));
+                        }.bind(this)); // end of this._database.getWorker promise
 
                 }.bind(this))
                 .catch(function(err){

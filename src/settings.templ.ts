@@ -2,7 +2,7 @@ module.exports = {
     version: "1.0.2",
     host: "192.168.0.1", // where the api is hosted in local network?
     port: 8000,          // internal tcp port where api listens for client requests
-    workerManagerPort: 11000, // Worker Manager serves on this port
+    workerManagerPort: 17900, // Worker Manager serves on this port
     publicUrl: "https://example.com", //how to access rest api from outside?
     connectionUrl: 'mongodb://rfarmmgr:123456@192.168.0.151:27017/rfarmdb',
     databaseName: 'rfarmdb',

@@ -23,6 +23,9 @@ class DatabaseMock implements IDatabase {
   getWorkspace(workspaceGuid: string): Promise<any> {
     throw new Error("Method not implemented.");
   }
+  getSession(sessionGuid: string): Promise<SessionInfo> {
+    throw new Error("Method not implemented.");
+  }
   storeWorker(workerInfo: WorkerInfo): Promise<WorkerInfo> {
     throw new Error("Method not implemented.");
   }
