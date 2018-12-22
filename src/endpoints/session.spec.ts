@@ -1,8 +1,11 @@
 import "reflect-metadata";
 import { IDatabase, IEndpoint } from "../interfaces";
-import { Container, injectable, postConstruct } from "inversify";
-import { TYPES } from "../types";
+import { injectable } from "inversify";
 import { SessionEndpoint } from "./session";
+import { WorkerInfo } from "../model/worker_info";
+import { WorkspaceInfo } from "../model/workspace_info";
+import { SessionInfo } from "../model/session_info";
+import { JobInfo } from "../model/job_info";
 
 @injectable()
 class DatabaseMock implements IDatabase {
@@ -20,34 +23,34 @@ class DatabaseMock implements IDatabase {
   getWorkspace(workspaceGuid: string): Promise<any> {
     throw new Error("Method not implemented.");
   }
-  storeWorker(workerInfo: import("c:/Projects/threejs.render-farm-api/src/model/worker_info").WorkerInfo): Promise<import("c:/Projects/threejs.render-farm-api/src/model/worker_info").WorkerInfo> {
+  storeWorker(workerInfo: WorkerInfo): Promise<WorkerInfo> {
     throw new Error("Method not implemented.");
   }
-  getWorker(sessionGuid: string): Promise<import("c:/Projects/threejs.render-farm-api/src/model/worker_info").WorkerInfo> {
+  getWorker(sessionGuid: string): Promise<WorkerInfo> {
     throw new Error("Method not implemented.");
   }
-  startWorkerSession(apiKey: string, sessionGuid: string): Promise<import("c:/Projects/threejs.render-farm-api/src/model/worker_info").WorkerInfo> {
+  startWorkerSession(apiKey: string, sessionGuid: string): Promise<WorkerInfo> {
     throw new Error("Method not implemented.");
   }
   assignSessionWorkspace(sessionGuid: string, workspaceGuid: string): Promise<boolean> {
     throw new Error("Method not implemented.");
   }
-  getSessionWorkspace(sessionGuid: string): Promise<import("c:/Projects/threejs.render-farm-api/src/model/workspace_info").WorkspaceInfo> {
+  getSessionWorkspace(sessionGuid: string): Promise<WorkspaceInfo> {
     throw new Error("Method not implemented.");
   }
-  expireSessions(): Promise<import("c:/Projects/threejs.render-farm-api/src/model/session_info").SessionInfo[]> {
+  expireSessions(): Promise<SessionInfo[]> {
     throw new Error("Method not implemented.");
   }
   closeSession(sessionGuid: string): Promise<boolean> {
     throw new Error("Method not implemented.");
   }
-  storeJob(jobInfo: import("c:/Projects/threejs.render-farm-api/src/model/job_info").JobInfo): Promise<import("c:/Projects/threejs.render-farm-api/src/model/job_info").JobInfo> {
+  storeJob(jobInfo: JobInfo): Promise<JobInfo> {
     throw new Error("Method not implemented.");
   }
-  getJob(jobGuid: string): Promise<import("c:/Projects/threejs.render-farm-api/src/model/job_info").JobInfo> {
+  getJob(jobGuid: string): Promise<JobInfo> {
     throw new Error("Method not implemented.");
   }
-  getSessionActiveJobs(sessionGuid: string): Promise<import("c:/Projects/threejs.render-farm-api/src/model/job_info").JobInfo[]> {
+  getSessionActiveJobs(sessionGuid: string): Promise<JobInfo[]> {
     throw new Error("Method not implemented.");
   }
 }
@@ -92,7 +95,7 @@ describe("SessionEndpoint", function() {
   var expressMock: ExpressMock;
 
   beforeEach(function() {
-    session = new SessionEndpoint(new DatabaseMock());
+    session = new SessionEndpoint(new DatabaseMock(), null);
     expressMock = new ExpressMock();
   });
 

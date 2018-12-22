@@ -272,14 +272,16 @@ class MaxscriptClient implements IMaxscriptClient {
     }
 
     renderScene(camera: string, size: number[], filename: string, vraySettings: any): Promise<boolean> {
+
         let maxscript =   ` pngio.settype(#true24) ; `  // enums: {#paletted|#true24|#true48|#gray8|#gray16} 
                         + ` pngio.setAlpha false ; `
                         + ` vr = renderers.current ; `
                         + ` vr.progressive_max_render_time = ${vraySettings.progressiveMaxRenderTime} ; `
                         + ` vr.progressive_noise_threshold = ${vraySettings.progressiveNoiseThreshold} ; `
                         + ` render camera:$${camera} outputSize: [${size[0]},${size[1]}] ` 
-                        + ` outputfile: "${filename}" vfb: false`;
+                        + ` outputfile: "${filename}" vfb: true quiet: true`;
 
+        // see here: http://help.autodesk.com/view/3DSMAX/2018/ENU/?guid=__files_GUID_9175301C_13E6_488B_ABA6_D27CD804B205_htm
         // can also use: JPEG.setQuality(5); JPEG.setSmoothing(1);
 
         return this.execMaxscript(maxscript, "renderScene");

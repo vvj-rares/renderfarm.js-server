@@ -164,13 +164,13 @@ class Database implements IDatabase {
 
                         console.log(" >> .sort({cpuUsage: 1}).limit(1).toArray() returned: ", obj);
 
-                        if (obj) {
-                            let worker = WorkerInfo.fromJSON(obj);
-                            let newSession = new SessionInfo(apiKey, sessionGuid, worker.endpoint);
+                        if (obj && obj.length === 1) {
+                            let workerInfo = WorkerInfo.fromJSON(obj[0]);
+                            let newSession = new SessionInfo(apiKey, sessionGuid, workerInfo.endpoint);
                             db.collection("sessions").insertOne(newSession.toDatabase())
                                 .then(function(value){
                                     if (value.insertedCount === 1) {
-                                        resolve({ session: newSession, worker: WorkerInfo.fromJSON(obj) });
+                                        resolve({ session: newSession, worker: workerInfo });
                                     } else {
                                         reject(`failed to insert new session, insertedCount was ${value.insertedCount}`);
                                     }

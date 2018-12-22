@@ -22,21 +22,35 @@ class JobEndpoint implements IEndpoint {
     bind(express: express.Application) {
         express.get('/job/:uid', async function (req, res) {
             // this resource is spammy, don't log anything
-            // console.log(`GET on /job/${req.params.uid}`);
+            console.log(`GET on /job/${req.params.uid}`);
 
             let jobGuid = req.params.uid;
 
             this._database.getJob(jobGuid)
                 .then(function(value){
                     let jobInfo = JobInfo.fromJSON(value);
-                    res.end(JSON.stringify(jobInfo.toJSON(), null, 2));
+
+                    const request = require('request');
+                    let parts = jobInfo.workerEndpoint.split(":");
+                    let workerHost = parts[0];
+
+                    let workerManagerUrl = `http://${workerHost}:${settings.workerManagerPort}/worker`;
+                    console.log(" >> worker manager request: ", workerManagerUrl);
+
+                    request(workerManagerUrl, function (error, response, body) {
+                        console.log('error:', error); // Print the error if one occurred
+                        console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+                        console.log('body:', body); // Print the HTML for the Google homepage.
+
+                        res.end(JSON.stringify(jobInfo.toJSON(), null, 2));
+                    });
+                    
                 }.bind(this))
                 .catch(function(err){
                     // console.error(`  FAIL | job not found: ${jobGuid}, `, err);
                     res.status(404);
                     res.end(JSON.stringify({ error: "job not found" }, null, 2));
                 }.bind(this)); // end of this._database.getJob(jobGuid) promise
-
             
         }.bind(this));
 

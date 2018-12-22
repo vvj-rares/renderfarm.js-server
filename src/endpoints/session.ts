@@ -7,9 +7,13 @@ import { WorkerInfo } from "../model/worker_info";
 @injectable()
 class SessionEndpoint implements IEndpoint {
     private _database: IDatabase;
+    private _maxscriptClientFactory: IMaxscriptClientFactory;
 
-    constructor(@inject(TYPES.IDatabase) database: IDatabase) {
+    constructor(@inject(TYPES.IDatabase) database: IDatabase,
+                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
+
         this._database = database;
+        this._maxscriptClientFactory = maxscriptClientFactory;
 
         //expire sessions by timer
         setInterval(async function() {
