@@ -284,10 +284,11 @@ class MaxscriptClient implements IMaxscriptClient {
                         + ` viewport.setCamera $${camera} ; `
                         + ` renderWidth  = ${size[0]} ; `
                         + ` renderHeight = ${size[1]} ; `
-                        + ` rendUseActiveView = false ; `
+                        + ` rendUseActiveView = true ; `
                         + ` rendSaveFile = true ; `
                         + ` rendOutputFilename = "${filename}" ; `
                         + ` max quick render `;
+        console.log(" >> RENDER maxscript: ", maxscript);
 
         // see here: http://help.autodesk.com/view/3DSMAX/2018/ENU/?guid=__files_GUID_9175301C_13E6_488B_ABA6_D27CD804B205_htm
         // can also use: JPEG.setQuality(5); JPEG.setSmoothing(1);

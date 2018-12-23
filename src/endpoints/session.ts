@@ -204,16 +204,16 @@ class SessionEndpoint implements IEndpoint {
                                 console.log("SessionEndpoint connected to maxscript client, ", value);
 
                                 maxscriptClient.resetScene()
-                                .then(function(value) {
-                                    maxscriptClient.disconnect();
-                                    console.log(`    OK | scene reset`);
-                                    res.end(JSON.stringify({ success: true, message: "session closed" }, null, 2));
-                                }.bind(this))
-                                .catch(function(err) {
-                                    maxscriptClient.disconnect();
-                                    console.error(`  WARN | failed to reset scene after session close\n`, err);
-                                    res.end(JSON.stringify({ success: true, message: "session closed" }, null, 2));
-                                }.bind(this))
+                                    .then(function(value) {
+                                        maxscriptClient.disconnect();
+                                        console.log(`    OK | scene reset`);
+                                        res.end(JSON.stringify({ success: true, message: "session closed" }, null, 2));
+                                    }.bind(this))
+                                    .catch(function(err) {
+                                        maxscriptClient.disconnect();
+                                        console.error(`  WARN | failed to reset scene after session close\n`, err);
+                                        res.end(JSON.stringify({ success: true, message: "session closed" }, null, 2));
+                                    }.bind(this)); // end of maxscriptClient.resetScene promise
                 
                             }.bind(this))
                             .catch(function(err) {

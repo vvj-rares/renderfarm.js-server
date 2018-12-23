@@ -23,9 +23,19 @@
                 padding: 0;
                 margin: 0;
             }
-            #progress {
+            #progress, #elapsed {
                 font-family: monospace;
                 margin-left: 24px;
+            }
+            #output {
+                left: 0;
+                top: 0;
+                position: fixed;
+            }
+            #viewport {
+                left: 0;
+                top: 0;
+                position: fixed;
             }
         </style>
 
@@ -72,7 +82,7 @@
                 });
                 // renderer.setSize(window.innerWidth, window.innerHeight);
                 renderer.setSize(640, 480);
-                renderer.setClearColor(new THREE.Color(0xfefefe));
+                renderer.setClearColor(new THREE.Color(0xaeaeae));
 
                 renderer.shadowMap.enabled = true;
                 renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
@@ -80,15 +90,16 @@
 
                 // document.body.appendChild(renderer.domElement);
 
-                camera.position.x = 5;
-                camera.position.y = 6;
-                camera.position.z = 7;
+                camera.position.x = 50;
+                camera.position.y = 60;
+                camera.position.z = 70;
                 camera.lookAt(0, 0, 0);
                 camera.updateProjectionMatrix ();
 
                 controls = new THREE.OrbitControls(camera);
 
                 var spotLight = new THREE.SpotLight( 0xffa0c0 );
+                spotLight.name = "SpotLight1";
                 spotLight.position.set( 10, 40, 10 );
                 spotLight.target.position.set( 0, 0, 0 );
                 spotLight.castShadow = true;
@@ -113,7 +124,7 @@
                 var gridHelper = new THREE.GridHelper(4, 4);
                 scene.add(gridHelper);
 
-                var geometry = new THREE.DodecahedronGeometry(1, 0);
+                var geometry = new THREE.DodecahedronGeometry(4, 0);
                     geometry = new THREE.BufferGeometry().fromGeometry(geometry);
 
                 var material = new THREE.MeshPhongMaterial({
@@ -123,13 +134,15 @@
                 });
 
                 var cube = new THREE.Mesh(geometry, material);
-                cube.applyMatrix(new THREE.Matrix4().makeTranslation(0, 1, 0))
+                cube.name = "Dodecahedron1";
+                cube.applyMatrix(new THREE.Matrix4().makeTranslation(10, 4, 10))
                 cube.castShadow = true;
                 cube.receiveShadow = false;
                 scene.add(cube);
 
                 var cube2 = new THREE.Mesh(geometry, material);
-                cube2.applyMatrix(new THREE.Matrix4().makeTranslation(-1.75, 1, -1.75));
+                cube2.name = "Dodecahedron2";
+                cube2.applyMatrix(new THREE.Matrix4().makeTranslation(-17.5, 4, -17.5));
                 cube2.castShadow = true;
                 cube2.receiveShadow = false;
                 scene.add(cube2);
@@ -141,13 +154,14 @@
                 });
 
                 var cube3 = new THREE.Mesh(geometry, material3);
-                cube3.applyMatrix(new THREE.Matrix4().makeTranslation(-1.75, 1, 1.75));
+                cube3.name = "Dodecahedron3";
+                cube3.applyMatrix(new THREE.Matrix4().makeTranslation(-17.5, 4, 17.5));
                 cube3.castShadow = true;
                 cube3.receiveShadow = false;
                 scene.add(cube3);
 // =============
 
-                var geometry = new THREE.ConeGeometry( 0.5, 3, 32 );
+                var geometry = new THREE.ConeGeometry( 1, 4, 32 );
                     geometry = new THREE.BufferGeometry().fromGeometry(geometry);
                 var material = new THREE.MeshPhongMaterial({
                     color: 0x40e040,
@@ -155,9 +169,10 @@
                     opacity: 0.95
                 });
                 var cone = new THREE.Mesh( geometry, material );
+                cone.name = "Cone1";
                 cone.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/4));
                 cone.applyMatrix(new THREE.Matrix4().makeRotationY(-Math.PI/4));
-                cone.applyMatrix(new THREE.Matrix4().makeTranslation(2, 1.2, -2));
+                cone.applyMatrix(new THREE.Matrix4().makeTranslation(12, 2.2, -12));
                 scene.add( cone );
 
                 var planeGeometry = new THREE.PlaneGeometry( 5, 5, 1 );
@@ -180,30 +195,48 @@
                     renderer.render(scene, camera);
                 };
 
+                let sceneName = "vray_caustics_heavy.max";
                 document.renderScene = function() {
+                    $("#progress").text("Contacting render farm...");
                     rfarm.createSession(function(sessionId) {
-                        rfarm.openScene(scene, "vray_simple_1.max", function(sceneNodeName) {
+                        $("#progress").text("Creating session...");
+                        rfarm.openScene(scene, sceneName, function(sceneNodeName) {
+                            $("#progress").text("Opening scene: " + sceneName);
                             rfarm.createMesh(cone, function(coneNodeName) {
+                                $("#progress").text("Creating mesh: " + cone.name);
                                 rfarm.createMesh(cube, function(cubeNodeName) {
+                                    $("#progress").text("Creating mesh: " + cube.name);
                                     rfarm.createMesh(cube2, function(cube2NodeName) {
+                                        $("#progress").text("Creating mesh: " + cube2.name);
                                         rfarm.createMesh(cube3, function(cube3NodeName) {
+                                            $("#progress").text("Creating mesh: " + cube3.name);
                                             rfarm.createSpotlight(spotLight, spotLight.target, function(spotLightName) {
+                                                $("#progress").text("Creating spot light: " + spotLight.name);
                                                 rfarm.createCamera(camera, function(cameraName) {
+                                                    $("#progress").text("Creating camera: " + camera.name);
                                                     var width = $("#viewport").outerWidth();
                                                     var height = $("#viewport").outerHeight();
 
+                                                    $("#progress").text("Starting rener...");
                                                     rfarm.render(cameraName, width, height, 
                                                         function(jobGuid) {
+                                                            $("#progress").text("Rener job created, updating...");
                                                             document.jobGuid = jobGuid;
                                                         },
                                                         function(progress, elapsed) {
-                                                            $("#progress").text("Progress: " + (100 * progress).toFixed(1) + "%, Elapsed: " + (elapsed * 60).toFixed(1) + " sec.");
+                                                            let elapsedMin = Math.floor(elapsed);
+                                                            let elapsedSec = Math.floor(60*(elapsed - elapsedMin));
+
+                                                            $("#elapsed").text(`Time elapsed: ${pad(elapsedMin,2)}:${pad(elapsedSec,2)}`);
+                                                            $("#progress").text(`${progress ? ("Vray progress: " + progress) : ""}`);
+                                                            console.log(progress, elapsed);
                                                         }, 
                                                         function(url) {
                                                             $('#viewport').css("display", "none");
                                                             $('#output').attr("src",url);
-                                                            $('#progress').css("display", "none");
-                                                            // rfarm.closeSession(sessionId);
+
+                                                            $("#progress").text("Rener complete.");
+                                                            rfarm.closeSession(sessionId);
                                                         });
                                                 });
                                             });
@@ -231,6 +264,7 @@
         <button id="render" onclick="renderScene()" style="position: fixed; left: 0; top:0;">render</button>
         <button id="cancel" onclick="cancelRender()" style="position: fixed; left: 70px; top:0;">cancel</button>
         <button id="save" onclick="saveJson(document.spotLight.toJSON(), 'spotLight.json')" style="position: fixed; left: 560px; top:0;">save json</button>
+        <div id="elapsed"></div>
         <div id="progress"></div>
     </body>
 </html>

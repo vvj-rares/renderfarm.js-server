@@ -1,3 +1,9 @@
+function pad(num, size) {
+    var s = num+"";
+    while (s.length < size) s = "0" + s;
+    return s;
+}
+
 var rfarm = {
     apiKey: "75f5-4d53-b0f4",
     workspace: "55a0bd33-9f15-4bc0-a482-17899eb67af3",
@@ -138,6 +144,7 @@ rfarm.createCamera = function(camera, onCameraReady) {
     camera.updateProjectionMatrix();
 
     var cameraJson = camera.toJSON();
+    console.log("CAMERA: ", cameraJson);
     var cameraText = JSON.stringify(cameraJson);
     var compressedCameraData = LZString144.compressToBase64(cameraText);
 
@@ -222,8 +229,8 @@ rfarm.render = function(cameraName, width, height, onStarted, onProgress, onImag
             success: function(result) {
                 console.log(result);
                 if (result.status === "rendering") {
-                    if (result.progress > 0) {
-                        onProgress(result.progress, result.elapsed);
+                    if (result.elapsed > 0) {
+                        onProgress(result.vrayProgress, result.elapsed);
                     }
 
                     setTimeout(function() {
