@@ -29,7 +29,9 @@ class WorkerEndpoint implements IEndpoint {
         }.bind(this));
 
         server.on('message', async function(msg, rinfo) {
+            console.log(msg.toString());
             var rec = JSON.parse(msg.toString());
+
             if (rec.type === "heartbeat" && rec.sender === "remote-maxscript") {
                 this.handleHeartbeatFromRemoteMaxscript(msg, rinfo, rec);
             } else if (rec.type === "heartbeat" && rec.sender === "worker-manager") {
@@ -71,7 +73,7 @@ class WorkerEndpoint implements IEndpoint {
     }
 
     async handleHeartbeatFromWorkerManager(msg, rinfo, rec) {
-        console.log(" >> TODO: handle heartbeat: ", msg);
+        // console.log(" >> TODO: handle heartbeat: ", msg);
     }
 
     bind(express: express.Application) {
