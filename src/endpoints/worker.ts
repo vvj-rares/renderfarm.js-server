@@ -30,27 +30,10 @@ class WorkerEndpoint implements IEndpoint {
 
         server.on('message', async function(msg, rinfo) {
             var rec = JSON.parse(msg.toString());
-            var workerId = rec.mac + rec.port;
-            let knownWorker = this._workers[workerId];
-            if (knownWorker !== undefined) { // update existing record
-                knownWorker.cpuUsage = rec.cpu_usage;
-                knownWorker.ramUsage = rec.ram_usage;
-                knownWorker.totalRam = rec.total_ram;
-                knownWorker.ip       = rinfo.address;
-                knownWorker.port     = rec.port;
-                // all who report into this api belongs to current workgroup
-                knownWorker.workgroup = settings.workgroup;
-                knownWorker.touch();
-
-                await this._database.storeWorker(knownWorker);
-            } else {
-                 // all who report into this api belongs to current workgroup
-                let newWorker = new WorkerInfo(rec.mac, rinfo.address, rec.port, settings.workgroup);
-                this._workers[workerId] = newWorker;
-
-                await this._database.storeWorker(newWorker);
-
-                console.log(`new worker: ${msg} from ${rinfo.address}:${rinfo.port}`);
+            if (rec.type === "heartbeat" && rec.sender === "remote-maxscript") {
+                this.handleHeartbeatFromRemoteMaxscript(msg, rinfo, rec);
+            } else if (rec.type === "heartbeat" && rec.sender === "worker-manager") {
+                this.handleHeartbeatFromWorkerManager(msg, rinfo, rec);
             }
         }.bind(this));
         
@@ -60,6 +43,35 @@ class WorkerEndpoint implements IEndpoint {
         }.bind(this));
 
         server.bind(3000);
+    }
+
+    async handleHeartbeatFromRemoteMaxscript(msg, rinfo, rec) {
+        var workerId = rec.mac + rec.port;
+        let knownWorker = this._workers[workerId];
+        if (knownWorker !== undefined) { // update existing record
+            knownWorker.cpuUsage = rec.cpu_usage;
+            knownWorker.ramUsage = rec.ram_usage;
+            knownWorker.totalRam = rec.total_ram;
+            knownWorker.ip       = rinfo.address;
+            knownWorker.port     = rec.port;
+            // all who report into this api belongs to current workgroup
+            knownWorker.workgroup = settings.workgroup;
+            knownWorker.touch();
+
+            await this._database.storeWorker(knownWorker);
+        } else {
+             // all who report into this api belongs to current workgroup
+            let newWorker = new WorkerInfo(rec.mac, rinfo.address, rec.port, settings.workgroup);
+            this._workers[workerId] = newWorker;
+
+            await this._database.storeWorker(newWorker);
+
+            console.log(`new worker: ${msg} from ${rinfo.address}:${rinfo.port}`);
+        }
+    }
+
+    async handleHeartbeatFromWorkerManager(msg, rinfo, rec) {
+        console.log(" >> TODO: handle heartbeat: ", msg);
     }
 
     bind(express: express.Application) {
