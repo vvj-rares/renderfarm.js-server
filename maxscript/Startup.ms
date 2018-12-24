@@ -33,9 +33,11 @@ fn rayysGetAllMaterialNames = (
 )
 
 fn rayysFlipYZ sceneRoot = (
+	callbacks.removeScripts id:#flipYZ
 	rotate sceneRoot (eulerangles 90 0 0)
 )
 
 fn rayysUnflipYZ sceneRoot = (
+	callbacks.removeScripts id:#unflipYZ
 	rotate sceneRoot (eulerangles -90 0 0)
 )
