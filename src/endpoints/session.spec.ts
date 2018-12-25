@@ -12,9 +12,6 @@ const majorVersion = settings.version.split(".")[0];
 
 @injectable()
 class DatabaseMock implements IDatabase {
-  deleteDeadWorkers(): Promise<boolean> {
-    throw new Error("Method not implemented.");
-  }
   public spyObj: jasmine.Spy;
 
   constructor() {
@@ -36,6 +33,9 @@ class DatabaseMock implements IDatabase {
     throw new Error("Method not implemented.");
   }
   getWorker(sessionGuid: string): Promise<WorkerInfo> {
+    throw new Error("Method not implemented.");
+  }
+  deleteDeadWorkers(): Promise<number> {
     throw new Error("Method not implemented.");
   }
   startWorkerSession(apiKey: string, sessionGuid: string): Promise<WorkerInfo> {
