@@ -28,6 +28,7 @@ export interface IDatabase {
 
     storeWorker(workerInfo: WorkerInfo): Promise<WorkerInfo>;
     getWorker(sessionGuid: string): Promise<WorkerInfo>;
+    deleteDeadWorkers(): Promise<number>;
 
     startWorkerSession(apiKey: string, sessionGuid: string): Promise<WorkerInfo>;
     assignSessionWorkspace(sessionGuid: string, workspaceGuid: string): Promise<boolean>;

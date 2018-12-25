@@ -3,6 +3,9 @@ import * as express from "express";
 import { IEndpoint, IDatabase, IMaxscriptClientFactory } from "../interfaces";
 import { TYPES } from "../types";
 
+const settings = require("../settings");
+const majorVersion = settings.version.split(".")[0];
+
 @injectable()
 class SceneLightEndpoint implements IEndpoint {
     private _database: IDatabase;
@@ -15,17 +18,17 @@ class SceneLightEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get('/scene/:sceneid/light', async function (req, res) {
+        express.get(`/v${majorVersion}/scene/:sceneid/light`, async function (req, res) {
             console.log(`GET on /scene/${req.params.sceneid}/light with session: ${req.body.session}`);
             res.end({});
         }.bind(this));
 
-        express.get('/scene/:sceneid/light/:uid', async function (req, res) {
+        express.get(`/v${majorVersion}/scene/:sceneid/light/:uid`, async function (req, res) {
             console.log(`GET on /scene/${req.params.sceneid}/light/${req.params.uid} with session: ${req.body.session}`);
             res.end({});
         }.bind(this));
 
-        express.post('/scene/:sceneid/skylight', async function (req, res) {
+        express.post(`/v${majorVersion}/scene/:sceneid/skylight`, async function (req, res) {
             console.log(`POST on /scene/${req.params.sceneid}/skylight with session: ${req.body.session}`);
 
             this._database.getWorker(req.body.session)
@@ -66,7 +69,7 @@ class SceneLightEndpoint implements IEndpoint {
     
         }.bind(this));
 
-        express.post('/scene/:sceneid/spotlight', async function (req, res) {
+        express.post(`/v${majorVersion}/scene/:sceneid/spotlight`, async function (req, res) {
             console.log(`POST on /scene/${req.params.sceneid}/spotlight with session: ${req.body.session}`);
 
             this._database.getWorker(req.body.session)
@@ -108,12 +111,12 @@ class SceneLightEndpoint implements IEndpoint {
     
         }.bind(this));
 
-        express.put('/scene/:sceneid/light/:uid', async function (req, res) {
+        express.put(`/v${majorVersion}/scene/:sceneid/light/:uid`, async function (req, res) {
             console.log(`PUT on /scene/${req.params.sceneid}/light/${req.params.uid} with session: ${req.body.session}`);
             res.end({});
         }.bind(this));
 
-        express.delete('/scene/:sceneid/light/:uid', async function (req, res) {
+        express.delete(`/v${majorVersion}/scene/:sceneid/light/:uid`, async function (req, res) {
             console.log(`DELETE on /scene/${req.params.sceneid}/light/${req.params.uid} with session: ${req.body.session}`);
             res.end({});
         }.bind(this));

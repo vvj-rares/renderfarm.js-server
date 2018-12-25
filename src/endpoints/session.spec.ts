@@ -7,8 +7,14 @@ import { WorkspaceInfo } from "../model/workspace_info";
 import { SessionInfo } from "../model/session_info";
 import { JobInfo } from "../model/job_info";
 
+const settings = require("../settings");
+const majorVersion = settings.version.split(".")[0];
+
 @injectable()
 class DatabaseMock implements IDatabase {
+  deleteDeadWorkers(): Promise<boolean> {
+    throw new Error("Method not implemented.");
+  }
   public spyObj: jasmine.Spy;
 
   constructor() {

@@ -9,11 +9,13 @@ import { myContainer } from "./inversify.config";
 import { TYPES } from "./types";
 import { IDatabase, IApp } from "./interfaces";
 
+console.log(`Starting api version ${settings.version}`);
 console.log("Connecting to database...");
 
 const database = myContainer.get<IDatabase>(TYPES.IDatabase);
 database.connect(settings.connectionUrl)
     .then(function() {
+
         console.log("    OK | Database connected");
         console.log("Starting server...");
 

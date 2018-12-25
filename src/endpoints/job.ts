@@ -5,6 +5,8 @@ import { TYPES } from "../types";
 import { JobInfo } from "../model/job_info";
 
 const settings = require("../settings");
+const majorVersion = settings.version.split(".")[0];
+
 const http = require('http');
 
 @injectable()
@@ -20,9 +22,9 @@ class JobEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get('/job/:uid', async function (req, res) {
+        express.get(`/v${majorVersion}/job/:uid`, async function (req, res) {
             // this resource is spammy, don't log anything
-            console.log(`GET on /job/${req.params.uid}`);
+            // console.log(`GET on /job/${req.params.uid}`);
 
             let jobGuid = req.params.uid;
 
@@ -30,14 +32,14 @@ class JobEndpoint implements IEndpoint {
                 .then(function(value){
                     let jobInfo = JobInfo.fromJSON(value);
 
-                    console.log(" >> updating session: ", jobInfo.sessionGuid);
+                    // console.log(" >> updating session: ", jobInfo.sessionGuid);
                     this._database.getSession(jobInfo.sessionGuid)
                         .then(function(jobSession){
 
                             const request = require('request');
                             let parts = jobInfo.workerEndpoint.split(":");
                             if (parts.length <= 1) {
-                                console.error(" >> wrong jobInfo.workerEndpoint: ", jobInfo.workerEndpoint);
+                                // console.error(" >> wrong jobInfo.workerEndpoint: ", jobInfo.workerEndpoint);
                                 res.status(500);
                                 res.end(JSON.stringify({ error: "job missing worker endpoint info" }, null, 2));
                                 return;
@@ -46,7 +48,7 @@ class JobEndpoint implements IEndpoint {
                             let workerPort = parseInt(parts[1]);
 
                             let workerManagerUrl = `http://${workerHost}:${settings.workerManagerPort}/worker`;
-                            console.log(" >> requesting: ", workerManagerUrl);
+                            // console.log(" >> requesting: ", workerManagerUrl);
                             request(workerManagerUrl, function (error, response, body) {
                                 if (error) {
                                     console.log(" >> error: ", error);

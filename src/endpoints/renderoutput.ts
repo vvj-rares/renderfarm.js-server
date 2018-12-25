@@ -3,12 +3,13 @@ import * as express from "express";
 import { IEndpoint } from "../interfaces";
 
 const settings = require("../settings");
+const majorVersion = settings.version.split(".")[0];
 
 @injectable()
 class RenderOutputEndpoint implements IEndpoint {
 
     bind(express: express.Application) {
-        express.get('/renderoutput/:filename', async function (req, res) {
+        express.get(`/v${majorVersion}/renderoutput/:filename`, async function (req, res) {
             console.log(`GET on /renderoutput/${req.params.filename}`);
 
             let mime = require('mime-types');

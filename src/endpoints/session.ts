@@ -4,6 +4,9 @@ import { IEndpoint, IDatabase, IMaxscriptClientFactory } from "../interfaces";
 import { TYPES } from "../types";
 import { WorkerInfo } from "../model/worker_info";
 
+const settings = require("../settings");
+const majorVersion = settings.version.split(".")[0];
+
 @injectable()
 class SessionEndpoint implements IEndpoint {
     private _database: IDatabase;
@@ -80,7 +83,7 @@ class SessionEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.post('/session', async function (req, res) {
+        express.post(`/v${majorVersion}/session`, async function (req, res) {
             let apiKey = req.body.api_key;
             if (!apiKey) {
                 console.log(`REJECT | api_key empty`);
@@ -186,7 +189,7 @@ class SessionEndpoint implements IEndpoint {
 
         }.bind(this));
 
-        express.delete('/session/:uid', async function (req, res) {
+        express.delete(`/v${majorVersion}/session/:uid`, async function (req, res) {
             console.log(`DELETE on /session/${req.params.uid}`);
 
             let sessionGuid = req.params.uid;

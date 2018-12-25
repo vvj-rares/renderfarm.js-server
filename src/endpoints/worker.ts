@@ -5,6 +5,7 @@ import { TYPES } from "../types";
 import { WorkerInfo } from "../model/worker_info";
 
 const settings = require("../settings");
+const majorVersion = settings.version.split(".")[0];
 
 @injectable()
 class WorkerEndpoint implements IEndpoint {
@@ -15,6 +16,22 @@ class WorkerEndpoint implements IEndpoint {
         this._database = database;
 
         this._workers = {};
+
+        //delete dead workers by timer
+        setInterval(async function() {
+            await this._database.deleteDeadWorkers()
+                .then(function(deletedCount){
+                    if (deletedCount > 0) {
+                        console.log(`    OK | deleted dead workers: ${deletedCount}`);
+                    } else {
+                        console.log(`  INFO | deleted dead workers: ${deletedCount}`);
+                    }
+                }.bind(this))
+                .catch(function(err){
+                    console.error(`  FAIL | failed to delete dead workers: `, err);
+                }.bind(this));
+
+        }.bind(this), 5*60*60*1000); // check once per 5 min
 
         this.listen();
     }
@@ -29,7 +46,7 @@ class WorkerEndpoint implements IEndpoint {
         }.bind(this));
 
         server.on('message', async function(msg, rinfo) {
-            console.log(msg.toString());
+            // console.log(msg.toString());
             var rec = JSON.parse(msg.toString());
 
             if (rec.type === "heartbeat" && rec.sender === "remote-maxscript") {
@@ -77,7 +94,7 @@ class WorkerEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get('/worker', function (req, res) {
+        express.get(`/v${majorVersion}/worker`, function (req, res) {
             let apiKey = req.query.api_key;
             console.log(`GET on /worker with api_key: ${apiKey}`);
             this._database.getApiKey(apiKey)
@@ -89,13 +106,13 @@ class WorkerEndpoint implements IEndpoint {
                         console.log(`    OK | api_key ${apiKey} accepted`);
                         res.end(JSON.stringify(response, null, 2));
                     } else {
-                        console.log(`  FAIL | api key declined: ${apiKey}`);
+                        console.error(`  FAIL | api key declined: ${apiKey}`);
                         res.status(403);
                         res.end(JSON.stringify({ error: "api key declined" }, null, 2));
                     }
                 }.bind(this))
                 .catch(function(err) {
-                    console.log(`  FAIL | failed to check api_key: ${apiKey}, `, err);
+                    console.error(`  FAIL | failed to check api_key: ${apiKey}, `, err);
                     res.status(500);
                     res.end(JSON.stringify({ error: "failed to check api_key" }, null, 2));
                 }.bind(this));

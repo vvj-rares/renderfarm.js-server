@@ -4,6 +4,7 @@ import { IEndpoint, IDatabase, IMaxscriptClientFactory } from "../interfaces";
 import { TYPES } from "../types";
 
 const settings = require("../settings");
+const majorVersion = settings.version.split(".")[0];
 
 @injectable()
 class SceneGeometryEndpoint implements IEndpoint {
@@ -24,12 +25,12 @@ class SceneGeometryEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get('/scene/:sceneid/geometry', async function (req, res) {
+        express.get(`/v${majorVersion}/scene/:sceneid/geometry`, async function (req, res) {
             console.log(`GET on /scene/${req.params.sceneid}/geometry with session: ${req.body.session}`);
             res.end({});
         }.bind(this));
 
-        express.get('/scene/:sceneid/geometry/:uuid', async function (req, res) {
+        express.get(`/v${majorVersion}/scene/:sceneid/geometry/:uuid`, async function (req, res) {
             console.log(`GET on on /scene/${req.params.sceneid}/geometry/${req.params.uuid} with session: ${req.query.session}`);
 
             if (this._geometryCache[req.query.session][req.params.uuid] === undefined) {
@@ -45,7 +46,7 @@ class SceneGeometryEndpoint implements IEndpoint {
             res.end(this._geometryCache[req.query.session][req.params.uuid].geometryJsonText);
         }.bind(this));
 
-        express.post('/scene/:sceneid/geometry', async function (req, res) {
+        express.post(`/v${majorVersion}/scene/:sceneid/geometry`, async function (req, res) {
             console.log(`POST on /scene/${req.params.sceneid}/geometry with session: ${req.body.session}`);
 
             const LZString = require("lz-string");
@@ -162,12 +163,12 @@ class SceneGeometryEndpoint implements IEndpoint {
     
         }.bind(this));
 
-        express.put('/scene/:sceneid/geometry/:uid', async function (req, res) {
+        express.put(`/v${majorVersion}/scene/:sceneid/geometry/:uid`, async function (req, res) {
             console.log(`PUT on on /scene/${req.params.sceneid}/geometry/${req.params.uid}  with session: ${req.body.session}`);
             res.end({});
         }.bind(this));
 
-        express.delete('/scene/:sceneid/geometry/:uid', async function (req, res) {
+        express.delete(`/v${majorVersion}/scene/:sceneid/geometry/:uid`, async function (req, res) {
             console.log(`DELETE on on /scene/${req.params.sceneid}/geometry/${req.params.uid}  with session: ${req.body.session}`);
             res.end({});
         }.bind(this));

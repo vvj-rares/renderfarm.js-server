@@ -4,6 +4,7 @@ import { IEndpoint, IDatabase } from "../interfaces";
 import { TYPES } from "../types";
 
 const settings = require("../settings");
+const majorVersion = settings.version.split(".")[0];
 
 @injectable()
 class WorkspaceFileEndpoint implements IEndpoint {
@@ -14,7 +15,7 @@ class WorkspaceFileEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get('/workspace/:guid/file/*/:filename', async function (req, res) {
+        express.get(`/v${majorVersion}/workspace/:guid/file/*/:filename`, async function (req, res) {
             console.log(`GET on /workspace/${req.params.guid}/file/${req.params[0]}/${req.params.filename}`);
 
             let workspaceGuid = req.params.guid;

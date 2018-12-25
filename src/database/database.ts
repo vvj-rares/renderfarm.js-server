@@ -307,6 +307,30 @@ class Database implements IDatabase {
         }.bind(this));
     }
 
+    async deleteDeadWorkers(): Promise<number> {
+        let db = this._client.db("rfarmdb");
+        assert.notEqual(db, null);
+
+        return new Promise<number>(function (resolve, reject) {
+            let expirationDate = new Date(Date.now() - 3*24*60*60*1000); // delete workers that are more than 3 days offline
+
+            db.collection("workers").deleteMany(
+                { 
+                    lastSeen : { $lte: expirationDate }
+                })
+                .then(function(value){
+                    if (value && value.deletedCount > 0) {
+                        resolve(value.deletedCount);
+                    } else {
+                        resolve(0);
+                    }
+                }.bind(this))
+                .catch(function(err){
+                    reject(err);
+                }.bind(this)); // end of db.collection("workers").deleteMany promise
+        });
+    }
+
     async assignSessionWorkspace(sessionGuid: string, workspaceGuid: string): Promise<boolean> {
         let db = this._client.db(settings.databaseName);
         assert.notEqual(db, null);
