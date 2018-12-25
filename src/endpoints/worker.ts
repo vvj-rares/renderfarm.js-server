@@ -25,8 +25,6 @@ class WorkerEndpoint implements IEndpoint {
                 .then(function(deletedCount){
                     if (deletedCount > 0) {
                         console.log(`    OK | deleted dead workers: ${deletedCount}`);
-                    } else {
-                        console.log(`  INFO | deleted dead workers: ${deletedCount}`);
                     }
                 }.bind(this))
                 .catch(function(err){
