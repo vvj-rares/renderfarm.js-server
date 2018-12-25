@@ -3,6 +3,7 @@ import * as express from "express";
 import { IEndpoint, IDatabase } from "../interfaces";
 import { TYPES } from "../types";
 import { WorkerInfo } from "../model/worker_info";
+import { VraySpawnerInfo } from "../model/vray_spawner_info";
 
 const settings = require("../settings");
 const majorVersion = settings.version.split(".")[0];
@@ -11,6 +12,7 @@ const majorVersion = settings.version.split(".")[0];
 class WorkerEndpoint implements IEndpoint {
     private _database: IDatabase;
     private _workers: { [id: string] : WorkerInfo; } = {};
+    private _vraySpawners: { [id: string] : VraySpawnerInfo; } = {};
 
     constructor(@inject(TYPES.IDatabase) database: IDatabase) {
         this._database = database;
@@ -19,7 +21,7 @@ class WorkerEndpoint implements IEndpoint {
 
         //delete dead workers by timer
         setInterval(async function() {
-            await this._database.deleteDeadWorkers()
+            this._database.deleteDeadWorkers()
                 .then(function(deletedCount){
                     if (deletedCount > 0) {
                         console.log(`    OK | deleted dead workers: ${deletedCount}`);
@@ -31,7 +33,7 @@ class WorkerEndpoint implements IEndpoint {
                     console.error(`  FAIL | failed to delete dead workers: `, err);
                 }.bind(this));
 
-        }.bind(this), 5*60*60*1000); // check once per 5 min
+        }.bind(this), 30*1000); // check once per 30 sec
 
         this.listen();
     }
@@ -46,8 +48,8 @@ class WorkerEndpoint implements IEndpoint {
         }.bind(this));
 
         server.on('message', async function(msg, rinfo) {
-            // console.log(msg.toString());
             var rec = JSON.parse(msg.toString());
+            // console.log(rec);
 
             if (rec.type === "heartbeat" && rec.sender === "remote-maxscript") {
                 this.handleHeartbeatFromRemoteMaxscript(msg, rinfo, rec);
@@ -55,13 +57,13 @@ class WorkerEndpoint implements IEndpoint {
                 this.handleHeartbeatFromWorkerManager(msg, rinfo, rec);
             }
         }.bind(this));
-        
+
         server.on('listening', function() {
             const address = server.address();
             console.log(`    OK | Worker monitor is listening on ${address.address}:${address.port}`);
         }.bind(this));
 
-        server.bind(3000);
+        server.bind(settings.heartbeatPort);
     }
 
     async handleHeartbeatFromRemoteMaxscript(msg, rinfo, rec) {
@@ -71,16 +73,15 @@ class WorkerEndpoint implements IEndpoint {
             knownWorker.cpuUsage = rec.cpu_usage;
             knownWorker.ramUsage = rec.ram_usage;
             knownWorker.totalRam = rec.total_ram;
-            knownWorker.ip       = rinfo.address;
-            knownWorker.port     = rec.port;
-            // all who report into this api belongs to current workgroup
-            knownWorker.workgroup = settings.workgroup;
             knownWorker.touch();
 
             await this._database.storeWorker(knownWorker);
         } else {
              // all who report into this api belongs to current workgroup
             let newWorker = new WorkerInfo(rec.mac, rinfo.address, rec.port, settings.workgroup);
+            newWorker.cpuUsage = rec.cpu_usage;
+            newWorker.ramUsage = rec.ram_usage;
+            newWorker.totalRam = rec.total_ram;
             this._workers[workerId] = newWorker;
 
             await this._database.storeWorker(newWorker);
@@ -90,7 +91,31 @@ class WorkerEndpoint implements IEndpoint {
     }
 
     async handleHeartbeatFromWorkerManager(msg, rinfo, rec) {
-        // console.log(" >> TODO: handle heartbeat: ", msg);
+        if (!rec.vray_spawner) {
+            return;
+        }
+
+        var vraySpawnerId = rec.ip + rec.mac;
+        let knownVraySpawner = this._vraySpawners[vraySpawnerId];
+        if (knownVraySpawner !== undefined) { // update existing record
+            knownVraySpawner.cpuUsage = rec.cpu_usage;
+            knownVraySpawner.ramUsage = rec.ram_usage;
+            knownVraySpawner.totalRam = rec.total_ram;
+            knownVraySpawner.touch();
+
+            await this._database.storeVraySpawner(knownVraySpawner);
+        } else {
+             // all who report into this api belongs to current workgroup
+            let newVraySpawner = new VraySpawnerInfo(rec.mac, rinfo.address, settings.workgroup);
+            newVraySpawner.cpuUsage = rec.cpu_usage;
+            newVraySpawner.ramUsage = rec.ram_usage;
+            newVraySpawner.totalRam = rec.total_ram;
+            this._vraySpawners[vraySpawnerId] = newVraySpawner;
+
+            await this._database.storeVraySpawner(newVraySpawner);
+
+            console.log(`new vray spawner: ${msg} from ${rinfo.address}`);
+        }
     }
 
     bind(express: express.Application) {

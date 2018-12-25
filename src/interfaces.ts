@@ -5,6 +5,7 @@ import { WorkerInfo } from "./model/worker_info";
 import { SessionInfo } from "./model/session_info";
 import { WorkspaceInfo } from "./model/workspace_info";
 import { JobInfo } from "./model/job_info";
+import { VraySpawnerInfo } from "./model/vray_spawner_info";
 
 export interface Warrior {
     fight(): string;
@@ -29,6 +30,8 @@ export interface IDatabase {
     storeWorker(workerInfo: WorkerInfo): Promise<WorkerInfo>;
     getWorker(sessionGuid: string): Promise<WorkerInfo>;
     deleteDeadWorkers(): Promise<number>;
+
+    storeVraySpawner(vraySpawnerInfo: VraySpawnerInfo): Promise<VraySpawnerInfo>;
 
     startWorkerSession(apiKey: string, sessionGuid: string): Promise<WorkerInfo>;
     assignSessionWorkspace(sessionGuid: string, workspaceGuid: string): Promise<boolean>;

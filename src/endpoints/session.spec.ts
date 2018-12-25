@@ -6,6 +6,7 @@ import { WorkerInfo } from "../model/worker_info";
 import { WorkspaceInfo } from "../model/workspace_info";
 import { SessionInfo } from "../model/session_info";
 import { JobInfo } from "../model/job_info";
+import { VraySpawnerInfo } from "../model/vray_spawner_info";
 
 const settings = require("../settings");
 const majorVersion = settings.version.split(".")[0];
@@ -36,6 +37,9 @@ class DatabaseMock implements IDatabase {
     throw new Error("Method not implemented.");
   }
   deleteDeadWorkers(): Promise<number> {
+    throw new Error("Method not implemented.");
+  }
+  storeVraySpawner(vraySpawnerInfo: VraySpawnerInfo): Promise<VraySpawnerInfo> {
     throw new Error("Method not implemented.");
   }
   startWorkerSession(apiKey: string, sessionGuid: string): Promise<WorkerInfo> {

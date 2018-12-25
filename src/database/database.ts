@@ -9,6 +9,7 @@ import { WorkerInfo } from "../model/worker_info";
 import { SessionInfo } from "../model/session_info";
 import { WorkspaceInfo } from "../model/workspace_info";
 import { JobInfo } from "../model/job_info";
+import { VraySpawnerInfo } from "../model/vray_spawner_info";
 
 const settings = require("../settings");
 
@@ -241,7 +242,7 @@ class Database implements IDatabase {
                     if (obj.value) {
                         resolve(WorkerInfo.fromJSON(obj.value));
                     } else {
-                        reject(`unable to find worker with mac ${workerInfo.mac}`);
+                        reject(`unable to find worker with mac ${workerInfo.mac} and port ${workerInfo.port}`);
                     }
                 })
                 .catch(function(err) {
@@ -312,7 +313,7 @@ class Database implements IDatabase {
         assert.notEqual(db, null);
 
         return new Promise<number>(function (resolve, reject) {
-            let expirationDate = new Date(Date.now() - 3*24*60*60*1000); // delete workers that are more than 3 days offline
+            let expirationDate = new Date(Date.now() - 30*60*1000); // delete workers that are more than 30 minutes offline
 
             db.collection("workers").deleteMany(
                 { 
@@ -329,6 +330,32 @@ class Database implements IDatabase {
                     reject(err);
                 }.bind(this)); // end of db.collection("workers").deleteMany promise
         });
+    }
+
+    async storeVraySpawner(vraySpawnerInfo: VraySpawnerInfo): Promise<VraySpawnerInfo> {
+        let db = this._client.db(settings.databaseName);
+        assert.notEqual(db, null);
+
+        let vraySpawnerJson = vraySpawnerInfo.toDatabase();
+        // console.log(" >> vraySpawnerJson: ", vraySpawnerJson);
+
+        return new Promise<VraySpawnerInfo>(function (resolve, reject) {
+            db.collection("vray-spawners").findOneAndUpdate(
+                { mac: vraySpawnerInfo.mac, ip: vraySpawnerInfo.ip },
+                { $set: vraySpawnerJson },
+                { returnOriginal: false, upsert: true })
+                .then(function(obj) {
+                    if (obj.value) {
+                        // console.log(" >> obj.value: ", obj.value);
+                        resolve(VraySpawnerInfo.fromJSON(obj.value));
+                    } else {
+                        reject(`unable to find vray spawner with mac ${vraySpawnerInfo.mac} and ip ${vraySpawnerInfo.ip}`);
+                    }
+                })
+                .catch(function(err) {
+                    reject(err);
+                });
+        }.bind(this));
     }
 
     async assignSessionWorkspace(sessionGuid: string, workspaceGuid: string): Promise<boolean> {
