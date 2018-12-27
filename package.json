@@ -1,5 +1,5 @@
 {
-  "name": "threejs.render-farm-api",
+  "name": "renderfarm.js-server",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -25,17 +25,15 @@
   "scripts": {
     "build": "tsc",
     "test": "tsc & jasmine --config=jasmine.json",
-    "test-dev-v1": "tsc & jasmine --config=jasmine.test-dev-v1.json",
-    "test-prod-v1": "tsc & jasmine --config=jasmine.test-prod-v1.json"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nmalex/threejs.render-farm-api.git"
+    "url": "git+https://github.com/nmalex/renderfarm.js-server.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/nmalex/threejs.render-farm-api/issues"
+    "url": "https://github.com/nmalex/renderfarm.js-server/issues"
   },
-  "homepage": "https://github.com/nmalex/threejs.render-farm-api#readme"
+  "homepage": "https://github.com/nmalex/renderfarm.js-server#readme"
 }
