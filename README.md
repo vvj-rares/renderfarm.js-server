@@ -4,11 +4,8 @@ Render three.js on server side with Vray.
 
 ## Getting Started
 
-These instructions will guide through deployment of own rendering farm API on existing hardware or in the cloud. For those who just want to start using our public rendering farm, switch to 
+These instructions will guide through deployment of own rendering farm API on existing hardware or in the cloud. For those who just want to start using our public rendering farm, switch to <https://github.com/nmalex/renderfarm.js> client area.
 
-[renderfarm.js client]: https://github.com/nmalex/renderfarm.js	"renderfarm.js client"
-
- area.
 ### Prerequisites
 
 What things you need to install the software and how to install them
