@@ -2,7 +2,8 @@ import "reflect-metadata";
 import axios from "axios";
 
 const apiEndpoint = "mel.mbnsay.com";
-const baseUrl = `https://${apiEndpoint}/v1/`;
+const baseUrl = `https://${apiEndpoint}`;
+const majorVersion = 1;
 
 describe(`Endpoint ${baseUrl}`, function() {
 
@@ -17,7 +18,7 @@ describe(`Endpoint ${baseUrl}`, function() {
         expect(res.headers['access-control-allow-methods']).toBe('PUT, POST, GET, DELETE, OPTIONS');
 
         expect(res.data).toBeTruthy();
-        expect(res.data.version).toBe("1.0.3");
+        expect(res.data.version).toBe("1.0.2");
     });
 
     describe("when song has been paused", function() {
