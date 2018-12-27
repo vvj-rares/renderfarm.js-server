@@ -1,6 +1,3 @@
---logInfo "MAXScript" "Greetings from log2console.dlx"
---threejsApiStart 29207 "192.168.0.200"
-
 fn rayysFindMaterialByName findName = (
 	for matClass in material.classes do
 	(

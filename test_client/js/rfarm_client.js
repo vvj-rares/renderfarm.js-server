@@ -30,7 +30,7 @@ rfarm.createSession = function(onCreated) {
     //todo: implement it
 
     $.ajax({
-        url: this.baseUrl  + "/session",
+        url: this.baseUrl  + "/v1/session",
         data: { api_key: this.apiKey, workspace: this.workspace },
         type: 'POST',
         success: function(result) {

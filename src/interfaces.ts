@@ -7,19 +7,6 @@ import { WorkspaceInfo } from "./model/workspace_info";
 import { JobInfo } from "./model/job_info";
 import { VraySpawnerInfo } from "./model/vray_spawner_info";
 
-export interface Warrior {
-    fight(): string;
-    sneak(): string;
-}
-
-export interface Weapon {
-    hit(): string;
-}
-
-export interface ThrowableWeapon {
-    throw(): string;
-}
-
 export interface IDatabase {
     connect(url: string): Promise<any>;
     getApiKey(apiKey: string): Promise<any>;

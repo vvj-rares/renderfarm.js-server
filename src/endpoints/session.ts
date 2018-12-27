@@ -190,7 +190,7 @@ class SessionEndpoint implements IEndpoint {
         }.bind(this));
 
         express.delete(`/v${majorVersion}/session/:uid`, async function (req, res) {
-            console.log(`DELETE on /session/${req.params.uid}`);
+            console.log(`DELETE on /v1/session/${req.params.uid}`);
 
             let sessionGuid = req.params.uid;
 
@@ -198,40 +198,43 @@ class SessionEndpoint implements IEndpoint {
                 .then(function(value){
 
                     //now we're going to reset 3ds max as this session is being closed
-                    this._database.getWorker(req.body.session)
+                    this._database.getWorker(sessionGuid)
                     .then(function(worker){
     
                         let maxscriptClient = this._maxscriptClientFactory.create();
                         maxscriptClient.connect(worker.ip, worker.port)
                             .then(function(value) {
-                                console.log("SessionEndpoint connected to maxscript client, ", value);
 
                                 maxscriptClient.resetScene()
                                     .then(function(value) {
                                         maxscriptClient.disconnect();
                                         console.log(`    OK | scene reset`);
-                                        res.end(JSON.stringify({ success: true, message: "session closed" }, null, 2));
+                                        res.end(JSON.stringify({ success: true }, null, 2));
                                     }.bind(this))
                                     .catch(function(err) {
                                         maxscriptClient.disconnect();
-                                        console.error(`  WARN | failed to reset scene after session close\n`, err);
-                                        res.end(JSON.stringify({ success: true, message: "session closed" }, null, 2));
+                                        res.status(500);
+                                        console.error(`  FAIL | failed to reset worker scene, `, err);
+                                        res.end(JSON.stringify({ error: "failed to reset worker scene" }, null, 2));
                                     }.bind(this)); // end of maxscriptClient.resetScene promise
                 
                             }.bind(this))
                             .catch(function(err) {
-                                console.error("SessionEndpoint failed to connect to maxscript client, ", err);
-                                res.end(JSON.stringify({ success: true, message: "session closed" }, null, 2));
+                                res.status(500);
+                                console.error("failed to connect session worker, ", err);
+                                res.end(JSON.stringify({ error: "failed to connect session worker" }, null, 2));
                             }.bind(this)); // end of maxscriptClient.connect promise
     
                     }.bind(this))
                     .catch(function(err){
-                        console.error(`  FAIL | failed to close expired session\n`, err);
-                        res.end(JSON.stringify({ error: "failed to close expired session" }, null, 2));
+                        res.status(500);
+                        console.error(`  FAIL | failed to get session worker, `, err);
+                        res.end(JSON.stringify({ error: "failed to get session worker" }, null, 2));
                     }.bind(this)); // end of this._database.getWorker promise
                     
                 }.bind(this))
                 .catch(function(err){
+                    res.status(500);
                     console.error(`  FAIL | failed to close session\n`, err);
                     res.end(JSON.stringify({ error: "failed to close session" }, null, 2));
                 }.bind(this));

@@ -1,7 +1,6 @@
 import { Container } from "inversify";
 import { TYPES } from "./types";
 import * as interfaces from "./interfaces";
-import { Ninja, Katana, Shuriken } from "./entities";
 import { Database } from "./database/database";
 import { App } from "./app";
 import { SessionEndpoint } from "./endpoints/session";
@@ -18,9 +17,6 @@ import { WorkspaceFileEndpoint } from "./endpoints/workspace.file";
 import { RenderOutputEndpoint } from "./endpoints/renderoutput";
 
 const myContainer = new Container();
-myContainer.bind<interfaces.Warrior>(TYPES.Warrior).to(Ninja);
-myContainer.bind<interfaces.Weapon>(TYPES.Weapon).to(Katana);
-myContainer.bind<interfaces.ThrowableWeapon>(TYPES.ThrowableWeapon).to(Shuriken);
 
 myContainer.bind<interfaces.IDatabase>(TYPES.IDatabase).to(Database).inSingletonScope();
 
