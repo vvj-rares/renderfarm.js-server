@@ -117,12 +117,7 @@ class SessionEndpoint implements IEndpoint {
                     this._database.getWorkspace(workspaceGuid)
                         .then(function(workspaceInfo){
 
-                            if (!workspaceInfo.value) {
-                                console.error(`  FAIL | workspace not found: ${workspaceGuid}`);
-                                res.status(500);
-                                res.end(JSON.stringify({ error: "workspace not found" }, null, 2));
-                                return;
-                            }
+                            console.log(`    OK | found workspace`);
 
                             this._database.assignSessionWorkspace(newSessionGuid, workspaceGuid)
                                 .then(function(){
@@ -137,7 +132,7 @@ class SessionEndpoint implements IEndpoint {
                                                 .then(function(value) {
                                                     console.log(`    OK | SessionGuid on worker was updated`);
 
-                                                    maxscriptClient.setWorkspace(workspaceInfo.value)
+                                                    maxscriptClient.setWorkspace(workspaceInfo)
                                                         .then(function(value) {
                                                             maxscriptClient.disconnect();
                                                             console.log(`    OK | workspace ${workspaceGuid} set to worker: ${workerInfo.ip}:${workerInfo.port}`);

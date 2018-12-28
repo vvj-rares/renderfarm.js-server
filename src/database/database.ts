@@ -53,22 +53,34 @@ class Database implements IDatabase {
         }
     }
 
-    async getWorkspace(workspaceGuid: string): Promise<any> {
-        if (workspaceGuid) {
-            let db = this._client.db(settings.databaseName);
-            assert.notEqual(db, null);
+    async getWorkspace(workspaceGuid: string): Promise<WorkspaceInfo> {
+        return new Promise<WorkspaceInfo>(function(resolve, reject) {
 
-            return db.collection("workspaces").findOneAndUpdate(
-                { guid: workspaceGuid, workgroup: settings.workgroup }, 
-                { $set: { lastSeen : new Date() } },
-                { returnOriginal: false });
-
-        } else {
-
-            return new Promise<any>(function(resolve, reject) {
+            if (workspaceGuid) {
+                let db = this._client.db(settings.databaseName);
+                assert.notEqual(db, null);
+    
+                db.collection("workspaces").findOneAndUpdate(
+                    { guid: workspaceGuid, workgroup: settings.workgroup }, 
+                    { $set: { lastSeen : new Date() } },
+                    { returnOriginal: false })
+                    .then(function(obj){
+                        console.log(" >> workspace value: ", obj);
+                        if (obj.value) {
+                            let workspaceInfo = WorkspaceInfo.fromJSON(obj.value);
+                            resolve(workspaceInfo);
+                        } else {
+                            reject();
+                        }
+                    }.bind(this))
+                    .catch(function(err){
+                        reject(err);
+                    }.bind(this)); // end of db.collection("workspaces").findOneAndUpdate promise
+    
+            } else {
                 reject();
-            });
-        }
+            }
+        });
     }
 
     async getSession(sessionGuid: string): Promise<SessionInfo> {
