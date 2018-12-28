@@ -60,24 +60,17 @@ class SessionEndpoint implements IEndpoint {
 
     async checkWorkspace(res: any, apiKey: string, workspaceGuid: string): Promise<boolean> {
         try {
-            let wsRec = await this._database.getWorkspace(workspaceGuid);
-            if (!wsRec.value) {
-                console.error(`  FAIL | rejected workspace guid: ${workspaceGuid}\n`);
+            let workspaceInfo = await this._database.getWorkspace(workspaceGuid);
 
-                res.status(403);
-                res.end(JSON.stringify({ error: "workspace guid rejected" }, null, 2));
-                return false;
-            }
-
-            console.log(`    OK | accepted workspace guid: ${workspaceGuid}`);
+            console.log(`    OK | accepted workspace guid: ${workspaceInfo.guid}`);
 
             return true;
         }
         catch(exc) {
-            console.error(`  FAIL | failed to check workspace guid: ${workspaceGuid}\n`, exc);
+            console.error(`  FAIL | workspace guid rejected: ${workspaceGuid}\n`, exc);
 
             res.status(500);
-            res.end(JSON.stringify({ error: "failed to check workspace guid" }, null, 2));
+            res.end(JSON.stringify({ error: "workspace guid rejected" }, null, 2));
             return false;
         }
     }
