@@ -1,5 +1,7 @@
 "use strict";
 
+import "reflect-metadata";
+
 import { MongoClient, Db } from "mongodb";
 import { injectable } from "inversify";
 import { IDatabase } from "../interfaces"
