@@ -37,7 +37,7 @@ describe(`Endpoint ${baseUrl}`, function() {
         checkResponse(res1);
 
         expect(res1.data).toBeTruthy();
-        expect(res1.data.id).toMatch("\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12}");
+        expect(res1.data.guid).toMatch("\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12}");
 
         //todo: close session
         // let res2: any = await axios.delete(`/v${majorVersion}/session/${res1.data.id}`);
