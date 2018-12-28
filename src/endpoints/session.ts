@@ -141,7 +141,7 @@ class SessionEndpoint implements IEndpoint {
                                                         .then(function(value) {
                                                             maxscriptClient.disconnect();
                                                             console.log(`    OK | workspace ${workspaceGuid} set to worker: ${workerInfo.ip}:${workerInfo.port}`);
-                                                            res.end(JSON.stringify({ id: newSessionGuid, workspace: workspaceInfo.name }, null, 2));
+                                                            res.end(JSON.stringify({ guid: newSessionGuid, workspace: workspaceInfo.toJSON() }, null, 2));
                                                         }.bind(this))
                                                         .catch(function(err) {
                                                             maxscriptClient.disconnect();
@@ -184,7 +184,7 @@ class SessionEndpoint implements IEndpoint {
                 .catch(function(err) {
                     console.error(`  FAIL | failed to create session: `, err);
                     res.status(500);
-                    res.end(JSON.stringify({ error: "failed to create session", reason: err }, null, 2));
+                    res.end(JSON.stringify({ error: "failed to create session, " + err }, null, 2));
                 }.bind(this)); // end of this._database.startWorkerSession promise
 
         }.bind(this));
