@@ -80,7 +80,7 @@ class Database implements IDatabase {
             } else {
                 reject();
             }
-        });
+        }.bind(this));
     }
 
     async getSession(sessionGuid: string): Promise<SessionInfo> {
