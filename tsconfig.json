@@ -1,10 +1,16 @@
 {
     "compilerOptions": {
         "outDir": "dist",
-        "target": "es5",
+        "target": "es2017",
         "lib": ["es6"],
         "types": ["node", "jasmine", "reflect-metadata", "mongodb", "uuid"],
         "module": "commonjs",
+    "allowJs": false,
+    "checkJs": false,
+    "sourceMap": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
         "moduleResolution": "node",
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true
