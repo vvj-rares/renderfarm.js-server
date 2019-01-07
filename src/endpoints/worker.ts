@@ -4,6 +4,7 @@ import { IEndpoint, IDatabase } from "../interfaces";
 import { TYPES } from "../types";
 import { WorkerInfo } from "../model/worker_info";
 import { VraySpawnerInfo } from "../model/vray_spawner_info";
+import { isString } from "util";
 
 const settings = require("../settings");
 const majorVersion = settings.version.split(".")[0];
@@ -119,27 +120,21 @@ class WorkerEndpoint implements IEndpoint {
     bind(express: express.Application) {
         express.get(`/v${majorVersion}/worker`, function (req, res) {
             let apiKey = req.query.api_key;
-            console.log(`GET on /worker with api_key: ${apiKey}`);
+            console.log(`GET on ${req.path} with api key: ${apiKey}`);
             this._database.getApiKey(apiKey)
-                .then(function(apiKeyRec) {
-                    if (apiKeyRec.value) {
-                        let response = Object.keys(this._workers).map(function(key, index) {
-                            return this._workers[key].toJSON();
-                        }.bind(this));
-                        console.log(`    OK | api_key ${apiKey} accepted`);
-                        res.end(JSON.stringify(response, null, 2));
-                    } else {
-                        console.error(`  FAIL | api key declined: ${apiKey}`);
-                        res.status(403);
-                        res.end(JSON.stringify({ error: "api key declined" }, null, 2));
-                    }
+                .then(function() {
+                    let response = Object.keys(this._workers).map(function(key) {
+                        return this._workers[key].toJSON();
+                    }.bind(this));
+                    console.log(`    OK | api key ${apiKey} accepted`);
+                    res.end(JSON.stringify(response, null, 2));
                 }.bind(this))
                 .catch(function(err) {
-                    console.error(`  FAIL | failed to check api_key: ${apiKey}, `, err);
+                    let errorText = "failed to check api key";
+                    console.error(`  FAIL | ${errorText}: ${apiKey}, `, err);
                     res.status(500);
-                    res.end(JSON.stringify({ error: "failed to check api_key" }, null, 2));
+                    res.end(JSON.stringify({ error: ( isString(err) ? err : errorText ) }));
                 }.bind(this));
-
         }.bind(this));
     }
 }

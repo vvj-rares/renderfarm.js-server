@@ -12,6 +12,7 @@ import { SessionInfo } from "../model/session_info";
 import { WorkspaceInfo } from "../model/workspace_info";
 import { JobInfo } from "../model/job_info";
 import { VraySpawnerInfo } from "../model/vray_spawner_info";
+import { ApiKey } from "./model/api_key";
 
 const settings = require("../settings");
 
@@ -34,23 +35,30 @@ class Database implements IDatabase {
         }.bind(this));
     }
 
-    async getApiKey(apiKey: string): Promise<any> {
-        if (apiKey) {
-
-            let db = this._client.db(settings.databaseName);
-            assert.notEqual(db, null);
-    
-            return db.collection("api-keys").findOneAndUpdate(
-                { apiKey: apiKey }, 
-                { $set: { lastSeen : new Date() } },
-                { returnOriginal: false });
-            
-        } else {
-
-            return new Promise<any>(function(resolve, reject) {
-                reject();
-            });
-        }
+    async getApiKey(apiKey: string): Promise<ApiKey> {
+        return new Promise<any>(function(resolve, reject) {
+            if (apiKey) {
+                let db = this._client.db(settings.databaseName);
+                assert.notEqual(db, null);
+        
+                db.collection("api-keys").findOneAndUpdate(
+                    { apiKey: apiKey }, 
+                    { $set: { lastSeen : new Date() } },
+                    { returnOriginal: false })
+                    .then(function(obj){
+                        if (obj.ok === 1 && obj.value) {
+                            resolve(new ApiKey(obj.value));
+                        } else {
+                            reject("api key not found");
+                        }
+                    }.bind(this))
+                    .catch(function(err){
+                        reject(err);
+                    }.bind(this));
+            } else {
+                reject("api key is empty");
+            }
+        }.bind(this));
     }
 
     async getWorkspace(workspaceGuid: string): Promise<WorkspaceInfo> {
