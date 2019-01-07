@@ -6,13 +6,21 @@ import { SessionInfo } from "./model/session_info";
 import { WorkspaceInfo } from "./model/workspace_info";
 import { JobInfo } from "./model/job_info";
 import { VraySpawnerInfo } from "./model/vray_spawner_info";
+import { ApiKey } from "./database/model/api_key";
+import { Workspace } from "./database/model/workspace";
+import { Session } from "./database/model/session";
+import { IDbEntity } from "./database/model/base/IDbEntity";
 
 export interface IDatabase {
     connect(url: string): Promise<any>;
-    getApiKey(apiKey: string): Promise<any>;
 
-    getWorkspace(workspaceGuid: string): Promise<any>; // todo: return WorkspaceInfo
-    getSession(sessionGuid: string): Promise<SessionInfo>;
+    insertOne<T extends IDbEntity>(collection: string, entity: IDbEntity, ctor: (obj: any) => T): Promise<T>;
+    updateOne<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T>;
+
+    getApiKey(apiKey: string): Promise<ApiKey>;
+
+    getWorkspace(workspaceGuid: string): Promise<Workspace>;
+    getSession(sessionGuid: string): Promise<Session>;
 
     storeWorker(workerInfo: WorkerInfo): Promise<WorkerInfo>;
     getWorker(sessionGuid: string): Promise<WorkerInfo>;
@@ -20,10 +28,10 @@ export interface IDatabase {
 
     storeVraySpawner(vraySpawnerInfo: VraySpawnerInfo): Promise<VraySpawnerInfo>;
 
-    startWorkerSession(apiKey: string, sessionGuid: string): Promise<WorkerInfo>;
+    createSession(apiKey: string, workspace: string): Promise<Session>;
     assignSessionWorkspace(sessionGuid: string, workspaceGuid: string): Promise<boolean>;
     getSessionWorkspace(sessionGuid: string): Promise<WorkspaceInfo>;
-    expireSessions(): Promise<SessionInfo[]>;
+    expireSessions(olderThanMinutes: number): Promise<Session[]>;
     closeSession(sessionGuid: string): Promise<boolean>;
 
     storeJob(jobInfo: JobInfo): Promise<JobInfo>;
@@ -74,4 +82,8 @@ export interface IMaxscriptClient {
 
 export interface IMaxscriptClientFactory {
     create(): IMaxscriptClient;
+}
+
+export interface IWorkerHeartbeatListener {
+    Listen(workerCb: (worker: WorkerInfo) => void, spawnerCb: (spawner: VraySpawnerInfo) => void): void;
 }

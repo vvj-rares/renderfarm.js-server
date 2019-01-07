@@ -1,1 +1,51 @@
-<a href="https://localhost:8000/v1/worker/?api_key=75f5-4d53-b0f4">Get all workers</a>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <title>renderfarm.js - Test Client</title>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <meta name="robots" content="noindex, nofollow">
+        <meta name="googlebot" content="noindex, nofollow">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+        <style type="text/css">
+        </style>
+
+        <script type="text/javascript">
+            var baseUrl = "https://localhost:8000";
+            function onExpireSessionsClick() {
+                $.ajax({
+                    url: baseUrl  + "/v1/session/action" + "/expireSessions",
+                    data: { },
+                    type: 'POST',
+                    success: function(result) {
+                        console.log(result);
+                    }.bind(this),
+                    error: function(err) {
+                        console.error(err.responseJSON);
+                    }.bind(this)
+                });
+            }
+            function onCreateSessionsClick() {
+                $.ajax({
+                    url: baseUrl  + "/v1/session/action" + "/createSession",
+                    data: {
+                        api_key: "75f5-4d53-b0f4"
+                    },
+                    type: 'POST',
+                    success: function(result) {
+                        console.log(result);
+                    }.bind(this),
+                    error: function(err) {
+                        console.error(err.responseJSON);
+                    }.bind(this)
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <button id="createSession" onclick="onCreateSessionsClick()" >create session</button>
+        <button id="expireSessions" onclick="onExpireSessionsClick()" >expire sessions</button>
+    </body>
+</html>

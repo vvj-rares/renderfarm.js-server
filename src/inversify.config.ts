@@ -15,6 +15,7 @@ import { SceneMaterialEndpoint } from "./endpoints/scene.material";
 import { SceneGeometryEndpoint } from "./endpoints/scene.geometry";
 import { WorkspaceFileEndpoint } from "./endpoints/workspace.file";
 import { RenderOutputEndpoint } from "./endpoints/renderoutput";
+import { WorkerHeartbeatListener } from "./endpoints/worker_heartbeat_listener";
 
 const myContainer = new Container();
 
@@ -33,6 +34,8 @@ myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(JobEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(WorkerEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(WorkspaceFileEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(RenderOutputEndpoint);
+
+myContainer.bind<interfaces.IWorkerHeartbeatListener>(TYPES.IWorkerHeartbeatListener).to(WorkerHeartbeatListener);
 
 myContainer.bind<interfaces.IMaxscriptClientFactory>(TYPES.IMaxscriptClientFactory).to(MaxscriptClientFactory);
 

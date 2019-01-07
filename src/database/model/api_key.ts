@@ -1,11 +1,26 @@
-export class ApiKey {
+import { IDbEntity } from "./base/IDbEntity";
+
+export class ApiKey extends IDbEntity {
     public apiKey: string;
     public userGuid: string;
     public lastSeen: Date;
 
     constructor(obj: any) {
-        this.apiKey = obj.apiKey;
+        super();
+        this.parse(obj);
+    }
+
+    public parse(obj: any) {
+        this.apiKey   = obj.apiKey;
         this.userGuid = obj.userGuid;
-        this.lastSeen = new Date(obj.lastSeen);
+        this.lastSeen = obj.lastSeen ? new Date(obj.lastSeen) : undefined;
+    }
+
+    public toJSON() {
+        return {
+            apiKey:   this.apiKey,
+            userGuid: this.userGuid,
+            lastSeen: this.lastSeen
+        };
     }
 }

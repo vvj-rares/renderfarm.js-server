@@ -37,7 +37,7 @@ class SessionEndpoint implements IEndpoint {
     async checkApiKey(res: any, apiKey: string): Promise<boolean> {
         try {
             let apiKeyRec = await this._database.getApiKey(apiKey);
-            if (!apiKeyRec.value) {
+            if (!apiKeyRec) {
                 console.error(`  FAIL | rejected api key: ${apiKey}\n`);
 
                 res.status(403);
@@ -175,6 +175,23 @@ class SessionEndpoint implements IEndpoint {
                     res.end(JSON.stringify({ error: "failed to create session, " + err }, null, 2));
                 }.bind(this)); // end of this._database.startWorkerSession promise
 
+        }.bind(this));
+
+        express.post(`/v1/session/action/:action`, async function(req, res) {
+            console.log(`POST on ${req.path} with action: ${req.params.action}`);
+            let action = req.params.action;
+            if (action === "expireSessions") {
+                let expired = await this._database.expireSessions(3);
+                res.end(JSON.stringify(expired, null, 2));
+            } else if (action === "createSession") {
+                let apiKey = req.body.api_key;
+                let created = await this._database.createSession(apiKey);
+                res.end(JSON.stringify(created, null, 2));
+            }
+
+            res.status(400);
+            res.end(JSON.stringify({error: "not implemented"}, null, 2));
+            
         }.bind(this));
 
         express.delete(`/v${majorVersion}/session/:uid`, async function (req, res) {

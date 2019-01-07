@@ -2,19 +2,23 @@
 
 import "reflect-metadata";
 
-import { MongoClient, Db } from "mongodb";
+import { MongoClient } from "mongodb";
 import { injectable } from "inversify";
 import { IDatabase } from "../interfaces"
 
 import assert = require("assert");
 import { WorkerInfo } from "../model/worker_info";
-import { SessionInfo } from "../model/session_info";
 import { WorkspaceInfo } from "../model/workspace_info";
 import { JobInfo } from "../model/job_info";
 import { VraySpawnerInfo } from "../model/vray_spawner_info";
 import { ApiKey } from "./model/api_key";
+import { IDbEntity } from "./model/base/IDbEntity";
+import { Workspace } from "./model/workspace";
+import { Session } from "./model/session";
+import { Worker } from "./model/worker";
 
 const settings = require("../settings");
+const uuidv4 = require('uuid/v4');
 
 @injectable()
 class Database implements IDatabase {
@@ -24,7 +28,7 @@ class Database implements IDatabase {
     constructor() {
     }
 
-    async connect(url: string): Promise<any> {
+    connect(url: string): Promise<any> {
         this._url = url;
         this._client = new MongoClient(url, { useNewUrlParser: true });
 
@@ -35,216 +39,196 @@ class Database implements IDatabase {
         }.bind(this));
     }
 
-    async getApiKey(apiKey: string): Promise<ApiKey> {
-        return new Promise<any>(function(resolve, reject) {
-            if (apiKey) {
-                let db = this._client.db(settings.databaseName);
-                assert.notEqual(db, null);
-        
-                db.collection("api-keys").findOneAndUpdate(
-                    { apiKey: apiKey }, 
-                    { $set: { lastSeen : new Date() } },
-                    { returnOriginal: false })
-                    .then(function(obj){
-                        if (obj.ok === 1 && obj.value) {
-                            resolve(new ApiKey(obj.value));
-                        } else {
-                            reject("api key not found");
-                        }
-                    }.bind(this))
-                    .catch(function(err){
-                        reject(err);
-                    }.bind(this));
-            } else {
-                reject("api key is empty");
-            }
-        }.bind(this));
-    }
-
-    async getWorkspace(workspaceGuid: string): Promise<WorkspaceInfo> {
-        return new Promise<WorkspaceInfo>(function(resolve, reject) {
-
-            if (workspaceGuid) {
-                let db = this._client.db(settings.databaseName);
-                assert.notEqual(db, null);
+    getOne<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T> {
+        return new Promise<T>(function(resolve, reject) {
+            let db = this._client.db(settings.databaseName);
+            assert.notEqual(db, null);
     
-                db.collection("workspaces").findOneAndUpdate(
-                    { guid: workspaceGuid, workgroup: settings.workgroup }, 
-                    { $set: { lastSeen : new Date() } },
-                    { returnOriginal: false })
-                    .then(function(obj){
-                        console.log(" >> workspace value: ", obj);
-                        if (obj.value) {
-                            let workspaceInfo = WorkspaceInfo.fromJSON(obj.value);
-                            resolve(workspaceInfo);
-                        } else {
-                            reject();
-                        }
-                    }.bind(this))
-                    .catch(function(err){
-                        reject(err);
-                    }.bind(this)); // end of db.collection("workspaces").findOneAndUpdate promise
-    
-            } else {
-                reject();
-            }
+            db.collection(collection).findOneAndUpdate(
+                filter,
+                { $set: setter },
+                { returnOriginal: false })
+                .then(function(obj){
+                    if (obj.ok === 1 && obj.value) {
+                        resolve(ctor(obj));
+                    } else {
+                        reject(`nothing was filtered from ${collection} by ${JSON.stringify(filter)}`);
+                    }
+                }.bind(this))
+                .catch(function(err){
+                    reject(err);
+                }.bind(this));
         }.bind(this));
     }
 
-    async getSession(sessionGuid: string): Promise<SessionInfo> {
-        return new Promise<SessionInfo>(function(resolve, reject) {
-            if (sessionGuid) {
-                let db = this._client.db(settings.databaseName);
-                assert.notEqual(db, null);
+    insertOne<T extends IDbEntity>(collection: string, entity: IDbEntity, ctor: (obj: any) => T): Promise<T> {
+        return new Promise<T>(function(resolve, reject) {
+            let db = this._client.db(settings.databaseName);
+            assert.notEqual(db, null);
 
-                db.collection("sessions").findOneAndUpdate(
-                    { guid: sessionGuid, closed: { $ne: true } },
-                    { $set: { lastSeen : new Date() } },
-                    { returnOriginal: false })
-                    .then(function(obj) {
-                        if (obj.value) {
-                            let sessionInfo = SessionInfo.fromJSON(obj.value);
-                            resolve(sessionInfo);
-                        } else {
-                            reject("session expired");
-                        }
-
-                    }.bind(this))
-                    .catch(function(err) {
-                        console.log(" >> failed to find session: ", err);
-                        reject("failed to find session");
-                    }.bind(this)); // end of db.collection("sessions").findOneAndUpdate promise
-            } else {
-                reject("session guid empty");
-            }
+            db.collection(collection).insertOne(entity.toJSON())
+                .then(function(obj){
+                    if (obj.result.ok === 1 && obj.insertedCount === 1) {
+                        resolve(ctor(obj.ops[0]));
+                    } else {
+                        reject(`failed to insert in ${collection}`);
+                    }
+                }.bind(this))
+                .catch(function(err){
+                    reject(err);
+                }.bind(this));
         }.bind(this));
     }
 
-    async expireSessions(): Promise<SessionInfo[]> {
+    updateOne<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T> {
+        return new Promise<T>(function(resolve, reject) {
+            let db = this._client.db(settings.databaseName);
+            assert.notEqual(db, null);
+
+            db.collection(collection).findOneAndUpdate(
+                filter, // like { apiKey: apiKey }
+                setter,
+                { returnOriginal: false })
+                .then(function(obj){
+                    if (obj.ok === 1 && obj.value) {
+                        resolve(ctor(obj.value));
+                    } else {
+                        reject(`nothing was filtered from ${collection} by ${JSON.stringify(filter)}`);
+                    }
+                }.bind(this))
+                .catch(function(err){
+                    reject(err);
+                }.bind(this));
+        }.bind(this));
+    }
+
+    updateMany<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T[]> {
         let db = this._client.db("rfarmdb");
         assert.notEqual(db, null);
 
-        return new Promise<SessionInfo[]>(function (resolve, reject) {
-            // first expire sessions which have not been updated since 3 minutes
-            let expirationDate = new Date(Date.now() - 3*60*1000); // 3*60*1000
-
-            db.collection("sessions").find(
-                { 
-                    lastSeen : { $lte: expirationDate },
-                    closed: { $exists: false }
-                })
-                .toArray(function(err, res) {
-                    if (err) {
-                        console.error(err);
-                        reject(`failed to find expiring sessions`);
-                        return;
+        let trans = uuidv4();
+        setter.$set._trans = trans; //remember transaction
+        return new Promise<T[]>(function (resolve, reject) {
+            db.collection(collection).updateMany(
+                filter,
+                setter)
+                .then(function(value){
+                    if (value.matchedCount > 0 && value.modifiedCount > 0) {
+                        // query updated documents with given transaction
+                        db.collection(collection).find({ _trans: trans })
+                            .toArray()
+                            .then(function(value){
+                                let updated = value.map(e => ctor(e));
+                                resolve(updated);
+                            }.bind(this))
+                            .catch(function(err){
+                                reject(err);
+                            }.bind(this));
+                    } else {
+                        resolve([]);
                     }
-
-                    // now make a collection of busy mac addresses
-                    let expiringSessions = res;
-
-                    // now expire sessions
-                    db.collection("sessions").updateMany(
-                        { 
-                            lastSeen: { $lte: expirationDate }, 
-                            closed: { $exists: false } 
-                        },
-                        { $set: { closed: true, closedAt: new Date(), abandoned: true } } )
-                        .then(function(value){
-                            if (value.result.nModified !== expiringSessions.length) {
-                                console.warn(` WARN | number of expired sessions: ${expiringSessions.length}, actually expired: ${value.result.nModified}`);
-                            }
-                            resolve(expiringSessions);
-                        }.bind(this))
-                        .catch(function(err){
-                            console.error(err);
-                            reject("failed to expire abandoned sessions");
-                        }.bind(this)); // end of  db.collection("sessions").updateMany promise
-
-                }); // end of find
+                }.bind(this))
+                .catch(function(err){
+                    reject(err);
+                }.bind(this));
         });
     }
 
+    getApiKey(apiKey: string): Promise<ApiKey> {
+        return this.getOne<ApiKey>(
+            "api-keys", 
+            { apiKey: apiKey },
+            { lastSeen: new Date() },
+            (obj) => new ApiKey(obj));
+    }
+
+    getWorkspace(workspaceGuid: string): Promise<Workspace> {
+        return this.getOne<Workspace>(
+            "workspaces", 
+            { guid: workspaceGuid, workgroup: settings.workgroup },
+            { lastSeen: new Date() },
+            (obj) => new Workspace(obj));
+    }
+
+    getSession(sessionGuid: string): Promise<Session> {
+        return this.getOne<Session>(
+            "sessions", 
+            { guid: sessionGuid, closed: { $ne: true } },
+            { lastSeen: new Date() },
+            (obj) => new Session(obj));
+    }
+
+    expireSessions(olderThanMinutes: number): Promise<Session[]> {
+        let expirationDate = new Date(Date.now() - olderThanMinutes * 60*1000);
+        let filter = { 
+            lastSeen : { $lte: expirationDate },
+            closed: { $exists: false }
+        };
+        let setter = { $set: { closed: true, closedAt: new Date(), abandoned: true } };
+        return this.updateMany<Session>("sessions", filter, setter, obj => new Session(obj));
+    }
+
     // assign free worker to given session
-    async startWorkerSession(apiKey: string, sessionGuid: string): Promise<WorkerInfo> {
+    createSession(apiKey: string, workspace: string): Promise<Session> {
         let db = this._client.db(settings.databaseName);
         assert.notEqual(db, null);
 
-        return new Promise<WorkerInfo>(function (resolve, reject) {
-            // first find not closed sessions, and join each with corresponding workers
-            db.collection("sessions").aggregate([
-                {
-                    $match: {
-                        closed: {
-                            $exists: false
+        return new Promise<Session>(function (resolve, reject) {
+
+            // pick only the workers who were seen not less than 2 seconds ago
+            let recentOnlineDate = new Date(Date.now() - 2 * 1000);
+            db.collection("workers").find({ 
+                workgroup: { $eq: settings.workgroup },
+                lastSeen : { $gte: recentOnlineDate },
+                sessionGuid: { $exists: false }
+            }).sort({
+                cpuUsage: 1
+            }).toArray()
+                .then(async function(availableWorkers){
+                    // now we have not busy workers ordered by cpu load, we can pick one from top
+                    let workers: Worker[] = availableWorkers.map(e => new Worker(e));
+
+                    // this will prevent multiple worker assignment, if top most worker was set busy = true,
+                    // then we just pick underlying least loaded worker.
+                    for(let wi in workers) {
+                        try {
+                            let filter: any = { 
+                                workgroup: settings.workgroup,
+                                lastSeen : { $gte: recentOnlineDate },
+                                sessionGuid: { $exists: false },
+                                endpoint: workers[wi].endpoint,
+                                mac: workers[wi].mac
+                            };
+                            let sessionGuid = uuidv4();
+                            let setter: any = { $set: { sessionGuid: sessionGuid } };
+
+                            let self = this as IDatabase;
+                            let caputuredWorker = await self.updateOne<Worker>("workers", filter, setter, (obj: any) => new Worker(obj));
+
+                            let session = new Session(null);
+                            session.apiKey = apiKey;
+                            session.guid = sessionGuid;
+                            session.firstSeen = new Date();
+                            session.lastSeen = session.firstSeen;
+                            session.workerEndpoint = caputuredWorker.endpoint;
+                            session.workspaceGuid = workspace;
+
+                            let createdSession = await self.insertOne<Session>("sessions", session, obj => new Session(obj));
+
+                            resolve(createdSession);
+                            return;
+                        }
+                        catch (err) {
+                            // ignore it, just try with another worker
                         }
                     }
-                },
-                {
-                    $lookup:
-                      {
-                        from: "workers",
-                        localField: "workerEndpoint",
-                        foreignField: "endpoint",
-                        as: "worker"
-                      }
-                },
-                { 
-                    $unwind : "$worker" 
-                }
-            ]).toArray(function(err, res) {
-                if (err) {
-                    console.error(err);
-                    reject(`failed to query open sessions`);
-                    return;
-                }
 
-                // now make a collection of busy mac addresses
-                let busyWorkersEndpoints = res.map(s => s.worker.endpoint);
-                console.log(" >> busyWorkersEndpoints: ", busyWorkersEndpoints);
+                    reject("all workers busy");
 
-                let recentOnlineDate = new Date(Date.now() - 2*1000); // pick the ones who were seen not less than 2 seconds ago
-
-                //now find one worker, whose mac does not belong to busyWorkersMac
-                db.collection("workers").find(
-                    { 
-                        endpoint: { $nin: busyWorkersEndpoints },
-                        workgroup: { $eq: settings.workgroup },
-                        lastSeen : { $gte: recentOnlineDate },
-                    }
-                ).sort({cpuUsage: 1}).limit(1).toArray()
-                    .then(function(obj) {
-
-                        console.log(" >> .sort({cpuUsage: 1}).limit(1).toArray() returned: \r\n", obj);
-
-                        if (obj && obj.length === 1) {
-                            let workerInfo = WorkerInfo.fromJSON(obj[0]);
-                            let newSession = new SessionInfo(apiKey, sessionGuid, workerInfo.endpoint);
-                            db.collection("sessions").insertOne(newSession.toDatabase())
-                                .then(function(value){
-                                    if (value.insertedCount === 1) {
-                                        resolve({ session: newSession, worker: workerInfo });
-                                    } else {
-                                        reject(`failed to insert new session, insertedCount was ${value.insertedCount}`);
-                                    }
-                                }.bind(this))
-                                .catch(function(err){
-                                    console.error(err);
-                                    reject(`failed to insert new session`);
-                                }.bind(this)); // end of db.collection("sessions").insertOne promise
-
-                        } else {
-                            reject(`all workers are busy`);
-                        }
-
-                    }.bind(this))
-                    .catch(function(err) {
-                        console.error(err);
-                        reject(`failed to query available workers`);
-                        return
-                    }.bind(this)); // end of db.collection("workers").find promise
-
-            }.bind(this)); // end of db.collection("sessions").aggregate promise
+                }.bind(this))
+                .catch(function(err){
+                    reject(err);
+                }.bind(this));
 
         }.bind(this)); // return this promise
     }

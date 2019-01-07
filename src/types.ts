@@ -5,6 +5,7 @@ const TYPES = {
     IChecks: Symbol.for("IChecks"),
     IMaxscriptClient: Symbol.for("IMaxscriptClient"),
     IMaxscriptClientFactory: Symbol.for("IMaxscriptClientFactory"),
+    IWorkerHeartbeatListener: Symbol.for("IWorkerHeartbeatListener"),
 };
 
 export { TYPES };
