@@ -117,6 +117,6 @@ describe("SessionEndpoint", function() {
 
         await postHandler["/v1/session"](req, res);
 
-        console.log(res);
+        //todo: test also res status code and response
     }.bind({ }));
 });

@@ -12,7 +12,7 @@ import { Session } from "./database/model/session";
 import { IDbEntity } from "./database/model/base/IDbEntity";
 
 export interface IDatabase {
-    connect(url: string): Promise<any>;
+    connect(): Promise<any>;
     create(): Promise<any>;
 
     insertOne<T extends IDbEntity>(collection: string, entity: IDbEntity, ctor: (obj: any) => T): Promise<T>;

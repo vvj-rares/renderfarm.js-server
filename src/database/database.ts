@@ -36,9 +36,8 @@ class Database implements IDatabase {
         return `${this._settings.current.collectionPrefix}-${name}`;
     }
 
-    connect(url: string): Promise<any> {
-        this._url = url;
-        this._client = new MongoClient(url, { useNewUrlParser: true });
+    connect(): Promise<any> {
+        this._client = new MongoClient(this._settings.current.connectionUrl, { useNewUrlParser: true });
 
         return new Promise(function(resolve, reject) {
             this._client.connect()
@@ -102,13 +101,13 @@ class Database implements IDatabase {
             let db = this._client.db(this._settings.current.databaseName);
             assert.notEqual(db, null);
     
-            db.collection(collection).findOneAndUpdate(
+            db.collection(this.envCollectionName(collection)).findOneAndUpdate(
                 filter,
                 { $set: setter },
                 { returnOriginal: false })
                 .then(function(obj){
                     if (obj.ok === 1 && obj.value) {
-                        resolve(ctor(obj));
+                        resolve(ctor(obj.value));
                     } else {
                         reject(`nothing was filtered from ${collection} by ${JSON.stringify(filter)}`);
                     }
@@ -124,7 +123,7 @@ class Database implements IDatabase {
             let db = this._client.db(this._settings.current.databaseName);
             assert.notEqual(db, null);
 
-            db.collection(collection).insertOne(entity.toJSON())
+            db.collection(this.envCollectionName(collection)).insertOne(entity.toJSON())
                 .then(function(obj){
                     if (obj.result.ok === 1 && obj.insertedCount === 1) {
                         resolve(ctor(obj.ops[0]));
@@ -143,7 +142,7 @@ class Database implements IDatabase {
             let db = this._client.db(this._settings.current.databaseName);
             assert.notEqual(db, null);
 
-            db.collection(collection).findOneAndUpdate(
+            db.collection(this.envCollectionName(collection)).findOneAndUpdate(
                 filter, // like { apiKey: apiKey }
                 setter,
                 { returnOriginal: false })
@@ -167,13 +166,13 @@ class Database implements IDatabase {
         let trans = uuidv4();
         setter.$set._trans = trans; //remember transaction
         return new Promise<T[]>(function (resolve, reject) {
-            db.collection(collection).updateMany(
+            db.collection(this.envCollectionName(collection)).updateMany(
                 filter,
                 setter)
                 .then(function(value){
                     if (value.matchedCount > 0 && value.modifiedCount > 0) {
                         // query updated documents with given transaction
-                        db.collection(collection).find({ _trans: trans })
+                        db.collection(this.envCollectionName(collection)).find({ _trans: trans })
                             .toArray()
                             .then(function(value){
                                 let updated = value.map(e => ctor(e));
