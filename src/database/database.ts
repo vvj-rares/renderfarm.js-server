@@ -42,13 +42,17 @@ class Database implements IDatabase {
     }
 
     public disconnect(): Promise<any> {
-        return new Promise(function(resolve, reject) {
-            if (this._client && this._client.isConnected) {
-                this._client.close()
-                    .then(resolve)
-                    .catch(reject);
-            } else {
-                resolve();
+        return new Promise(async function(resolve, reject) {
+            try {
+                if (this._client && this._client.isConnected) {
+                    await this._client.close();
+                    delete this._client;
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            } catch(err) {
+                reject(err);
             }
         }.bind(this));
     }
