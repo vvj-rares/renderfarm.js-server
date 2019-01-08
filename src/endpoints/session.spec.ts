@@ -1,7 +1,8 @@
 import "reflect-metadata";
-import { IEndpoint, ISettings } from "../interfaces";
+import { IEndpoint, ISettings, IMaxscriptClient } from "../interfaces";
 import { SessionEndpoint } from "./session";
 import { Settings } from "../settings";
+import { Workspace } from "../database/model/workspace";
 
 describe("SessionEndpoint", function() {
     var session: IEndpoint;
@@ -9,26 +10,26 @@ describe("SessionEndpoint", function() {
     var database: any;
     var express: any;
     var maxscriptClientFactory: any;
+    var maxscriptClient: any;
 
     beforeEach(function() {
-        settings = jasmine.createSpyObj("settings", []);
+        settings = new Settings("test");
         database = jasmine.createSpyObj("database", ["getApiKey", "getWorkspace", "startWorkerSession", "assignSessionWorkspace"]);
         express = jasmine.createSpyObj("express", ["post", "delete"]);
         maxscriptClientFactory = jasmine.createSpyObj("maxscriptClientFactory", ["create"]);
-        session = new SessionEndpoint(settings, database, null);
+        maxscriptClient = jasmine.createSpyObj("maxscriptClient", ["connect", "setSession", "setWorkspace", "disconnect"]);
+        session = new SessionEndpoint(settings, database, maxscriptClientFactory);
     });
 
-    it("should handle POST", function() {
-        let postPath;
-        let postHandler;
-        let fn = function(path, handler) {
-            postHandler = handler;
-            postPath = path;
+    it("should handle POST", async function() {
+        let postHandler = {};
+        let expressPostMock = function(path, handler) {
+            postHandler[path] = handler;
         };
-        express.post.and.callFake(fn);
+        express.post.and.callFake(expressPostMock);
         session.bind(express);
 
-        expect(postPath).toBe("/v1/session");
+        expect(postHandler["/v1/session"]).toBeDefined();
 
         let req = {
             body: {
@@ -36,40 +37,86 @@ describe("SessionEndpoint", function() {
                 workspace: "someWorkspaceGuid"
             }
         };
+
         let res = jasmine.createSpyObj("res", ["status", "end"]);
 
-        let apiKey;
         let getApiKeyMock = async function(value) {
-            apiKey = value;
-            return { value: value };
+            expect(value).toBe("someApiKey");
+            return value;
         };
         database.getApiKey.and.callFake(getApiKeyMock);
 
-        let workspaceGuid;
         let getWorkspaceMock = async function(value) {
-            workspaceGuid = value;
-            return { guid: value };
+            expect(value).toBe("someWorkspaceGuid");
+            return new Promise<Workspace>(function(resolve, reject) { 
+                resolve(new Workspace({ guid: value }));
+            });
         };
-        database.getWorkspace.and.callFake(getWorkspaceMock)
+        database.getWorkspace.and.callFake(getWorkspaceMock);
 
-        let apiKey2, sessionGuid2;
-        let startWorkerSessionMock = async function(api_key, session_guid) {
-            console.log(">> I'm in 2", api_key, session_guid);
-            apiKey2 = api_key;
-            sessionGuid2 = session_guid;
-            return {
-                session: { guid: session_guid },
-                worker: { mac: "someMacAddress" }
-            };
+        let generatedSessionGuid: string;
+        let assignSessionWorkspaceMock = function(sessionGuid, workspaceGuid) {
+            expect(workspaceGuid).toBe("someWorkspaceGuid");
+            expect(sessionGuid).toBe(generatedSessionGuid);
+            
+            return new Promise<boolean>(function(resolve, reject) { 
+                resolve(true);
+            });
+        };
+        database.assignSessionWorkspace.and.callFake(assignSessionWorkspaceMock);
+
+        let startWorkerSessionMock = function(apiKey, newSessionGuid) {
+            expect(apiKey).toBe("someApiKey");
+            expect(newSessionGuid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
+
+            generatedSessionGuid = newSessionGuid;
+
+            return new Promise<any>(function(resolve, reject) { 
+                resolve({
+                    session: { guid: newSessionGuid },
+                    worker: { mac: "someMacAddress", ip: "1.2.3.4", port: 1234 }
+                });
+            });
         };
         database.startWorkerSession.and.callFake(startWorkerSessionMock);
 
-        postHandler(req, res);
+        let maxscriptFactoryCreateMock = function() {
+            return maxscriptClient;
+        };
+        maxscriptClientFactory.create.and.callFake(maxscriptFactoryCreateMock);
 
-        expect(apiKey).toBe("someApiKey");
-        expect(workspaceGuid).toBe("someWorkspaceGuid");
+        let maxscriptClientConnectMock = function(ip, port) {
+            return new Promise<boolean>(function(resolve, reject) { 
+                resolve(true);
+            });
+        };
+        maxscriptClient.connect.and.callFake(maxscriptClientConnectMock);
 
-        expect(apiKey2).toBe("someApiKey");
-        expect(sessionGuid2).toBe("someWorkspaceGuid");
-    });
+        let maxscriptClientSetSessionMock = function(value) {
+            expect(value).toBe(generatedSessionGuid);
+            return new Promise<boolean>(function(resolve, reject) { 
+                resolve(true);
+            });
+        };
+        maxscriptClient.setSession.and.callFake(maxscriptClientSetSessionMock);
+
+        let maxscriptClientSetWorkspaceMock = function(workspaceInfo) {
+            expect(workspaceInfo.guid).toBe("someWorkspaceGuid");
+            return new Promise<boolean>(function(resolve, reject) { 
+                resolve(true);
+            });
+        };
+        maxscriptClient.setWorkspace.and.callFake(maxscriptClientSetWorkspaceMock);
+
+        let maxscriptClientDisconnectMock = function() {
+            return new Promise<boolean>(function(resolve, reject) { 
+                resolve(true);
+            });
+        };
+        maxscriptClient.disconnect.and.callFake(maxscriptClientDisconnectMock);
+
+        await postHandler["/v1/session"](req, res);
+
+        console.log(res);
+    }.bind({ }));
 });

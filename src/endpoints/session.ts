@@ -103,7 +103,7 @@ class SessionEndpoint implements IEndpoint {
             const uuidv4 = require('uuid/v4');
             let newSessionGuid = uuidv4();
 
-            this._database.startWorkerSession(apiKey, newSessionGuid)
+            await this._database.startWorkerSession(apiKey, newSessionGuid)
                 .then(async function(value) {
                     
                     let workerInfo = WorkerInfo.fromJSON(value.worker);
@@ -167,7 +167,6 @@ class SessionEndpoint implements IEndpoint {
                             console.error(`  FAIL | failed to get workspace: ${workspaceGuid}\n`, err);
                             res.status(500);
                             res.end(JSON.stringify({ error: "failed to get workspace" }, null, 2));
-                            return;
                         }.bind(this)); // end of getWorkspace promise
         
                 }.bind(this))
