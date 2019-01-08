@@ -13,10 +13,9 @@ import { IDbEntity } from "./database/model/base/IDbEntity";
 
 export interface IDatabase {
     connect(): Promise<any>;
-    create(): Promise<any>;
+    disconnect(): Promise<any>;
 
-    insertOne<T extends IDbEntity>(collection: string, entity: IDbEntity, ctor: (obj: any) => T): Promise<T>;
-    updateOne<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T>;
+    create(): Promise<any>;
 
     getApiKey(apiKey: string): Promise<ApiKey>;
 
