@@ -19,19 +19,21 @@ class SessionEndpoint implements IEndpoint {
         this._maxscriptClientFactory = maxscriptClientFactory;
 
         //expire sessions by timer
-        setInterval(async function() {
-            await this._database.expireSessions()
-                .then(function(guids){
-                    if (guids.length === 0) {
-                        return;
-                    }
-                    console.log(`    OK | expired sessions: ${guids.length}`);
-                }.bind(this))
-                .catch(function(err){
-                    console.error(err);
-                }.bind(this));
+        if (this._settings.current.expireSessions) {
+            setInterval(async function() {
+                await this._database.expireSessions(this._settings.current.sessionTimeoutMinutes)
+                    .then(function(guids){
+                        if (guids.length === 0) {
+                            return;
+                        }
+                        console.log(`    OK | expired sessions: ${guids.length}`);
+                    }.bind(this))
+                    .catch(function(err){
+                        console.error(err);
+                    }.bind(this));
 
-        }.bind(this), 5000);
+            }.bind(this), 5000);
+        }
     }
 
     async checkApiKey(res: any, apiKey: string): Promise<boolean> {
@@ -181,7 +183,7 @@ class SessionEndpoint implements IEndpoint {
             console.log(`POST on ${req.path} with action: ${req.params.action}`);
             let action = req.params.action;
             if (action === "expireSessions") {
-                let expired = await this._database.expireSessions(3);
+                let expired = await this._database.expireSessions(this._settings.current.sessionTimeoutMinutes);
                 res.end(JSON.stringify(expired, null, 2));
             } else if (action === "createSession") {
                 let apiKey = req.body.api_key;
