@@ -1,28 +1,28 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IMaxscriptClientFactory, IMaxscriptClient } from "../interfaces";
+import { IEndpoint, IDatabase, IMaxscriptClientFactory, IMaxscriptClient, ISettings } from "../interfaces";
 import { TYPES } from "../types";
 import { JobInfo } from "../model/job_info";
-
-const settings = require("../settings");
-const majorVersion = settings.version.split(".")[0];
 
 const http = require('http');
 
 @injectable()
 class JobEndpoint implements IEndpoint {
+    private _settings: ISettings;
     private _database: IDatabase;
     private _maxscriptClientFactory: IMaxscriptClientFactory;
-    private _renderingClients: { [jobGuid: string] : IMaxscriptClient } = {};
 
-    constructor(@inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
+    constructor(@inject(TYPES.ISettings) settings: ISettings,
+                @inject(TYPES.IDatabase) database: IDatabase,
+                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) 
+    {
+        this._settings = settings;
         this._database = database;
         this._maxscriptClientFactory = maxscriptClientFactory;
     }
 
     bind(express: express.Application) {
-        express.get(`/v${majorVersion}/job/:uid`, async function (req, res) {
+        express.get(`/v${this._settings.majorVersion}/job/:uid`, async function (req, res) {
             // this resource is spammy, don't log anything
             // console.log(`GET on /job/${req.params.uid}`);
 
@@ -47,7 +47,7 @@ class JobEndpoint implements IEndpoint {
                             let workerHost = parts[0];
                             let workerPort = parseInt(parts[1]);
 
-                            let workerManagerUrl = `http://${workerHost}:${settings.workerManagerPort}/worker`;
+                            let workerManagerUrl = `http://${workerHost}:${this._settings.current.workerManagerPort}/worker`;
                             // console.log(" >> requesting: ", workerManagerUrl);
                             request(workerManagerUrl, function (error, response, body) {
                                 if (error) {
@@ -123,7 +123,7 @@ class JobEndpoint implements IEndpoint {
                                     this._database.storeJob(jobInfo)
                                         .then(function(value){
                                             const fileId = require('../utils/genRandomName')("render");
-                                            const outputPath = `${settings.renderOutputDir}\\\\${fileId}.png`;
+                                            const outputPath = `${this._settings.current.renderOutputDir}\\\\${fileId}.png`;
 
                                             this._renderingClients[ jobGuid ] = maxscriptClient;
                                             let vraySettings = {
@@ -134,7 +134,7 @@ class JobEndpoint implements IEndpoint {
                                                     maxscriptClient.disconnect();
                                                     delete this._renderingClients[ jobGuid ];
 
-                                                    jobInfo.url = `${settings.publicUrl}/renderoutput/${fileId}.png`;
+                                                    jobInfo.url = `${this._settings.current.publicUrl}/renderoutput/${fileId}.png`;
                                                     jobInfo.success();
                                                     
                                                     this._database.storeJob(jobInfo)

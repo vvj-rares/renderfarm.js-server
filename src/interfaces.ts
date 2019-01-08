@@ -39,6 +39,13 @@ export interface IDatabase {
     getSessionActiveJobs(sessionGuid: string): Promise<JobInfo[]>;
 }
 
+export interface ISettings {
+    version: string;
+    majorVersion: number;
+    current: any;
+    env: string;
+}
+
 export interface IApp {
     express: express.Application;
 }

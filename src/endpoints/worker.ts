@@ -1,26 +1,27 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IWorkerHeartbeatListener } from "../interfaces";
+import { IEndpoint, IDatabase, IWorkerHeartbeatListener, ISettings } from "../interfaces";
 import { TYPES } from "../types";
 import { isString } from "util";
 import { WorkerInfo } from "../model/worker_info";
 import { VraySpawnerInfo } from "../model/vray_spawner_info";
 
-const settings = require("../settings");
-const majorVersion = settings.version.split(".")[0];
-
 @injectable()
 export class WorkerEndpoint implements IEndpoint {
+    private _settings: ISettings;
     private _database: IDatabase;
     private _workerHeartbeatListener: IWorkerHeartbeatListener;
 
-    constructor(@inject(TYPES.IDatabase) database: IDatabase,
-               @inject(TYPES.IWorkerHeartbeatListener) workerHeartbeatListener: IWorkerHeartbeatListener ) {
+    constructor(@inject(TYPES.ISettings) settings: ISettings,
+                @inject(TYPES.IDatabase) database: IDatabase,
+                @inject(TYPES.IWorkerHeartbeatListener) workerHeartbeatListener: IWorkerHeartbeatListener ) 
+    {
+        this._settings = settings;
         this._database = database;
         this._workerHeartbeatListener = workerHeartbeatListener;
 
         //delete dead workers by timer
-        if (settings.deleteDeadWorkers) {
+        if (this._settings.current.deleteDeadWorkers) {
             setInterval(this.tryDeleteDeadWorkers.bind(this), 5*1000); // check once per 5 sec
         }
 
@@ -28,7 +29,7 @@ export class WorkerEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get(`/v${majorVersion}/worker`, function (req, res) {
+        express.get(`/v${this._settings.majorVersion}/worker`, function (req, res) {
             let apiKey = req.query.api_key;
             console.log(`GET on ${req.path} with api key: ${apiKey}`);
             this._database.getApiKey(apiKey)

@@ -1,15 +1,10 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IMaxscriptClientFactory } from "../interfaces";
+import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings } from "../interfaces";
 import { TYPES } from "../types";
-
-const settings = require("../settings");
-const majorVersion = settings.version.split(".")[0];
 
 @injectable()
 class SceneMaterialEndpoint implements IEndpoint {
-    private _database: IDatabase;
-    private _maxscriptClientFactory: IMaxscriptClientFactory;
 
     // maps uuid of threejs material to material name in 3ds max
     // key is sessionId, cache items are resolved per session
@@ -18,26 +13,33 @@ class SceneMaterialEndpoint implements IEndpoint {
     //     value is { maxMatName: string, materialJsonText: string }
     private _materialCache: { [sessionId: string] : { [id: string] : any; }; } = {};
 
-    constructor(@inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
+    private _settings: ISettings;
+    private _database: IDatabase;
+    private _maxscriptClientFactory: IMaxscriptClientFactory;
+
+    constructor(@inject(TYPES.ISettings) settings: ISettings,
+                @inject(TYPES.IDatabase) database: IDatabase,
+                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) 
+    {
+        this._settings = settings;
         this._database = database;
         this._maxscriptClientFactory = maxscriptClientFactory;
     }
 
     bind(express: express.Application) {
-        express.get(`/v${majorVersion}/scene/:sceneid/material`, async function (req, res) {
+        express.get(`/v${this._settings.majorVersion}/scene/:sceneid/material`, async function (req, res) {
             let sceneid = req.params.sceneid;
             console.log(`GET on /scene/${sceneid}/material with session: ${req.body.session}`);
 
         }.bind(this));
 
-        express.get(`/v${majorVersion}/scene/:sceneid/material/:uid`, async function (req, res) {
+        express.get(`/v${this._settings.majorVersion}/scene/:sceneid/material/:uid`, async function (req, res) {
             let sceneid = req.params.sceneid;
             console.log(`GET on /scene/${sceneid}/material/${req.params.uid} with session: ${req.body.session}`);
 
         }.bind(this));
 
-        express.post(`/v${majorVersion}/scene/:sceneid/material`, async function (req, res) {
+        express.post(`/v${this._settings.majorVersion}/scene/:sceneid/material`, async function (req, res) {
             let sceneid = req.params.sceneid;
             console.log(`POST on /scene/${sceneid}/material with session: ${req.body.session}`);
 
@@ -99,13 +101,13 @@ class SceneMaterialEndpoint implements IEndpoint {
 
         }.bind(this));
 
-        express.put(`/v${majorVersion}/scene/:sceneid/material/:uid`, async function (req, res) {
+        express.put(`/v${this._settings.majorVersion}/scene/:sceneid/material/:uid`, async function (req, res) {
             let sceneid = req.params.sceneid;
             console.log(`PUT on /scene/${sceneid}/material/${req.params.uid} with session: ${req.body.session}`);
 
         }.bind(this));
 
-        express.delete(`/v${majorVersion}/scene/:sceneid/material/:uid`, async function (req, res) {
+        express.delete(`/v${this._settings.majorVersion}/scene/:sceneid/material/:uid`, async function (req, res) {
             let sceneid = req.params.sceneid;
             console.log(`DELETE on /scene/${sceneid}/material/${req.params.uid} with session: ${req.body.session}`);
 

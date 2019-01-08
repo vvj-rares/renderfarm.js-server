@@ -1,9 +1,8 @@
-import { injectable } from "inversify";
+import { injectable, inject } from "inversify";
 import { WorkerInfo } from "../model/worker_info";
 import { VraySpawnerInfo } from "../model/vray_spawner_info";
-import { IWorkerHeartbeatListener } from "../interfaces";
-
-const settings = require("../settings");
+import { IWorkerHeartbeatListener, ISettings } from "../interfaces";
+import { TYPES } from "../types";
 
 @injectable()
 export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
@@ -17,6 +16,13 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
 
     private _workerCb: (worker: WorkerInfo) => void;
     private _spawnerCb: (worker: VraySpawnerInfo) => void;
+
+    private _settings: ISettings;
+
+    constructor(@inject(TYPES.ISettings) settings: ISettings) 
+    {
+        this._settings = settings;
+    }
 
     public Listen(workerCb: (worker: WorkerInfo) => void, spawnerCb: (spawner: VraySpawnerInfo) => void) {
         this._workerCb = workerCb;
@@ -41,7 +47,7 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
             const address = server.address();
             console.log(`    OK | Worker monitor is listening on ${address.address}:${address.port}`);
         }.bind(this));
-        server.bind(settings.heartbeatPort);
+        server.bind(this._settings.current.heartbeatPort);
     }
 
     private handleHeartbeatFromRemoteMaxscript(msg, rinfo, rec) {
@@ -59,7 +65,7 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
         }
         else {
             // all who report into this api belongs to current workgroup
-            let newWorker = new WorkerInfo(rec.mac, rinfo.address, rec.port, settings.workgroup);
+            let newWorker = new WorkerInfo(rec.mac, rinfo.address, rec.port, this._settings.current.workgroup);
             newWorker.cpuUsage = rec.cpu_usage;
             newWorker.ramUsage = rec.ram_usage;
             newWorker.totalRam = rec.total_ram;
@@ -91,7 +97,7 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
         }
         else {
             // all who report into this api belongs to current workgroup
-            let newVraySpawner = new VraySpawnerInfo(rec.mac, rinfo.address, settings.workgroup);
+            let newVraySpawner = new VraySpawnerInfo(rec.mac, rinfo.address, this._settings.current.workgroup);
             newVraySpawner.cpuUsage = rec.cpu_usage;
             newVraySpawner.ramUsage = rec.ram_usage;
             newVraySpawner.totalRam = rec.total_ram;

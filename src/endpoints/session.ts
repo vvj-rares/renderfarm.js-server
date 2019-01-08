@@ -1,20 +1,20 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IMaxscriptClientFactory } from "../interfaces";
+import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings } from "../interfaces";
 import { TYPES } from "../types";
 import { WorkerInfo } from "../model/worker_info";
 
-const settings = require("../settings");
-const majorVersion = settings.version.split(".")[0];
-
 @injectable()
 class SessionEndpoint implements IEndpoint {
+    private _settings: ISettings;
     private _database: IDatabase;
     private _maxscriptClientFactory: IMaxscriptClientFactory;
 
-    constructor(@inject(TYPES.IDatabase) database: IDatabase,
+    constructor(@inject(TYPES.ISettings) settings: ISettings,
+                @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
 
+        this._settings = settings;
         this._database = database;
         this._maxscriptClientFactory = maxscriptClientFactory;
 
@@ -76,7 +76,7 @@ class SessionEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.post(`/v${majorVersion}/session`, async function (req, res) {
+        express.post(`/v${this._settings.majorVersion}/session`, async function (req, res) {
             let apiKey = req.body.api_key;
             if (!apiKey) {
                 console.log(`REJECT | api_key empty`);
@@ -194,7 +194,7 @@ class SessionEndpoint implements IEndpoint {
             
         }.bind(this));
 
-        express.delete(`/v${majorVersion}/session/:uid`, async function (req, res) {
+        express.delete(`/v${this._settings.majorVersion}/session/:uid`, async function (req, res) {
             console.log(`DELETE on /v1/session/${req.params.uid}`);
 
             let sessionGuid = req.params.uid;

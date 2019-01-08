@@ -1,21 +1,19 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase } from "../interfaces";
+import { IEndpoint, IDatabase, ISettings } from "../interfaces";
 import { TYPES } from "../types";
-
-const settings = require("../settings");
-const majorVersion = settings.version.split(".")[0];
 
 @injectable()
 class WorkspaceFileEndpoint implements IEndpoint {
-    private _database: IDatabase;
+    private _settings: ISettings;
 
-    constructor(@inject(TYPES.IDatabase) database: IDatabase) {
-        this._database = database;
+    constructor(@inject(TYPES.ISettings) settings: ISettings) 
+    {
+        this._settings = settings;
     }
 
     bind(express: express.Application) {
-        express.get(`/v${majorVersion}/workspace/:guid/file/*/:filename`, async function (req, res) {
+        express.get(`/v${this._settings.majorVersion}/workspace/:guid/file/*/:filename`, async function (req, res) {
             console.log(`GET on /workspace/${req.params.guid}/file/${req.params[0]}/${req.params.filename}`);
 
             let workspaceGuid = req.params.guid;
@@ -33,7 +31,7 @@ class WorkspaceFileEndpoint implements IEndpoint {
                     let mime = require('mime-types');
                     let mimeType = mime.lookup(req.params.filename);
 
-                    let rootDir = `${settings.homeDir}` + req.params[0];
+                    let rootDir = `${this._settings.current.homeDir}` + req.params[0];
 
                     console.log(` >> Looking up file ${req.params.filename} in folder ${rootDir}`)
 

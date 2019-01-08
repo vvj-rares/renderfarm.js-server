@@ -1,4 +1,5 @@
 const TYPES = {
+    ISettings: Symbol.for("ISettings"),
     IDatabase: Symbol.for("IDatabase"),
     IApp: Symbol.for("IApp"),
     IEndpoint: Symbol.for("IEndpoint"),

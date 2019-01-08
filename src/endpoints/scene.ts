@@ -1,24 +1,25 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IMaxscriptClientFactory } from "../interfaces";
+import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings } from "../interfaces";
 import { TYPES } from "../types";
-
-const settings = require("../settings");
-const majorVersion = settings.version.split(".")[0];
 
 @injectable()
 class SceneEndpoint implements IEndpoint {
+    private _settings: ISettings;
     private _database: IDatabase;
     private _maxscriptClientFactory: IMaxscriptClientFactory;
 
-    constructor(@inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
+    constructor(@inject(TYPES.ISettings) settings: ISettings,
+                @inject(TYPES.IDatabase) database: IDatabase,
+                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) 
+    {
+        this._settings = settings;
         this._database = database;
         this._maxscriptClientFactory = maxscriptClientFactory;
     }
 
     bind(express: express.Application) {
-        express.post(`/v${majorVersion}/scene`, async function (req, res) {
+        express.post(`/v${this._settings.majorVersion}/scene`, async function (req, res) {
             console.log(`POST on /scene with session: ${req.body.session}`);
 
             let sessionGuid = req.body.session;
@@ -87,12 +88,12 @@ class SceneEndpoint implements IEndpoint {
     
         }.bind(this));
 
-        express.put(`/v${majorVersion}/scene/:uid`, async function (req, res) {
+        express.put(`/v${this._settings.majorVersion}/scene/:uid`, async function (req, res) {
             console.log(`PUT on /scene/${req.params.uid}`);
             res.end(JSON.stringify({}, null, 2));
         }.bind(this));
 
-        express.delete(`/v${majorVersion}/scene/:uid`, async function (req, res) {
+        express.delete(`/v${this._settings.majorVersion}/scene/:uid`, async function (req, res) {
             console.log(`DELETE on /scene/${req.params.uid}`);
             res.end(JSON.stringify({}, null, 2));
         }.bind(this));

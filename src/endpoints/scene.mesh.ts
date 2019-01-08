@@ -1,34 +1,35 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IMaxscriptClientFactory } from "../interfaces";
+import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings } from "../interfaces";
 import { TYPES } from "../types";
-
-const settings = require("../settings");
-const majorVersion = settings.version.split(".")[0];
 
 @injectable()
 class SceneMeshEndpoint implements IEndpoint {
+    private _settings: ISettings;
     private _database: IDatabase;
     private _maxscriptClientFactory: IMaxscriptClientFactory;
 
-    constructor(@inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
+    constructor(@inject(TYPES.ISettings) settings: ISettings,
+                @inject(TYPES.IDatabase) database: IDatabase,
+                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) 
+    {
+        this._settings = settings;
         this._database = database;
         this._maxscriptClientFactory = maxscriptClientFactory;
     }
 
     bind(express: express.Application) {
-        express.get(`/v${majorVersion}/scene/:sceneid/mesh`, async function (req, res) {
+        express.get(`/v${this._settings.majorVersion}/scene/:sceneid/mesh`, async function (req, res) {
             console.log(`GET on /scene/${req.params.sceneid}/mesh with session: ${req.body.session}`);
             res.end({});
         }.bind(this));
 
-        express.get(`/v${majorVersion}/scene/:sceneid/mesh/:uuid`, async function (req, res) {
+        express.get(`/v${this._settings.majorVersion}/scene/:sceneid/mesh/:uuid`, async function (req, res) {
             console.log(`GET on on /scene/${req.params.sceneid}/mesh/${req.params.uuid}`);
             res.end({});
         }.bind(this));
 
-        express.post(`/v${majorVersion}/scene/:sceneid/mesh`, async function (req, res) {
+        express.post(`/v${this._settings.majorVersion}/scene/:sceneid/mesh`, async function (req, res) {
             console.log(`POST on /scene/${req.params.sceneid}/mesh with session: ${req.body.session}`);
 
             this._database.getWorker(req.body.session)
@@ -99,12 +100,12 @@ class SceneMeshEndpoint implements IEndpoint {
 
         }.bind(this));
 
-        express.put(`/v${majorVersion}/scene/:sceneid/mesh/:uid`, async function (req, res) {
+        express.put(`/v${this._settings.majorVersion}/scene/:sceneid/mesh/:uid`, async function (req, res) {
             console.log(`PUT on on /scene/${req.params.sceneid}/mesh/${req.params.uid}  with session: ${req.body.session}`);
             res.end({});
         }.bind(this));
 
-        express.delete(`/v${majorVersion}/scene/:sceneid/mesh/:uid`, async function (req, res) {
+        express.delete(`/v${this._settings.majorVersion}/scene/:sceneid/mesh/:uid`, async function (req, res) {
             console.log(`DELETE on on /scene/${req.params.sceneid}/mesh/${req.params.uid}  with session: ${req.body.session}`);
             res.end({});
         }.bind(this));

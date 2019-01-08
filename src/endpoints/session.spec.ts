@@ -1,18 +1,21 @@
 import "reflect-metadata";
-import { IEndpoint } from "../interfaces";
+import { IEndpoint, ISettings } from "../interfaces";
 import { SessionEndpoint } from "./session";
+import { Settings } from "../settings";
 
 describe("SessionEndpoint", function() {
     var session: IEndpoint;
+    var settings: ISettings;
     var database: any;
     var express: any;
     var maxscriptClientFactory: any;
 
     beforeEach(function() {
+        settings = jasmine.createSpyObj("settings", []);
         database = jasmine.createSpyObj("database", ["getApiKey", "getWorkspace", "startWorkerSession", "assignSessionWorkspace"]);
         express = jasmine.createSpyObj("express", ["post", "delete"]);
         maxscriptClientFactory = jasmine.createSpyObj("maxscriptClientFactory", ["create"]);
-        session = new SessionEndpoint(database, null);
+        session = new SessionEndpoint(settings, database, null);
     });
 
     it("should handle POST", function() {

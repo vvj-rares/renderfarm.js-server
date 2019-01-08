@@ -1,19 +1,22 @@
 "use strict";
 
-const settings = require("./settings");
-
 import * as express from "express";
 import * as bodyParser from "body-parser";
-import { injectable, multiInject } from "inversify";
-import { IApp, IEndpoint } from "./interfaces";
+import { injectable, multiInject, inject } from "inversify";
+import { IApp, IEndpoint, ISettings } from "./interfaces";
 import { TYPES } from "./types";
+import { settings } from "cluster";
 
 @injectable()
 class App implements IApp {
 
+    private _settings: ISettings;
     private _express: express.Application;
 
-    constructor(@multiInject(TYPES.IEndpoint) endpoints: IEndpoint[]) {
+    constructor(@inject(TYPES.ISettings) settings: ISettings,
+                @multiInject(TYPES.IEndpoint) endpoints: IEndpoint[]) 
+    {
+        this._settings = settings;
         this._express = express();
         this.config();
         this.bindEndpoints(endpoints);
@@ -46,8 +49,8 @@ class App implements IApp {
         // report server status
         this._express.get('/', function (req, res) {
             console.log(`GET on /`);
-            res.send(JSON.stringify({ version: settings.version }, null, 2));
-        });
+            res.end(JSON.stringify({ env: this._settings.env, version: this._settings.version }));
+        }.bind(this));
 
         this._express.get('/favicon.ico', function (req, res) {
             console.log(`GET on /favicon.ico`);
@@ -69,7 +72,7 @@ class App implements IApp {
                     res.end(content);
                 }
             });
-        });
+        }.bind(this));
 
         for (let endp of endpoints) {
             endp.bind(this._express);

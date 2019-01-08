@@ -3,4 +3,4 @@ dist/
 letsencrypt/
 package-lock.json
 
-settings.ts
+app.settings.ts
