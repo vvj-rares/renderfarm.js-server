@@ -39,6 +39,7 @@ module.exports = {
         host: "localhost",
         port: 8000,
         workerManagerPort: 17900,
+        heartbeatPort: 3000,
         sslKey: "ssl/key.pem",
         sslCert: "ssl/cert.pem",
         renderOutputDir: "C:\\\\Temp",
