@@ -1,6 +1,4 @@
 module.exports = function() {
-    return;
-
     var reporters = require('jasmine-reporters');
     var reporter = new reporters.TeamCityReporter({
         savePath: __dirname,
