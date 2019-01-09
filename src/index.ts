@@ -15,7 +15,7 @@ async function main() {
 
     const database = myContainer.get<IDatabase>(TYPES.IDatabase);
     await database.connect();
-    await database.create();
+    await database.createCollections();
     
     console.log("    OK | Database connected");
     console.log("Starting server...");

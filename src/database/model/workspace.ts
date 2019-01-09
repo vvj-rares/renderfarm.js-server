@@ -32,4 +32,11 @@ export class Workspace extends IDbEntity {
             lastSeen:  this.lastSeen
         };
     }
+
+    public get filter(): any {
+        return {
+            guid:       this.guid,
+            workgroup: this.workgroup
+        }
+    }
 }

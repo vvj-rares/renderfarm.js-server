@@ -30,6 +30,18 @@ class WorkerInfo {
         return this._mac;
     }
 
+    public get cpuUsage(): number {
+        return this._cpuUsage;
+    }
+
+    public get ramUsage(): number {
+        return this._ramUsage;
+    }
+
+    public get totalRam(): number {
+        return this._totalRam;
+    }
+
     public set cpuUsage(value: number) {
         this._cpuUsage = value;
     }

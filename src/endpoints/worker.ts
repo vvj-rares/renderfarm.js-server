@@ -5,6 +5,7 @@ import { TYPES } from "../types";
 import { isString } from "util";
 import { WorkerInfo } from "../model/worker_info";
 import { VraySpawnerInfo } from "../model/vray_spawner_info";
+import { Worker } from "../database/model/worker";
 
 @injectable()
 export class WorkerEndpoint implements IEndpoint {
@@ -49,7 +50,7 @@ export class WorkerEndpoint implements IEndpoint {
         }.bind(this));
     }
 
-    private onWorkerUpdate(worker: WorkerInfo) {
+    private onWorkerUpdate(worker: Worker) {
         this._database.storeWorker(worker);
     }
 

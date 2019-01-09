@@ -23,4 +23,10 @@ export class ApiKey extends IDbEntity {
             lastSeen: this.lastSeen
         };
     }
+
+    public get filter(): any {
+        return {
+            apiKey: this.apiKey
+        }
+    }
 }

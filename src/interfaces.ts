@@ -9,20 +9,23 @@ import { VraySpawnerInfo } from "./model/vray_spawner_info";
 import { ApiKey } from "./database/model/api_key";
 import { Workspace } from "./database/model/workspace";
 import { Session } from "./database/model/session";
-import { IDbEntity } from "./database/model/base/IDbEntity";
+import { Worker } from "./database/model/worker";
 
 export interface IDatabase {
     connect(): Promise<any>;
     disconnect(): Promise<any>;
 
-    create(): Promise<any>;
+    createCollections(): Promise<any>;
+    dropCollections(): Promise<any>;
 
     getApiKey(apiKey: string): Promise<ApiKey>;
 
     getWorkspace(workspaceGuid: string): Promise<Workspace>;
     getSession(sessionGuid: string): Promise<Session>;
 
-    storeWorker(workerInfo: WorkerInfo): Promise<WorkerInfo>;
+    storeWorker(worker: Worker): Promise<boolean>;
+    updateWorker(worker: Worker): Promise<Worker>;
+
     getWorker(sessionGuid: string): Promise<WorkerInfo>;
     deleteDeadWorkers(): Promise<number>;
 

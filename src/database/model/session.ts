@@ -38,4 +38,10 @@ export class Session extends IDbEntity {
             closedAt:       this.closedAt
         };
     }
+
+    public get filter(): any {
+        return {
+            guid: this.guid
+        }
+    }
 }
