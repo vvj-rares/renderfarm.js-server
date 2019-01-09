@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { IEndpoint, ISettings, IMaxscriptClient } from "../interfaces";
+import { IEndpoint, ISettings } from "../interfaces";
 import { SessionEndpoint } from "./session";
 import { Settings } from "../settings";
 import { Workspace } from "../database/model/workspace";
@@ -7,18 +7,12 @@ import { Workspace } from "../database/model/workspace";
 require("../jasmine.config")();
 
 describe("SessionEndpoint", function() {
-    var globalConsole: any;
     var session: IEndpoint;
     var settings: ISettings;
     var database: any;
     var express: any;
     var maxscriptClientFactory: any;
     var maxscriptClient: any;
-
-    beforeAll(function() {
-        globalConsole = global.console;
-        global.console.log = function(): void {};
-    })
 
     beforeEach(function() {
 
@@ -28,10 +22,6 @@ describe("SessionEndpoint", function() {
         maxscriptClientFactory = jasmine.createSpyObj("maxscriptClientFactory", ["create"]);
         maxscriptClient = jasmine.createSpyObj("maxscriptClient", ["connect", "setSession", "setWorkspace", "disconnect"]);
         session = new SessionEndpoint(settings, database, maxscriptClientFactory);
-    })
-
-    afterAll(function() {
-        global.console = globalConsole;
     })
 
     it("should handle POST", async function() {

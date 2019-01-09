@@ -8,7 +8,6 @@ const apiKey = "75f5-4d53-b0f4";
 const workspaceGuid = "55a0bd33-9f15-4bc0-a482-17899eb67af3";
 
 xdescribe(`Endpoint ${baseUrl}`, function() {
-    /*
     var checkResponse = function(res) {
         expect(res).toBeTruthy();
         expect(res.status).toBe(200);
@@ -84,5 +83,4 @@ xdescribe(`Endpoint ${baseUrl}`, function() {
             //}).toThrowError("song is already playing");
         });
     });
-    */
 });
