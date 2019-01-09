@@ -7,12 +7,23 @@ import { Workspace } from "../database/model/workspace";
 require("../jasmine.config")();
 
 describe("SessionEndpoint", function() {
+    var consoleLog: any;
+
     var session: IEndpoint;
     var settings: ISettings;
     var database: any;
     var express: any;
     var maxscriptClientFactory: any;
     var maxscriptClient: any;
+
+    beforeAll(function() {
+        consoleLog = console.log;
+        console.log = function() {};
+    })
+
+    afterAll(function() {
+        console.log = consoleLog;
+    })
 
     beforeEach(function() {
 
