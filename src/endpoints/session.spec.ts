@@ -4,7 +4,10 @@ import { SessionEndpoint } from "./session";
 import { Settings } from "../settings";
 import { Workspace } from "../database/model/workspace";
 
+require("../jasmine.config")();
+
 describe("SessionEndpoint", function() {
+    var globalConsole: any;
     var session: IEndpoint;
     var settings: ISettings;
     var database: any;
@@ -12,14 +15,24 @@ describe("SessionEndpoint", function() {
     var maxscriptClientFactory: any;
     var maxscriptClient: any;
 
+    beforeAll(function() {
+        globalConsole = global.console;
+        global.console.log = function(): void {};
+    })
+
     beforeEach(function() {
+
         settings = new Settings("test");
         database = jasmine.createSpyObj("database", ["getApiKey", "getWorkspace", "startWorkerSession", "assignSessionWorkspace"]);
         express = jasmine.createSpyObj("express", ["post", "delete"]);
         maxscriptClientFactory = jasmine.createSpyObj("maxscriptClientFactory", ["create"]);
         maxscriptClient = jasmine.createSpyObj("maxscriptClient", ["connect", "setSession", "setWorkspace", "disconnect"]);
         session = new SessionEndpoint(settings, database, maxscriptClientFactory);
-    });
+    })
+
+    afterAll(function() {
+        global.console = globalConsole;
+    })
 
     it("should handle POST", async function() {
         let postHandler = {};

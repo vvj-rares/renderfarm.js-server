@@ -18,10 +18,20 @@ export interface IDatabase {
     createCollections(): Promise<any>;
     dropCollections(): Promise<any>;
 
+    //api keys
     getApiKey(apiKey: string): Promise<ApiKey>;
 
-    getWorkspace(workspaceGuid: string): Promise<Workspace>;
     getSession(sessionGuid: string): Promise<Session>;
+    createSession(apiKey: string, workspace: string): Promise<Session>;
+    expireSessions(olderThanMinutes: number): Promise<Session[]>;
+    closeSession(sessionGuid: string): Promise<Session>;
+
+    //do we need them?
+    assignSessionWorkspace(sessionGuid: string, workspaceGuid: string): Promise<boolean>;
+    getSessionWorkspace(sessionGuid: string): Promise<WorkspaceInfo>;
+
+    //workspaces
+    getWorkspace(workspaceGuid: string): Promise<Workspace>;
 
     storeWorker(worker: Worker): Promise<boolean>;
     updateWorker(worker: Worker): Promise<Worker>;
@@ -30,12 +40,6 @@ export interface IDatabase {
     deleteDeadWorkers(): Promise<number>;
 
     storeVraySpawner(vraySpawnerInfo: VraySpawnerInfo): Promise<VraySpawnerInfo>;
-
-    createSession(apiKey: string, workspace: string): Promise<Session>;
-    assignSessionWorkspace(sessionGuid: string, workspaceGuid: string): Promise<boolean>;
-    getSessionWorkspace(sessionGuid: string): Promise<WorkspaceInfo>;
-    expireSessions(olderThanMinutes: number): Promise<Session[]>;
-    closeSession(sessionGuid: string): Promise<boolean>;
 
     storeJob(jobInfo: JobInfo): Promise<JobInfo>;
     getJob(jobGuid: string): Promise<JobInfo>;

@@ -1,6 +1,8 @@
 import { IDbEntity } from "./base/IDbEntity";
+import { Session } from "./session";
 
 export class Worker extends IDbEntity {
+    public guid: string;
     public mac: string;
     public ip: string;
     public port: number;
@@ -13,6 +15,8 @@ export class Worker extends IDbEntity {
     public totalRam: number;
     public sessionGuid: string;
 
+    public sessionRef: Session;
+
     constructor(obj: any) {
         super();
         if (obj) {
@@ -21,6 +25,7 @@ export class Worker extends IDbEntity {
     }
 
     public parse(obj: any) {
+        this.guid      = obj.guid;
         this.mac       = obj.mac;
         this.ip        = obj.ip;
         this.port      = obj.port;
@@ -31,14 +36,12 @@ export class Worker extends IDbEntity {
         this.cpuUsage  = obj.cpuUsage;
         this.ramUsage  = obj.ramUsage;
         this.totalRam  = obj.totalRam;
-
-        if (obj.sessionGuid) {
-            this.sessionGuid = obj.sessionGuid;
-        }
+        this.sessionGuid = obj.sessionGuid;
     }
 
     public toJSON() {
         let result: any = {
+            guid:      this.guid,
             mac:       this.mac,
             ip:        this.ip,
             port:      this.port,
@@ -48,22 +51,16 @@ export class Worker extends IDbEntity {
             lastSeen:  this.lastSeen || new Date(),
             cpuUsage:  this.cpuUsage,
             ramUsage:  this.ramUsage,
-            totalRam:  this.totalRam
+            totalRam:  this.totalRam,
+            sessionGuid: this.sessionGuid
         };
-
-        if (this.sessionGuid) {
-            result.sessionGuid = this.sessionGuid;
-        }
 
         return result;
     }
 
     public get filter(): any {
         return {
-            mac:       this.mac,
-            ip:        this.ip,
-            port:      this.port,
-            workgroup: this.workgroup
+            guid:       this.guid
         }
     }
 }
