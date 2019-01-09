@@ -151,7 +151,7 @@ class Database implements IDatabase {
         });
     }
 
-    public createSession(apiKey: string, workspace: string): Promise<Session> {
+    public createSession(apiKey: string, workspaceGuid: string): Promise<Session> {
         return new Promise<Session>(async function (resolve, reject) {
             if (!this.isConnected(reject)) return;
 
@@ -164,43 +164,47 @@ class Database implements IDatabase {
             // this will prevent multiple worker assignment, if top most worker was set busy = true,
             // then we just pick underlying least loaded worker.
             for(let wi in workers) {
-                try {
-                    let candidate = workers[wi];
-                    let recentOnlineDate = new Date(Date.now() - 2 * 1000);
-                    let filter: any = { 
-                        workgroup: this._settings.current.workgroup,
-                        lastSeen : { $gte: recentOnlineDate },
-                        sessionGuid: { $exists: false },
-                        endpoint: candidate.endpoint,
-                        mac: candidate.mac
-                    };
-                    let sessionGuid = uuidv4();
-                    let setter: any = { $set: { sessionGuid: sessionGuid } };
-
-                    let self = this as Database;
-                    let caputuredWorker = await self.updateOne<Worker>("workers", filter, setter, (obj: any) => new Worker(obj));
-
-                    let session = new Session(null);
-                    session.apiKey = apiKey;
-                    session.guid = sessionGuid;
-                    session.firstSeen = new Date();
-                    session.lastSeen = session.firstSeen;
-                    session.workerEndpoint = caputuredWorker.endpoint;
-                    session.workspaceGuid = workspace;
-
-                    let createdSession = await self.insertOne<Session>("sessions", session, obj => new Session(obj));
-
+                let candidate = workers[wi];
+                let createdSession = await this.tryCreateSessionAtWorker(apiKey, workspaceGuid, candidate);
+                if (createdSession) {
                     resolve(createdSession);
                     return;
-                }
-                catch (err) {
-                    // ignore it, just try with another worker
                 }
             }
 
             reject("all workers busy");
 
         }.bind(this)); // return this promise
+    }
+
+    private async tryCreateSessionAtWorker(apiKey: string, workspaceGuid: string, candidate: Worker): Promise<Session> {
+        try {
+            let recentOnlineDate = new Date(Date.now() - 2 * 1000);
+            let filter: any = { 
+                workgroup: this._settings.current.workgroup,
+                lastSeen : { $gte: recentOnlineDate },
+                sessionGuid: { $exists: false },
+                endpoint: candidate.endpoint,
+                mac: candidate.mac
+            };
+            let sessionGuid = uuidv4();
+            let setter: any = { $set: { sessionGuid: sessionGuid } };
+
+            let self = this as Database;
+            let caputuredWorker = await self.updateOne<Worker>("workers", filter, setter, (obj: any) => new Worker(obj));
+
+            let session = new Session(null);
+            session.apiKey = apiKey;
+            session.guid = sessionGuid;
+            session.firstSeen = new Date();
+            session.lastSeen = session.firstSeen;
+            session.workerEndpoint = caputuredWorker.endpoint;
+            session.workspaceGuid = workspaceGuid;
+
+            return await self.insertOne<Session>("sessions", session, obj => new Session(obj));
+        } catch {
+            return null;
+        }
     }
 
     public closeSession(sessionGuid: string): Promise<boolean> {
