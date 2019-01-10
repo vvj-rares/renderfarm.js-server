@@ -2,7 +2,7 @@ import "reflect-metadata";
 
 import { Settings } from "../settings";
 import { Database } from "./database";
-import { isError } from "util";
+import { isError, isArray } from "util";
 import { Session } from "./model/session";
 import { Worker } from "./model/worker";
 
@@ -28,7 +28,7 @@ describe("Database Session", function() {
         await database.disconnect();
     });
 
-    describe("(read-only test):", function() {
+    describe("read-only test", function() {
         beforeEach(async function() {
             settings = new Settings("test");
             database = new Database(settings);
@@ -77,7 +77,7 @@ describe("Database Session", function() {
         });
     }); // end of read-only tests
 
-    describe("(write tests)", function() {
+    describe("write test", function() {
         var collectionPrefix: string;
 
         beforeEach(async function() {
@@ -144,26 +144,55 @@ describe("Database Session", function() {
             expect(worker.sessionGuid).toBe(session.guid);
         })
 
-        it("closes session and releases worker", async function() {
+        function rndMac(): string {
+            let res = "";
+            for (let i=0; i<12; i++) {
+                res += Math.round(15 * Math.random()).toString(16);
+            }
+            return res;
+        }
+
+        function rndIp(): string {
+            let a1 = 2 + Math.round(252 * Math.random());
+            let a2 = 2 + Math.round(252 * Math.random());
+            return `192.168.${a1}.${a2}`;
+        }
+
+        function rndPort(): number {
+            return 10000 + Math.round(50000 * Math.random());
+        }
+
+        async function createSomeWorker(mac, ip, port, cpuUsage = undefined) {
             let newWorker = new Worker(null);
             newWorker.guid = uuidv4();
-            newWorker.mac = "6a15eefcf0d6";
-            newWorker.ip = "192.168.5.67";
-            newWorker.port = 19283;
+            newWorker.mac = mac;
+            newWorker.ip = ip;
+            newWorker.port = port;
             newWorker.workgroup = "default";
-            newWorker.cpuUsage = 0.02;
-            newWorker.ramUsage = 0.13;
-            newWorker.totalRam = 256;
+            newWorker.cpuUsage = cpuUsage !== undefined ? cpuUsage : Math.random();
+            newWorker.ramUsage = Math.random();
+            newWorker.totalRam = 32;
 
             // add fresh worker for the session
             let isWorkerStored = await database.storeWorker(newWorker);
             expect(isWorkerStored).toBeTruthy();
 
+            return newWorker;
+        }
+
+        async function createSomeSession() {
             let session: Session = await database.createSession(existingApiKey, existingWorkspaceGuid);
             expect(session).toBeTruthy();
             // check that refs were resolved well
             expect(session.workerRef).toBeTruthy();
             expect(session.workerRef.sessionGuid).toBe(session.guid);
+
+            return session;
+        }
+
+        it("closes session and releases worker", async function() {
+            let newWorker = await createSomeWorker(rndMac(), rndIp(), rndPort());
+            let session = await createSomeSession();
 
             let closedSession = await database.closeSession(session.guid);
             
@@ -177,6 +206,118 @@ describe("Database Session", function() {
             expect(closedSession.workerGuid).toBe(newWorker.guid);
             expect(closedSession.workerRef).toBeTruthy();
             expect(closedSession.workerRef.sessionGuid).toBeNull();
+        })
+
+        it("expires one session and releases one worker", async function() {
+            let newWorker = await createSomeWorker(rndMac(), rndIp(), rndPort());
+            let session = await createSomeSession();
+
+            let grabbedWorker = await database.getOne<Worker>("workers", { guid: newWorker.guid }, obj => new Worker(obj));
+
+            expect(grabbedWorker).toBeTruthy();
+            expect(grabbedWorker.sessionGuid).toBe(session.guid);
+
+            let expiredSessions = await database.expireSessions(0);
+
+            expect(isArray(expiredSessions)).toBeTruthy();
+            expect(expiredSessions.length).toBe(1);
+
+            let releasedWorker = await database.getOne<Worker>("workers", { guid: newWorker.guid }, obj => new Worker(obj));
+
+            expect(releasedWorker.guid).toBe(grabbedWorker.guid); // ensure we released same worker as we grabbed
+            expect(releasedWorker.sessionGuid).toBeNull();
+            //now check that expired sessions have actualized worker refs
+            expect(expiredSessions[0].workerRef).toBeTruthy();
+            expect(expiredSessions[0].workerRef.sessionGuid).toBeNull();
+            expect(expiredSessions[0].workerRef.guid).toBe(newWorker.guid);
+        })
+
+        it("checks that workers with less CPU load are grabbed first", async function() {
+            await createSomeWorker(rndMac(), rndIp(), rndPort(), 0.9);
+            await createSomeWorker(rndMac(), rndIp(), rndPort(), 0.1);
+            await createSomeWorker(rndMac(), rndIp(), rndPort(), 0.3);
+            await createSomeWorker(rndMac(), rndIp(), rndPort(), 0.5);
+
+            let session0 = await createSomeSession();
+            let session1 = await createSomeSession();
+            let session2 = await createSomeSession();
+            let session3 = await createSomeSession();
+
+            let grabbedWorker0 = await database.getOne<Worker>("workers", { sessionGuid: session0.guid }, obj => new Worker(obj));
+            expect(grabbedWorker0).toBeTruthy();
+            expect(grabbedWorker0.sessionGuid).toBe(session0.guid);
+
+            let grabbedWorker1 = await database.getOne<Worker>("workers", { sessionGuid: session1.guid }, obj => new Worker(obj));
+            expect(grabbedWorker1).toBeTruthy();
+            expect(grabbedWorker1.sessionGuid).toBe(session1.guid);
+
+            let grabbedWorker2 = await database.getOne<Worker>("workers", { sessionGuid: session2.guid }, obj => new Worker(obj));
+            expect(grabbedWorker2).toBeTruthy();
+            expect(grabbedWorker2.sessionGuid).toBe(session2.guid);
+
+            let grabbedWorker3 = await database.getOne<Worker>("workers", { sessionGuid: session3.guid }, obj => new Worker(obj));
+            expect(grabbedWorker3).toBeTruthy();
+            expect(grabbedWorker3.sessionGuid).toBe(session3.guid);
+
+            expect(grabbedWorker0.cpuUsage).toBe(0.1);
+            expect(grabbedWorker1.cpuUsage).toBe(0.3);
+            expect(grabbedWorker2.cpuUsage).toBe(0.5);
+            expect(grabbedWorker3.cpuUsage).toBe(0.9);
+        })
+
+        it("checks that session fails to open when no more workers available", async function() {
+            await createSomeWorker(rndMac(), rndIp(), rndPort(), 0.1);
+
+            let session0 = await createSomeSession();
+            expect(session0).toBeTruthy();
+
+            try {
+                await createSomeSession();
+                fail();
+            } catch (err) {
+                expect(isError(err));
+                expect(err.message).toBe("all workers busy");
+            }
+        })
+
+        it("checks that another session can reuse previously released worker", async function() {
+            let worker = await createSomeWorker(rndMac(), rndIp(), rndPort(), 0.1);
+
+            let session0 = await createSomeSession();
+            expect(session0).toBeTruthy();
+            expect(session0.workerGuid).toBe(worker.guid);
+
+            let closedSession0 = await database.closeSession(session0.guid);
+            expect(closedSession0).toBeTruthy();
+
+            let session1 = await createSomeSession();
+            expect(session1).toBeTruthy();
+            expect(session1.workerGuid).toBe(worker.guid);
+        })
+
+        fit("checks that session does not grab offline worker", async function() {
+            let worker = await createSomeWorker(rndMac(), rndIp(), rndPort(), 0.1);
+
+            let firstSeen = new Date(new Date().getTime() - 3000); // 3 seconds back
+            let lastSeen  = new Date(new Date().getTime() - 2000); // 2 seconds back
+
+            let offlineWorker = await database.findOneAndUpdate(
+                "workers", 
+                { guid: worker.guid }, 
+                { $set: { firstSeen: firstSeen, lastSeen: lastSeen }}, 
+                obj => new Worker(obj));
+            
+            expect(offlineWorker).toBeTruthy();
+            //worker is older than 2 seconds => means worker did not send heartbeats => means worker dead
+            expect(new Date().getTime() - offlineWorker.lastSeen.getTime()).toBeGreaterThan(2000);
+
+            try {
+                await createSomeSession();
+                fail();
+            } catch (err) {
+                expect(isError(err));
+                expect(err.message).toBe("all workers busy");
+            }
         })
     }); // end of write tests
 });

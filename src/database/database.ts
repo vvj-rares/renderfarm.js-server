@@ -198,29 +198,24 @@ export class Database implements IDatabase {
         return session;
     }
 
-    public createSession(apiKey: string, workspaceGuid: string): Promise<Session> {
-        //todo: get rid of Promise here
-        return new Promise<Session>(async function (resolve, reject) {
-            let db = this._client.db(this._settings.current.databaseName);
-            assert.notEqual(db, null);
-    
-            // pick only the workers who were seen not less than 2 seconds ago
-            let workers = await this.getAvailableWorkers();
+    public async createSession(apiKey: string, workspaceGuid: string): Promise<Session> {
+        let db = this._client.db(this._settings.current.databaseName);
+        assert.notEqual(db, null);
 
-            // this will prevent multiple worker assignment, if top most worker was set busy = true,
-            // then we just pick underlying least loaded worker.
-            for(let wi in workers) {
-                let candidate = workers[wi];
-                let createdSession = await this.tryCreateSessionAtWorker(apiKey, workspaceGuid, candidate);
-                if (createdSession) {
-                    resolve(createdSession);
-                    return;
-                }
+        // pick only the workers who were seen not less than 2 seconds ago
+        let workers = await this.getAvailableWorkers();
+
+        // this will prevent multiple worker assignment, if top most worker was set busy = true,
+        // then we just pick underlying least loaded worker.
+        for(let wi in workers) {
+            let candidate = workers[wi];
+            let createdSession = await this.tryCreateSessionAtWorker(apiKey, workspaceGuid, candidate);
+            if (createdSession) {
+                return createdSession;
             }
+        }
 
-            reject("all workers busy");
-
-        }.bind(this)); // return this promise
+        throw Error("all workers busy");
     }
 
     private async tryCreateSessionAtWorker(apiKey: string, workspaceGuid: string, candidate: Worker): Promise<Session> {
@@ -291,14 +286,33 @@ export class Database implements IDatabase {
         return closedSession;
     }
 
-    public expireSessions(olderThanMinutes: number): Promise<Session[]> {
+    public async expireSessions(olderThanMinutes: number): Promise<Session[]> {
         let expirationDate = new Date(Date.now() - olderThanMinutes * 60*1000);
         let filter = { 
             lastSeen : { $lte: expirationDate },
             closed: { $eq: null }
         };
-        let setter = { $set: { closed: true, closedAt: new Date(), abandoned: true } };
-        return this.updateMany<Session>("sessions", filter, setter, obj => new Session(obj));
+        let setter = { $set: { closed: true, closedAt: new Date(), expired: true } };
+        let expiredSessions = await this.findManyAndUpdate<Session>("sessions", filter, setter, obj => new Session(obj));
+
+        let workerUpdateFilter = { $or: [] };
+        for (let si in expiredSessions) {
+            let session = expiredSessions[si];
+            workerUpdateFilter.$or.push({guid: session.workerGuid});
+        }
+
+        let updatedWorkers = await this.findManyAndUpdate(
+            "workers", 
+            workerUpdateFilter, 
+            { $set: { sessionGuid: null } }, 
+            obj => new Worker(obj));
+
+        for (let si in expiredSessions) {
+            let session = expiredSessions[si];
+            session.workerRef = updatedWorkers.find(e => e.guid === session.workerGuid);
+        }
+
+        return expiredSessions;
     }
     //#endregion
 
@@ -523,7 +537,6 @@ export class Database implements IDatabase {
                 { returnOriginal: false, upsert: true })
                 .then(function(obj) {
                     if (obj.value) {
-                        // console.log(" >> obj.value: ", obj.value);
                         resolve(VraySpawnerInfo.fromJSON(obj.value));
                     } else {
                         reject(`unable to find vray spawner with mac ${vraySpawnerInfo.mac} and ip ${vraySpawnerInfo.ip}`);
@@ -706,38 +719,33 @@ export class Database implements IDatabase {
         }.bind(this));
     }
 
-    public updateMany<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T[]> {
-        //todo: get rid off Promise here
-        return new Promise<T[]>(function (resolve, reject) {
-            let db = this._client.db(this._settings.current.databaseName);
-            assert.notEqual(db, null);
+    public async updateMany(collection: string, filter: any, setter: any): Promise<number> {
+        let db = this._client.db(this._settings.current.databaseName);
+        assert.notEqual(db, null);
 
-            let trans = uuidv4();
-            setter.$set._trans = trans; //remember transaction
+        let trans = uuidv4();
+        setter.$set._trans = trans; //remember transaction
 
-            db.collection(this.envCollectionName(collection)).updateMany(
-                filter,
-                setter)
-                .then(function(value){
-                    if (value.matchedCount > 0 && value.modifiedCount > 0) {
-                        // query updated documents with given transaction
-                        db.collection(this.envCollectionName(collection)).find({ _trans: trans })
-                            .toArray()
-                            .then(function(value){
-                                let updated = value.map(e => ctor(e));
-                                resolve(updated);
-                            }.bind(this))
-                            .catch(function(err){
-                                reject(err);
-                            }.bind(this));
-                    } else {
-                        resolve([]);
-                    }
-                }.bind(this))
-                .catch(function(err){
-                    reject(err);
-                }.bind(this));
-        }.bind(this));
+        let updateResult = await db.collection(this.envCollectionName(collection)).updateMany(filter, setter);
+        return updateResult.modifiedCount;
+    }
+
+    public async findManyAndUpdate<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T[]> {
+        let db = this._client.db(this._settings.current.databaseName);
+        assert.notEqual(db, null);
+
+        let trans = uuidv4();
+        setter.$set._trans = trans; //remember transaction
+
+        let updateResult = await db.collection(this.envCollectionName(collection)).updateMany(filter, setter);
+
+        if (updateResult.matchedCount > 0 && updateResult.modifiedCount > 0) {
+            // query updated documents with given transaction
+            let findResult = await db.collection(this.envCollectionName(collection)).find({ _trans: trans }).toArray();
+            return findResult.map(e => ctor(e));
+        } else {
+            return [];
+        }
     }
 
     public async ensureClientConnection() {
