@@ -178,23 +178,6 @@ class SessionEndpoint implements IEndpoint {
 
         }.bind(this));
 
-        express.post(`/v1/session/action/:action`, async function(req, res) {
-            console.log(`POST on ${req.path} with action: ${req.params.action}`);
-            let action = req.params.action;
-            if (action === "expireSessions") {
-                let expired = await this._database.expireSessions(this._settings.current.sessionTimeoutMinutes);
-                res.end(JSON.stringify(expired, null, 2));
-            } else if (action === "createSession") {
-                let apiKey = req.body.api_key;
-                let created = await this._database.createSession(apiKey);
-                res.end(JSON.stringify(created, null, 2));
-            }
-
-            res.status(400);
-            res.end(JSON.stringify({error: "not implemented"}, null, 2));
-            
-        }.bind(this));
-
         express.delete(`/v${this._settings.majorVersion}/session/:uid`, async function (req, res) {
             console.log(`DELETE on /v1/session/${req.params.uid}`);
 
