@@ -224,7 +224,7 @@ export class Database implements IDatabase {
             let filter: any = { 
                 workgroup: this._settings.current.workgroup,
                 lastSeen : { $gte: recentOnlineDate },
-                sessionGuid: { $eq: null },
+                sessionGuid: null,
                 guid: candidate.guid
             };
             let sessionGuid = uuidv4();
@@ -253,22 +253,22 @@ export class Database implements IDatabase {
     }
 
     public async closeSession(sessionGuid: string): Promise<Session> {
-        let closedSession = await this.findOneAndUpdate<Session>(
-            "sessions",
-            {
-                guid: sessionGuid,
-                closedAt: { $eq: null }
-            },
-            {
-                $set: {
-                    closed: true, 
-                    closedAt: new Date()
-                }
-            },
-            obj => new Session(obj));
-        
+        let closedSession = await this.safe(this.findOneAndUpdate<Session>(
+                "sessions",
+                {
+                    guid: sessionGuid,
+                    closedAt: null
+                },
+                {
+                    $set: {
+                        closed: true, 
+                        closedAt: new Date()
+                    }
+                },
+                obj => new Session(obj)));
+
         if (!closedSession) {
-            throw Error("open session with given guid does not exist, possibly session was expired");
+            throw Error("session not found");
         }
 
         closedSession.workerRef = await this.findOneAndUpdate<Worker>(
@@ -290,7 +290,7 @@ export class Database implements IDatabase {
         let expirationDate = new Date(Date.now() - olderThanMinutes * 60*1000);
         let filter = { 
             lastSeen : { $lte: expirationDate },
-            closed: { $eq: null }
+            closed: null
         };
         let setter = { $set: { closed: true, closedAt: new Date(), expired: true } };
         let expiredSessions = await this.findManyAndUpdate<Session>("sessions", filter, setter, obj => new Session(obj));
@@ -422,7 +422,7 @@ export class Database implements IDatabase {
             db.collection(this.envCollectionName("workers")).find({ 
                 workgroup: { $eq: this._settings.current.workgroup },
                 lastSeen : { $gte: recentOnlineDate },
-                sessionGuid: { $eq: null }
+                sessionGuid: null
             }).sort({
                 cpuUsage: 1 //sort by cpu load, less loaded first
             }).toArray().then(function(arr: any[]){
@@ -758,4 +758,13 @@ export class Database implements IDatabase {
         return `${this._settings.current.collectionPrefix}-${name}`;
     }
     //#endregion
+
+    private async safe<T>(promise: Promise<T>): Promise<T> {
+        try {
+            let res:T = await promise;
+            return res;
+        } catch {
+            return undefined;
+        }
+    }
 }

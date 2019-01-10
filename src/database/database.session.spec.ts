@@ -336,13 +336,42 @@ describe("Database Session", function() {
         })
 
         it("checks that closed session can not be closed twice", async function() {
-            //todo: implement it
-            fail();
+            let worker = await createSomeWorker(rndMac(), rndIp(), rndPort());
+
+            let session0 = await createSomeSession();
+            expect(session0).toBeTruthy();
+            expect(session0.workerGuid).toBe(worker.guid);
+
+            let closedSession0 = await database.closeSession(session0.guid);
+            expect(closedSession0).toBeTruthy();
+
+            try {
+                await database.closeSession(session0.guid);
+                fail();
+            } catch (err) {
+                expect(isError(err));
+                expect(err.message).toBe("session not found");
+            }
         })
 
         it("checks that expired session can not be closed", async function() {
-            //todo: implement it
-            fail();
+            let worker = await createSomeWorker(rndMac(), rndIp(), rndPort());
+
+            let session0 = await createSomeSession();
+            expect(session0).toBeTruthy();
+            expect(session0.workerGuid).toBe(worker.guid);
+
+            let expiredSessions = await database.expireSessions(0);
+            expect(isArray(expiredSessions)).toBeTruthy();
+            expect(expiredSessions.length).toBe(1);
+
+            try {
+                await database.closeSession(session0.guid);
+                fail();
+            } catch (err) {
+                expect(isError(err));
+                expect(err.message).toBe("session not found");
+            }
         })
     }); // end of write tests
 });
