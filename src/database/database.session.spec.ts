@@ -295,9 +295,10 @@ describe("Database Session", function() {
             expect(session1.workerGuid).toBe(worker.guid);
         })
 
-        fit("checks that session does not grab offline worker", async function() {
+        it("checks that session does not grab offline worker", async function() {
             let worker = await createSomeWorker(rndMac(), rndIp(), rndPort(), 0.1);
 
+            //make worker Offline
             let firstSeen = new Date(new Date().getTime() - 3000); // 3 seconds back
             let lastSeen  = new Date(new Date().getTime() - 2000); // 2 seconds back
 
@@ -306,7 +307,7 @@ describe("Database Session", function() {
                 { guid: worker.guid }, 
                 { $set: { firstSeen: firstSeen, lastSeen: lastSeen }}, 
                 obj => new Worker(obj));
-            
+
             expect(offlineWorker).toBeTruthy();
             //worker is older than 2 seconds => means worker did not send heartbeats => means worker dead
             expect(new Date().getTime() - offlineWorker.lastSeen.getTime()).toBeGreaterThan(2000);
@@ -318,6 +319,20 @@ describe("Database Session", function() {
                 expect(isError(err));
                 expect(err.message).toBe("all workers busy");
             }
+
+            //now make worker Online, and try again
+            let onlineWorker = await database.findOneAndUpdate(
+                "workers", 
+                { guid: worker.guid }, 
+                { $set: { firstSeen: firstSeen, lastSeen: new Date() }},
+                obj => new Worker(obj));
+
+            expect(onlineWorker).toBeTruthy();
+            //worker is younger than 2 seconds => means worker is most likely alive
+            expect(new Date().getTime() - onlineWorker.lastSeen.getTime()).toBeLessThan(2000);
+
+            let session = await createSomeSession();
+            expect(session).toBeTruthy();
         })
     }); // end of write tests
 });
