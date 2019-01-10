@@ -334,5 +334,15 @@ describe("Database Session", function() {
             let session = await createSomeSession();
             expect(session).toBeTruthy();
         })
+
+        it("checks that closed session can not be closed twice", async function() {
+            //todo: implement it
+            fail();
+        })
+
+        it("checks that expired session can not be closed", async function() {
+            //todo: implement it
+            fail();
+        })
     }); // end of write tests
 });
