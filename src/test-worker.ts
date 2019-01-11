@@ -1,4 +1,4 @@
-import { Settings } from "../src/settings";
+import { Settings } from "./settings";
 
 const settings = new Settings("dev");
 
