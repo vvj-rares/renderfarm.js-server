@@ -1,7 +1,7 @@
 {
   "spec_dir": "dist",
   "spec_files": [
-    "./**/*[Dd][sS]pec.js"
+    "./**/*.[Dd][sS]pec.js"
   ],
   "stopSpecOnExpectationFailure": false
 }
