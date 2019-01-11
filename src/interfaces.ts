@@ -1,8 +1,6 @@
 "use strict";
 
 import * as express from "express";
-import { WorkerInfo } from "./model/worker_info";
-import { SessionInfo } from "./model/session_info";
 import { WorkspaceInfo } from "./model/workspace_info";
 import { JobInfo } from "./model/job_info";
 import { VraySpawnerInfo } from "./model/vray_spawner_info";
@@ -36,7 +34,7 @@ export interface IDatabase {
     storeWorker(worker: Worker): Promise<boolean>;
     updateWorker(worker: Worker): Promise<Worker>;
 
-    getWorker(sessionGuid: string): Promise<WorkerInfo>;
+    // getWorker(sessionGuid: string): Promise<WorkerInfo>;
     deleteDeadWorkers(): Promise<number>;
 
     storeVraySpawner(vraySpawnerInfo: VraySpawnerInfo): Promise<VraySpawnerInfo>;
@@ -99,5 +97,5 @@ export interface IMaxscriptClientFactory {
 }
 
 export interface IWorkerHeartbeatListener {
-    Listen(workerCb: (worker: WorkerInfo) => void, spawnerCb: (spawner: VraySpawnerInfo) => void): void;
+    Listen(workerCb: (worker: Worker) => void, spawnerCb: (spawner: VraySpawnerInfo) => void): void;
 }

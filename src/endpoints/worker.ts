@@ -3,7 +3,6 @@ import * as express from "express";
 import { IEndpoint, IDatabase, IWorkerHeartbeatListener, ISettings } from "../interfaces";
 import { TYPES } from "../types";
 import { isString } from "util";
-import { WorkerInfo } from "../model/worker_info";
 import { VraySpawnerInfo } from "../model/vray_spawner_info";
 import { Worker } from "../database/model/worker";
 

@@ -2,7 +2,6 @@ import { injectable, inject } from "inversify";
 import * as express from "express";
 import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings } from "../interfaces";
 import { TYPES } from "../types";
-import { WorkerInfo } from "../model/worker_info";
 
 @injectable()
 class SessionEndpoint implements IEndpoint {
@@ -105,8 +104,9 @@ class SessionEndpoint implements IEndpoint {
 
             await this._database.startWorkerSession(apiKey, newSessionGuid)
                 .then(async function(value) {
-                    
-                    let workerInfo = WorkerInfo.fromJSON(value.worker);
+                    throw Error("POST on /session is inconclusive");
+                    let workerInfo: any = {};
+                    // let workerInfo = WorkerInfo.fromJSON(value.worker);
                     console.log(`    OK | session ${value.session.guid} assigned to worker ${value.worker.mac}`);
 
                     this._database.getWorkspace(workspaceGuid)

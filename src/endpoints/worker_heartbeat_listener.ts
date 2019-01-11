@@ -1,20 +1,20 @@
 import { injectable, inject } from "inversify";
-import { WorkerInfo } from "../model/worker_info";
 import { VraySpawnerInfo } from "../model/vray_spawner_info";
 import { IWorkerHeartbeatListener, ISettings } from "../interfaces";
 import { TYPES } from "../types";
+import { Worker } from "../database/model/worker";
 
 @injectable()
 export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
     private _workers: {
-        [id: string]: WorkerInfo;
+        [id: string]: Worker;
     } = {};
 
     private _vraySpawners: {
         [id: string]: VraySpawnerInfo;
     } = {};
 
-    private _workerCb: (worker: WorkerInfo) => void;
+    private _workerCb: (worker: Worker) => void;
     private _spawnerCb: (worker: VraySpawnerInfo) => void;
 
     private _settings: ISettings;
@@ -24,7 +24,7 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
         this._settings = settings;
     }
 
-    public Listen(workerCb: (worker: WorkerInfo) => void, spawnerCb: (spawner: VraySpawnerInfo) => void) {
+    public Listen(workerCb: (worker: Worker) => void, spawnerCb: (spawner: VraySpawnerInfo) => void) {
         this._workerCb = workerCb;
         this._spawnerCb = spawnerCb;
         const dgram = require('dgram');
@@ -57,7 +57,6 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
             knownWorker.cpuUsage = rec.cpu_usage;
             knownWorker.ramUsage = rec.ram_usage;
             knownWorker.totalRam = rec.total_ram;
-            knownWorker.touch();
 
             if (this._workerCb) {
                 this._workerCb(knownWorker);
@@ -65,7 +64,12 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
         }
         else {
             // all who report into this api belongs to current workgroup
-            let newWorker = new WorkerInfo(rec.mac, rinfo.address, rec.port, this._settings.current.workgroup);
+            let newWorker = new Worker(null);
+            // rec.mac, rinfo.address, rec.port, this._settings.current.workgroup
+            newWorker.mac = rec.mac;
+            newWorker.ip = rinfo.address;
+            newWorker.port = rec.port;
+            newWorker.workgroup = this._settings.current.workgroup;
             newWorker.cpuUsage = rec.cpu_usage;
             newWorker.ramUsage = rec.ram_usage;
             newWorker.totalRam = rec.total_ram;

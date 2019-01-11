@@ -7,7 +7,6 @@ import { injectable, inject } from "inversify";
 import { IDatabase, ISettings } from "../interfaces"
 
 import assert = require("assert");
-import { WorkerInfo } from "../model/worker_info";
 import { WorkspaceInfo } from "../model/workspace_info";
 import { JobInfo } from "../model/job_info";
 import { VraySpawnerInfo } from "../model/vray_spawner_info";
@@ -442,9 +441,9 @@ export class Database implements IDatabase {
         return this.findOneAndUpdate<Worker>("workers", worker.filter, worker.toJSON(), obj => new Worker(obj));
     }
 
-    public getWorker(sessionGuid: string): Promise<WorkerInfo> {
+    public getWorker(sessionGuid: string): Promise<Worker> {
         //todo: get rid off Promise here
-        return new Promise<WorkerInfo>(function (resolve, reject) {
+        return new Promise<Worker>(function (resolve, reject) {
             if (sessionGuid === undefined || sessionGuid === "" || sessionGuid === null) {
                 reject("getWorker: session id is empty");
             }
@@ -490,10 +489,12 @@ export class Database implements IDatabase {
                 await db.collection(this.envCollectionName("sessions")).updateOne(
                     { guid: sessionGuid },
                     { $set: { lastSeen : new Date() } });
+                
+                throw Error("getWorker not implemented");
 
-                let worker = WorkerInfo.fromJSON(res[0].worker);
-                console.log(`getWorker: found a worker for session ${sessionGuid}: ${JSON.stringify(worker)}`);
-                resolve(worker);
+                // let worker = Worker.fromJSON(res[0].worker);
+                // console.log(`getWorker: found a worker for session ${sessionGuid}: ${JSON.stringify(worker)}`);
+                // resolve(worker);
             }.bind(this));
         }.bind(this));
     }
@@ -550,29 +551,27 @@ export class Database implements IDatabase {
     //#endregion
 
     //#region Jobs
-    public storeJob(jobInfo: JobInfo): Promise<JobInfo> {
-        //todo: get rid off Promise here
-        return new Promise<JobInfo>(function (resolve, reject) {
-            let db = this._client.db(this._settings.current.databaseName);
-            assert.notEqual(db, null);
-    
-            let jobJson = jobInfo.toDatabase();
-    
-            db.collection(this.envCollectionName("jobs")).findOneAndUpdate(
-                { guid: jobInfo.guid },
-                { $set: jobJson },
-                { returnOriginal: false, upsert: true })
-                .then(function(obj) {
-                    if (obj.value) {
-                        resolve(WorkerInfo.fromJSON(obj.value));
-                    } else {
-                        reject(`unable to find job with guid ${jobInfo.guid}`);
-                    }
-                }.bind(this))
-                .catch(function(err) {
-                    reject(err);
-                }.bind(this));
-        }.bind(this));
+    public async storeJob(jobInfo: JobInfo): Promise<JobInfo> {
+        throw Error("storeJob not implemented");
+        let db = this._client.db(this._settings.current.databaseName);
+        assert.notEqual(db, null);
+
+        let jobJson = jobInfo.toDatabase();
+
+        db.collection(this.envCollectionName("jobs")).findOneAndUpdate(
+            { guid: jobInfo.guid },
+            { $set: jobJson },
+            { returnOriginal: false, upsert: true })
+            .then(function(obj) {
+                if (obj.value) {
+                    // resolve(WorkerInfo.fromJSON(obj.value));
+                } else {
+                    // reject(`unable to find job with guid ${jobInfo.guid}`);
+                }
+            }.bind(this))
+            .catch(function(err) {
+                // reject(err);
+            }.bind(this));
     }
 
     public getJob(jobGuid: string): Promise<JobInfo> {
