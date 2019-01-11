@@ -5,8 +5,8 @@ module.exports = {
         host: "localhost",
         port: 8000,
         publicUrl: "https://localhost:8000",
-        workerManagerPort: 17900,
-        heartbeatPort: 3000,
+        workerManagerPort: 17900, //WorkerManager REST API is hosted on this port
+        heartbeatPort: 3000, //renderfarmjs-server API collects UDP heartbeats on this port
         sslKey: "ssl/key.pem",
         sslCert: "ssl/cert.pem",
         renderOutputDir: "C:\\Temp",
