@@ -53,7 +53,9 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
     private handleHeartbeatFromRemoteMaxscript(msg, rinfo, rec) {
         var workerId = rec.mac + rec.port;
         let knownWorker = this._workers[workerId];
+
         if (knownWorker !== undefined) { // update existing record
+            knownWorker.lastSeen = new Date();
             knownWorker.cpuUsage = rec.cpu_usage;
             knownWorker.ramUsage = rec.ram_usage;
             knownWorker.totalRam = rec.total_ram;
@@ -65,14 +67,16 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
         else {
             // all who report into this api belongs to current workgroup
             let newWorker = new Worker(null);
-            // rec.mac, rinfo.address, rec.port, this._settings.current.workgroup
             newWorker.mac = rec.mac;
             newWorker.ip = rinfo.address;
             newWorker.port = rec.port;
+            newWorker.firstSeen = new Date();
+            newWorker.lastSeen = new Date();
             newWorker.workgroup = this._settings.current.workgroup;
             newWorker.cpuUsage = rec.cpu_usage;
             newWorker.ramUsage = rec.ram_usage;
             newWorker.totalRam = rec.total_ram;
+
             this._workers[workerId] = newWorker;
 
             if (this._workerCb) {
