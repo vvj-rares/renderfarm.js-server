@@ -25,7 +25,7 @@ describe("SessionEndpoint", function() {
         console.log = consoleLog;
     })
 
-    beforeEach(function() {
+    /* beforeEach(function() {
 
         settings = new Settings("test");
         database = jasmine.createSpyObj("database", ["getApiKey", "getWorkspace", "startWorkerSession", "assignSessionWorkspace"]);
@@ -132,5 +132,5 @@ describe("SessionEndpoint", function() {
         await postHandler["/v1/session"](req, res);
 
         //todo: test also res status code and response
-    }.bind({ }));
+    }.bind({ })); */
 });
