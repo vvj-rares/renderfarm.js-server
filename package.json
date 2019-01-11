@@ -26,7 +26,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "tsc & jasmine --config=jasmine.json"
+    "test": "tsc & jasmine --config=jasmine.json",
+    "test-dev": "tsc & jasmine --config=jasmine.depl.json"
   },
   "repository": {
     "type": "git",
