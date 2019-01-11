@@ -1,5 +1,5 @@
 module.exports = {
-    version: "1.0.3",
+    version: "1.0.0",
     common: {
         workgroup: "default",
         host: "localhost",
@@ -9,8 +9,8 @@ module.exports = {
         heartbeatPort: 3000,
         sslKey: "ssl/key.pem",
         sslCert: "ssl/cert.pem",
-        renderOutputDir: "C:\\\\Temp",
-        renderOutputLocal: "C:\\\\Temp",
+        renderOutputDir: "C:\\Temp",
+        renderOutputLocal: "C:\\Temp",
         apiKeyCheck: true,
         workspaceCheck: true,
         deleteDeadWorkers: true,
@@ -42,8 +42,8 @@ module.exports = {
         heartbeatPort: 3000,
         sslKey: "ssl/key.pem",
         sslCert: "ssl/cert.pem",
-        renderOutputDir: "C:\\\\Temp",
-        renderOutputLocal: "C:\\\\Temp",
+        renderOutputDir: "C:\\Temp",
+        renderOutputLocal: "C:\\Temp",
         apiKeyCheck: true,
         workspaceCheck: true,
         deleteDeadWorkers: true,

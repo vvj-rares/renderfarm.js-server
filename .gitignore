@@ -4,3 +4,4 @@ letsencrypt/
 package-lock.json
 
 app.settings.ts
+ftp_settings.js
