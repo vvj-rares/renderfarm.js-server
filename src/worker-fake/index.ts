@@ -43,8 +43,12 @@ setInterval(function() {
         
         // console.log(`to: ${settings.current.host}:${settings.current.heartbeatPort} ${hbstr}`);
         client.send(message, settings.current.heartbeatPort, settings.current.host, (err) => {
-            client.close();
-            client = undefined;
+            if (err) {
+                if (client) {
+                    client.close();
+                    client = null;
+                }
+            }
         });
     }
 }, 1000);
