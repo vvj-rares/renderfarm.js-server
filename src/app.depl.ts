@@ -2,7 +2,7 @@ import "reflect-metadata";
 import axios from "axios";
 import { Settings } from "./settings";
 
-require("../jasmine.config")();
+require("./jasmine.config")();
 
 describe(`Api`, function() {
     var settings: Settings;
