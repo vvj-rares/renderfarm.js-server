@@ -92,5 +92,31 @@ describe("Database Worker", function() {
             expect(worker.ramUsage).toBe(newWorker.ramUsage);
             expect(worker.totalRam).toBe(newWorker.totalRam);
         })
+
+        it("checks that available and recent workers are returned correctly", async function() {
+            let worker0 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
+            let worker1 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
+            let worker2 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
+
+            worker1.firstSeen = new Date( worker1.firstSeen.getTime() - 90*1000 ); // 90sec ago
+            worker1.lastSeen = new Date( worker1.lastSeen.getTime() - 61*1000 ); // 61sec ago
+
+            worker2.firstSeen = new Date( worker2.firstSeen.getTime() - 120*1000 ); // 120sec ago
+            worker2.lastSeen = new Date( worker2.lastSeen.getTime() - 3*1000 ); // 3sec ago
+
+            let stored0 = await database.storeWorker(worker0);
+            expect(stored0).toBeTruthy();
+            let stored1 = await database.storeWorker(worker1);
+            expect(stored1).toBeTruthy();
+            let stored2 = await database.storeWorker(worker2);
+            expect(stored2).toBeTruthy();
+
+            let availableWorkers = await database.getAvailableWorkers();
+            expect(availableWorkers.length).toBe(1);
+            expect(availableWorkers[0].guid).toBe(worker0.guid);
+
+            let recentWorkers = await database.getRecentWorkers();
+            expect(recentWorkers.length).toBe(3);
+        })
     }); // end of write tests
 });

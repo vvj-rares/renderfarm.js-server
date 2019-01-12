@@ -42,6 +42,8 @@ export class JasmineHelpers {
         newWorker.mac = mac;
         newWorker.ip = ip;
         newWorker.port = port;
+        newWorker.firstSeen = new Date();
+        newWorker.lastSeen = new Date();
         newWorker.workgroup = "default";
         newWorker.cpuUsage = cpuUsage !== undefined ? cpuUsage : Math.random();
         newWorker.ramUsage = Math.random();
