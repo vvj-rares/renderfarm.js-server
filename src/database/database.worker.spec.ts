@@ -9,17 +9,26 @@ require("../jasmine.config")();
 const uuidv4 = require('uuid/v4');
 
 describe("Database Worker", function() {
+    var originalTimeout;
+
     var settings: Settings;
     var database: Database;
     var helpers: JasmineHelpers;
 
     beforeEach(async function() {
+        originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
+
         settings = new Settings("test");
         database = new Database(settings);
         helpers = new JasmineHelpers(database, settings);
         await database.connect();
         await database.dropAllCollections(/_testrun\d+/);
         await database.disconnect();
+    });
+
+    afterEach(function() {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
     });
 
     describe("read-only test", function() {
@@ -93,7 +102,7 @@ describe("Database Worker", function() {
             expect(worker.totalRam).toBe(newWorker.totalRam);
         })
 
-        it("checks that available and recent workers are returned correctly", async function() {
+        async function createOnlineAndOfflineWorkers(): Promise<Worker[]> {
             let worker0 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
             let worker1 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
             let worker2 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
@@ -111,12 +120,33 @@ describe("Database Worker", function() {
             let stored2 = await database.storeWorker(worker2);
             expect(stored2).toBeTruthy();
 
+            return [
+                worker0, // must be online, with most recent lastSeen
+                worker1, // must be older than "dead threshold"
+                worker2  // must be "most recent, but yet considered offline"
+            ];
+        }
+
+        it("checks that available and recent workers are returned correctly", async function() {
+            let workers = await createOnlineAndOfflineWorkers();
+
             let availableWorkers = await database.getAvailableWorkers();
             expect(availableWorkers.length).toBe(1);
-            expect(availableWorkers[0].guid).toBe(worker0.guid);
+            expect(availableWorkers[0].guid).toBe(workers[0].guid);
 
             let recentWorkers = await database.getRecentWorkers();
             expect(recentWorkers.length).toBe(3);
         })
+
+        it("checks that old workers are removed from the database", async function() {
+            let workers = await createOnlineAndOfflineWorkers();
+
+            let recentWorkers = await database.getRecentWorkers();
+            expect(recentWorkers.length).toBe(3);
+
+            let deleted = await database.deleteDeadWorkers();
+            expect(deleted).toBe(1);
+        })
+
     }); // end of write tests
 });

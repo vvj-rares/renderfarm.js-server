@@ -74,8 +74,12 @@ describe("Database Session", function() {
 
     describe("write test", function() {
         var collectionPrefix: string;
+        var originalTimeout;
 
         beforeEach(async function() {
+            originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
+            jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
+    
             var randomPart = Math.round(9e9 * Math.random()).toFixed(0);
             collectionPrefix = `_testrun${randomPart}`;
             settings = new Settings("test");
@@ -86,7 +90,9 @@ describe("Database Session", function() {
         })
     
         afterEach(async function() {
-            await database.dropCollections();
+            jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
+
+            // await database.dropCollections();
             await database.disconnect();
         })
 
@@ -176,17 +182,33 @@ describe("Database Session", function() {
             expect(expiredSessions[0].workerRef.guid).toBe(newWorker.guid);
         })
 
-        it("checks that workers with less CPU load are grabbed first", async function() {
-            await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.9);
-            await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.1);
-            await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.3);
-            await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.5);
+        fit("checks that workers with less CPU load are grabbed first", async function() {
+            let worker0 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.9);
+            let worker1 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.1);
+            let worker2 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.3);
+            let worker3 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.5);
 
             let workspace = await helpers.createSomeWorkspace();
 
+            await helpers.touchWorkers(worker0, worker1, worker2, worker3);
             let session0 = await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
+            let av0 = await database.getAvailableWorkers();
+            console.log(av0.length);
+
+            await helpers.touchWorkers(worker0, worker1, worker2, worker3);
             let session1 = await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
+            let av1 = await database.getAvailableWorkers();
+            console.log(av1.length);
+
+            await helpers.touchWorkers(worker0, worker1, worker2, worker3);
             let session2 = await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
+            let av2 = await database.getAvailableWorkers();
+            console.log(av2.length);
+
+            fail();
+            return;
+
+            await helpers.touchWorkers(worker0, worker1, worker2, worker3);
             let session3 = await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
 
             let grabbedWorker0 = await database.getOne<Worker>("workers", { sessionGuid: session0.guid }, obj => new Worker(obj));

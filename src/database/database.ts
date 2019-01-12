@@ -186,14 +186,19 @@ export class Database implements IDatabase {
 
         // pick only the workers who were seen not less than 2 seconds ago
         let workers = await this.getAvailableWorkers();
+        console.log(" >> createSession, getAvailableWorkers returned: ", workers.length);
 
         // this will prevent multiple worker assignment, if top most worker was set busy = true,
         // then we just pick underlying least loaded worker.
         for(let wi in workers) {
             let candidate = workers[wi];
+            console.log(`    candidate ${wi}: ${candidate.guid}`);
             let createdSession = await this.tryCreateSessionAtWorker(apiKey, workspace, candidate);
             if (createdSession) {
+                console.log(`    OK! ${wi}: ${candidate.guid}, assigned session: ${createdSession.guid}`);
                 return createdSession;
+            } else {
+                console.log(`  MISS! ${wi}: ${candidate.guid}, worker was busy`);
             }
         }
 
@@ -202,11 +207,13 @@ export class Database implements IDatabase {
 
     private async tryCreateSessionAtWorker(apiKey: string, workspace: Workspace, candidate: Worker): Promise<Session> {
         try {
+            console.log(" >> tryCreateSessionAtWorker: ", candidate.guid);
+
             let recentOnlineDate = new Date(Date.now() - 2 * 1000);
-            let filter: any = { 
+            let filter: any = {
                 workgroup: this._settings.current.workgroup,
                 lastSeen : { $gte: recentOnlineDate },
-                sessionGuid: null,
+                sessionGuid: { $eq: null },
                 guid: candidate.guid
             };
             let sessionGuid = uuidv4();
@@ -215,8 +222,14 @@ export class Database implements IDatabase {
                 lastSeen: new Date() 
             } };
 
-            let self = this as Database;
-            let caputuredWorker = await self.findOneAndUpdate<Worker>("workers", filter, setter, (obj: any) => new Worker(obj));
+            let workersBefore = await this.getAvailableWorkers();
+            console.log(" >> this.getAvailableWorkers BEFORE: ", workersBefore.length, " << end of available workers");
+
+            let caputuredWorker = await this.findOneAndUpdate<Worker>("workers", filter, setter, (obj: any) => new Worker(obj));
+            console.log(" >> caputuredWorker: ", caputuredWorker.guid, "\r\n\r\n");
+
+            let workersAfter = await this.getAvailableWorkers();
+            console.log(" >> this.getAvailableWorkers AFTER: ", workersAfter.length, " << end of available workers");
 
             let session = new Session(null);
             session.apiKey = apiKey;
@@ -226,7 +239,7 @@ export class Database implements IDatabase {
             session.workerGuid = caputuredWorker.guid;
             session.workspaceGuid = workspace.guid;
 
-            let result = await self.insertOne<Session>("sessions", session, obj => new Session(obj));
+            let result = await this.insertOne<Session>("sessions", session, obj => new Session(obj));
             result.workerRef = caputuredWorker;
             result.workspaceRef = workspace;
             return result;
@@ -331,10 +344,12 @@ export class Database implements IDatabase {
         let result = await db.collection(this.envCollectionName("workers")).find({ 
             workgroup: { $eq: this._settings.current.workgroup },
             lastSeen : { $gte: recentOnlineDate },
-            sessionGuid: null
+            sessionGuid: { $eq: null }
         }).sort({
             cpuUsage: 1 //sort by cpu load, less loaded first
         }).toArray();
+
+        console.log(result, "\r\n");
 
         return result.map(e => new Worker(e));
     }
@@ -459,13 +474,11 @@ export class Database implements IDatabase {
         let db = this._client.db(this._settings.current.databaseName);
         assert.notEqual(db, null);
 
-        let arr = await db.collection(this.envCollectionName(collection)).find({}).toArray();
-
         let obj = await db.collection(this.envCollectionName(collection)).findOneAndUpdate(
             filter,
             setter,
             { returnOriginal: false });
-        
+
         if (obj.ok === 1 && obj.value) {
             return ctor(obj.value);
         } else {

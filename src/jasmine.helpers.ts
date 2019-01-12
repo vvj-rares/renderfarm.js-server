@@ -7,7 +7,6 @@ import { Session } from "./database/model/session";
 const uuidv4 = require('uuid/v4');
 
 export class JasmineHelpers {
-
     public existingApiKey: string = "0000-0001";
     public existingUserGuid: string = "00000000-0000-0000-0000-000000000001";
     public existingSessionGuid: string = "00000000-1111-0000-0000-000000000001";
@@ -54,6 +53,13 @@ export class JasmineHelpers {
         expect(isWorkerStored).toBeTruthy();
 
         return newWorker;
+    }
+
+    public touchWorkers = async function(...workers: Worker[]) {
+        for(let wi in workers) {
+            workers[wi].lastSeen = new Date();
+            await this.database.storeWorker(workers[wi]);
+        }
     }
 
     public async createSomeWorkspace() {
