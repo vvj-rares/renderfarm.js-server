@@ -49,14 +49,12 @@ export class JasmineHelpers {
         newWorker.totalRam = 32;
 
         // add fresh worker for the session
-        await this.database.insertWorker(newWorker);
-
-        return newWorker;
+        return this.database.insertWorker(newWorker);
     }
 
     public async touchWorkers(...workers: Worker[]) {
         for(let wi in workers) {
-            await this.database.updateOne<Worker>(
+            await this.database.updateOne(
                 "workers",
                 { guid: workers[wi].guid },
                 { $set: { lastSeen: new Date() } });
@@ -73,8 +71,6 @@ export class JasmineHelpers {
         newWorkspace.name = "Test Workspace";
 
         // add fresh worker for the session
-        await this.database.insertOne<Workspace>("workspaces", newWorkspace, obj => new Workspace(obj));
-
-        return newWorkspace;
+        return this.database.insertOne<Workspace>("workspaces", newWorkspace, obj => new Workspace(obj));
     }
 }

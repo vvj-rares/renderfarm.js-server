@@ -2,7 +2,7 @@
 
 import "reflect-metadata";
 
-import { MongoClient } from "mongodb";
+import { MongoClient, CollectionInsertOneOptions } from "mongodb";
 import { injectable, inject } from "inversify";
 import { IDatabase, ISettings } from "../interfaces"
 
@@ -472,7 +472,8 @@ export class Database implements IDatabase {
         let db = this._client.db(this._settings.current.databaseName);
         assert.notEqual(db, null);
 
-        let obj = await db.collection(this.envCollectionName(collection)).insertOne(entity.toJSON());
+        let opt: CollectionInsertOneOptions = { w: 1 };
+        let obj = await db.collection(this.envCollectionName(collection)).insertOne(entity.toJSON(), opt);
 
         if (obj.result.ok === 1 && obj.insertedCount === 1) {
             return ctor(obj.ops[0]);
@@ -481,7 +482,7 @@ export class Database implements IDatabase {
         }
     }
 
-    public async updateOne<T extends IDbEntity>(collection: string, filter: any, setter: any): Promise<boolean> {
+    public async updateOne(collection: string, filter: any, setter: any): Promise<boolean> {
         await this.ensureClientConnection();
 
         let db = this._client.db(this._settings.current.databaseName);
