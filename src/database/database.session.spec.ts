@@ -181,6 +181,10 @@ describe("Database Session", function() {
             expect(session.workerRef.guid).toBe(session.workerGuid);
             expect(session.workerRef.sessionGuid).toBe(session.guid);
 
+            // and check that ref on assigned workspace was correctly resolved
+            expect(session.workspaceRef).toBeTruthy();
+            expect(session.workspaceRef.guid).toBe(workspace.guid);
+
             let worker = await database.getOne<Worker>("workers", { guid: newWorker.guid }, obj => new Worker(obj));
 
             // now check that worker is correctly initialized, and has assigned session
