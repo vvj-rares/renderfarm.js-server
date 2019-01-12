@@ -1,4 +1,5 @@
 import { Settings } from "../settings";
+import { isFunction } from "util";
 
 const dgram = require('dgram');
 
@@ -56,7 +57,9 @@ setInterval(function() {
 //let it run until Ctrl+C
 const readline = require('readline');
 readline.emitKeypressEvents(process.stdin);
-process.stdin.setRawMode(true);
+if (isFunction(process.stdin.setRawMode)) {
+    process.stdin.setRawMode(true);
+}
 process.stdin.on('keypress', (str, key) => {
     if (key.ctrl && key.name === 'c') {
         process.exit();
