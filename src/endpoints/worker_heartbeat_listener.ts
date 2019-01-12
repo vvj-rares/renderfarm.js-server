@@ -4,6 +4,8 @@ import { IWorkerHeartbeatListener, ISettings } from "../interfaces";
 import { TYPES } from "../types";
 import { Worker } from "../database/model/worker";
 
+const uuidv4 = require('uuid/v4');
+
 @injectable()
 export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
     private _workers: {
@@ -67,6 +69,7 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
         else {
             // all who report into this api belongs to current workgroup
             let newWorker = new Worker(null);
+            newWorker.guid = uuidv4();
             newWorker.mac = rec.mac;
             newWorker.ip = rinfo.address;
             newWorker.port = rec.port;
