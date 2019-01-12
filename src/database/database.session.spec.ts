@@ -92,7 +92,7 @@ describe("Database Session", function() {
         afterEach(async function() {
             jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
 
-            // await database.dropCollections();
+            await database.dropCollections();
             await database.disconnect();
         })
 
@@ -262,7 +262,7 @@ describe("Database Session", function() {
 
             //make worker Offline
             let firstSeen = new Date(new Date().getTime() - 3000); // 3 seconds back
-            let lastSeen  = new Date(new Date().getTime() - 2000); // 2 seconds back
+            let lastSeen  = new Date(new Date().getTime() - 2001); // 2.001 seconds back
 
             let offlineWorker = await database.findOneAndUpdate(
                 "workers", 
