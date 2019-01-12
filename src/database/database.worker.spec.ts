@@ -62,7 +62,7 @@ describe("Database Worker", function() {
             await database.disconnect();
         })
 
-        fit("checks that worker was correctly persisted", async function() {
+        it("checks that worker was correctly persisted", async function() {
             let newWorker = new Worker(null);
             newWorker.guid = uuidv4();
             newWorker.ip = helpers.rndIp();
