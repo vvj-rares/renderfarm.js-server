@@ -10,7 +10,9 @@ export class Workspace extends IDbEntity {
 
     constructor(obj: any) {
         super();
-        this.parse(obj);
+        if (obj) {
+            this.parse(obj);
+        }
     }
 
     public parse(obj: any) {

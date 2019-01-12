@@ -54,7 +54,7 @@ export class WorkerEndpoint implements IEndpoint {
     }
 
     private onSpawnerUpdate(spawner: VraySpawnerInfo) {
-        this._database.storeVraySpawner(spawner);
+        // this._database.storeVraySpawner(spawner);
     }
 
     private async tryDeleteDeadWorkers() {

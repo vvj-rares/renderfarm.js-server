@@ -2,7 +2,6 @@
 
 import * as express from "express";
 import { WorkspaceInfo } from "./model/workspace_info";
-import { JobInfo } from "./model/job_info";
 import { VraySpawnerInfo } from "./model/vray_spawner_info";
 import { ApiKey } from "./database/model/api_key";
 import { Workspace } from "./database/model/workspace";
@@ -24,10 +23,6 @@ export interface IDatabase {
     expireSessions(olderThanMinutes: number): Promise<Session[]>;
     closeSession(sessionGuid: string): Promise<Session>;
 
-    //do we need them?
-    assignSessionWorkspace(sessionGuid: string, workspaceGuid: string): Promise<boolean>;
-    getSessionWorkspace(sessionGuid: string): Promise<WorkspaceInfo>;
-
     //workspaces
     getWorkspace(workspaceGuid: string): Promise<Workspace>;
 
@@ -37,11 +32,11 @@ export interface IDatabase {
     // getWorker(sessionGuid: string): Promise<WorkerInfo>;
     deleteDeadWorkers(): Promise<number>;
 
-    storeVraySpawner(vraySpawnerInfo: VraySpawnerInfo): Promise<VraySpawnerInfo>;
+    //storeVraySpawner(vraySpawnerInfo: VraySpawnerInfo): Promise<VraySpawnerInfo>;
 
-    storeJob(jobInfo: JobInfo): Promise<JobInfo>;
-    getJob(jobGuid: string): Promise<JobInfo>;
-    getSessionActiveJobs(sessionGuid: string): Promise<JobInfo[]>;
+    //storeJob(jobInfo: JobInfo): Promise<JobInfo>;
+    //getJob(jobGuid: string): Promise<JobInfo>;
+    //getSessionActiveJobs(sessionGuid: string): Promise<JobInfo[]>;
 }
 
 export interface ISettings {

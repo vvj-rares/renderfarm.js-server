@@ -1,5 +1,6 @@
 import { IDbEntity } from "./base/IDbEntity";
 import { Worker } from "./worker";
+import { Workspace } from "./workspace";
 
 export class Session extends IDbEntity {
     public apiKey: string;
@@ -13,6 +14,7 @@ export class Session extends IDbEntity {
     public closedAt?: Date;
 
     public workerRef?: Worker;
+    public workspaceRef?: Workspace;
 
     constructor(obj: any) {
         super();

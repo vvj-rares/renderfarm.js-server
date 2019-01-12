@@ -7,9 +7,6 @@ import { injectable, inject } from "inversify";
 import { IDatabase, ISettings } from "../interfaces"
 
 import assert = require("assert");
-import { WorkspaceInfo } from "../model/workspace_info";
-import { JobInfo } from "../model/job_info";
-import { VraySpawnerInfo } from "../model/vray_spawner_info";
 import { ApiKey } from "./model/api_key";
 import { IDbEntity } from "./model/base/IDbEntity";
 import { Workspace } from "./model/workspace";
@@ -50,104 +47,88 @@ export class Database implements IDatabase {
         }
     }
 
-    public createCollections(): Promise<any> {
-        return new Promise<any>(async function(resolve, reject) {
-            try {
-                let db = this._client.db(this._settings.current.databaseName);
-                assert.notEqual(db, null);
+    public async createCollections(): Promise<any> {
+        let db = this._client.db(this._settings.current.databaseName);
+        assert.notEqual(db, null);
 
-                let collections = await db.listCollections().toArray();
+        let collections = await db.listCollections().toArray();
 
-                let users = this.envCollectionName("users"); 
-                if (!collections.find(e => e.name === users)) {
-                    await db.createCollection(users);
-                }
+        let users = this.envCollectionName("users"); 
+        if (!collections.find(e => e.name === users)) {
+            await db.createCollection(users);
+        }
 
-                let apiKeys = this.envCollectionName("api-keys");
-                if (!collections.find(e => e.name === apiKeys)) {
-                    await db.createCollection(apiKeys);
-                }
+        let apiKeys = this.envCollectionName("api-keys");
+        if (!collections.find(e => e.name === apiKeys)) {
+            await db.createCollection(apiKeys);
+        }
 
-                let sessions = this.envCollectionName("sessions");
-                if (!collections.find(e => e.name === sessions)) {
-                    await db.createCollection(sessions);
-                }
+        let sessions = this.envCollectionName("sessions");
+        if (!collections.find(e => e.name === sessions)) {
+            await db.createCollection(sessions);
+        }
 
-                let workspaces = this.envCollectionName("workspaces");
-                if (!collections.find(e => e.name === workspaces)) {
-                    await db.createCollection(workspaces);
-                }
+        let workspaces = this.envCollectionName("workspaces");
+        if (!collections.find(e => e.name === workspaces)) {
+            await db.createCollection(workspaces);
+        }
 
-                let workers = this.envCollectionName("workers");
-                if (!collections.find(e => e.name === workers)) {
-                    await db.createCollection(workers);
-                }
+        let workers = this.envCollectionName("workers");
+        if (!collections.find(e => e.name === workers)) {
+            await db.createCollection(workers);
+        }
 
-                let vraySpawners = this.envCollectionName("vray-spawners");
-                if (!collections.find(e => e.name === vraySpawners)) {
-                    await db.createCollection(vraySpawners);
-                }
+        let vraySpawners = this.envCollectionName("vray-spawners");
+        if (!collections.find(e => e.name === vraySpawners)) {
+            await db.createCollection(vraySpawners);
+        }
 
-                let jobs = this.envCollectionName("jobs");
-                if (!collections.find(e => e.name === jobs)) {
-                    await db.createCollection(jobs);
-                }
-
-                resolve();
-            } catch (err) {
-                reject(err);
-            }
-        }.bind(this));
+        let jobs = this.envCollectionName("jobs");
+        if (!collections.find(e => e.name === jobs)) {
+            await db.createCollection(jobs);
+        }
     }
 
-    public dropCollections(): Promise<any> {
-        return new Promise<any>(async function(resolve, reject) {
-            try {
-                let db = this._client.db(this._settings.current.databaseName);
-                assert.notEqual(db, null);
+    public async dropCollections(): Promise<any> {
+        let db = this._client.db(this._settings.current.databaseName);
+        assert.notEqual(db, null);
 
-                let collections = await db.listCollections().toArray();
+        let collections = await db.listCollections().toArray();
 
-                let users = this.envCollectionName("users"); 
-                if (collections.find(e => e.name === users)) {
-                    await db.collection(users).drop();
-                }
+        let users = this.envCollectionName("users"); 
+        if (collections.find(e => e.name === users)) {
+            await db.collection(users).drop();
+        }
 
-                let apiKeys = this.envCollectionName("api-keys");
-                if (collections.find(e => e.name === apiKeys)) {
-                    await db.collection(apiKeys).drop();
-                }
+        let apiKeys = this.envCollectionName("api-keys");
+        if (collections.find(e => e.name === apiKeys)) {
+            await db.collection(apiKeys).drop();
+        }
 
-                let sessions = this.envCollectionName("sessions");
-                if (collections.find(e => e.name === sessions)) {
-                    await db.collection(sessions).drop();
-                }
+        let sessions = this.envCollectionName("sessions");
+        if (collections.find(e => e.name === sessions)) {
+            await db.collection(sessions).drop();
+        }
 
-                let workspaces = this.envCollectionName("workspaces");
-                if (collections.find(e => e.name === workspaces)) {
-                    await db.collection(workspaces).drop();
-                }
+        let workspaces = this.envCollectionName("workspaces");
+        if (collections.find(e => e.name === workspaces)) {
+            await db.collection(workspaces).drop();
+        }
 
-                let workers = this.envCollectionName("workers");
-                if (collections.find(e => e.name === workers)) {
-                    await db.collection(workers).drop();
-                }
+        let workers = this.envCollectionName("workers");
+        if (collections.find(e => e.name === workers)) {
+            await db.collection(workers).drop();
+        }
 
-                let vraySpawners = this.envCollectionName("vray-spawners");
-                if (collections.find(e => e.name === vraySpawners)) {
-                    await db.collection(vraySpawners).drop();
-                }
+        let vraySpawners = this.envCollectionName("vray-spawners");
+        if (collections.find(e => e.name === vraySpawners)) {
+            await db.collection(vraySpawners).drop();
+        }
 
-                let jobs = this.envCollectionName("jobs");
-                if (collections.find(e => e.name === jobs)) {
-                    await db.collection(jobs).drop();
-                }
-
-                resolve();
-            } catch (err) {
-                reject(err);
-            }
-        }.bind(this));
+        let jobs = this.envCollectionName("jobs");
+        if (collections.find(e => e.name === jobs)) {
+            await db.collection(jobs).drop();
+        }
     }
 
     public async dropAllCollections(regex: RegExp): Promise<number> {
@@ -170,21 +151,21 @@ export class Database implements IDatabase {
     //#endregion
 
     //#region Api Keys
-    public getApiKey(apiKey: string): Promise<ApiKey> {
-        return this.getOneAndUpdate<ApiKey>(
+    public async getApiKey(apiKey: string): Promise<ApiKey> {
+        return await this.findOneAndUpdate<ApiKey>(
             "api-keys", 
             { apiKey: apiKey },
-            { lastSeen: new Date() },
+            { $set: { lastSeen: new Date() } },
             (obj) => new ApiKey(obj));
     }
     //#endregion
 
     //#region Sessions
     public async getSession(sessionGuid: string): Promise<Session> {
-        let session = await this.getOneAndUpdate<Session>(
+        let session = await this.findOneAndUpdate<Session>(
             "sessions", 
             { guid: sessionGuid, closed: { $ne: true } },
-            { lastSeen: new Date() },
+            { $set: { lastSeen: new Date() } },
             (obj) => new Session(obj));
 
         session.workerRef = await this.getOne<Worker>(
@@ -201,6 +182,8 @@ export class Database implements IDatabase {
         let db = this._client.db(this._settings.current.databaseName);
         assert.notEqual(db, null);
 
+        let workspace = await this.getWorkspace(workspaceGuid);
+
         // pick only the workers who were seen not less than 2 seconds ago
         let workers = await this.getAvailableWorkers();
 
@@ -208,7 +191,7 @@ export class Database implements IDatabase {
         // then we just pick underlying least loaded worker.
         for(let wi in workers) {
             let candidate = workers[wi];
-            let createdSession = await this.tryCreateSessionAtWorker(apiKey, workspaceGuid, candidate);
+            let createdSession = await this.tryCreateSessionAtWorker(apiKey, workspace, candidate);
             if (createdSession) {
                 return createdSession;
             }
@@ -217,7 +200,7 @@ export class Database implements IDatabase {
         throw Error("all workers busy");
     }
 
-    private async tryCreateSessionAtWorker(apiKey: string, workspaceGuid: string, candidate: Worker): Promise<Session> {
+    private async tryCreateSessionAtWorker(apiKey: string, workspace: Workspace, candidate: Worker): Promise<Session> {
         try {
             let recentOnlineDate = new Date(Date.now() - 2 * 1000);
             let filter: any = { 
@@ -241,10 +224,11 @@ export class Database implements IDatabase {
             session.firstSeen = new Date();
             session.lastSeen = session.firstSeen;
             session.workerGuid = caputuredWorker.guid;
-            session.workspaceGuid = workspaceGuid;
+            session.workspaceGuid = workspace.guid;
 
             let result = await self.insertOne<Session>("sessions", session, obj => new Session(obj));
             result.workerRef = caputuredWorker;
+            result.workspaceRef = workspace;
             return result;
         } catch {
             return undefined;
@@ -316,121 +300,30 @@ export class Database implements IDatabase {
     //#endregion
 
     //#region Workspaces
-    public getWorkspace(workspaceGuid: string): Promise<Workspace> {
-        return this.getOneAndUpdate<Workspace>(
+    public async getWorkspace(workspaceGuid: string): Promise<Workspace> {
+        return await this.findOneAndUpdate<Workspace>(
             "workspaces", 
             { guid: workspaceGuid, workgroup: this._settings.current.workgroup },
-            { lastSeen: new Date() },
+            { $set: { lastSeen: new Date() } },
             (obj) => new Workspace(obj));
-    }
-
-    public assignSessionWorkspace(sessionGuid: string, workspaceGuid: string): Promise<boolean> {
-        //todo: get rid off Promise here
-        return new Promise<boolean>(function (resolve, reject) {
-            let db = this._client.db(this._settings.current.databaseName);
-            assert.notEqual(db, null);
-    
-            db.collection(this.envCollectionName("sessions")).findOneAndUpdate(
-                { guid : sessionGuid },
-                { $set: { workspaceGuid: workspaceGuid, lastSeen : new Date() } },
-                { returnOriginal: false })
-                .then(function(obj) {
-                    if (obj.value) {
-                        resolve(true);
-                    } else {
-                        reject(`unable to find session with guid ${sessionGuid}`);
-                    }
-                }.bind(this))
-                .catch(function(err) {
-                    reject(err);
-                }.bind(this));
-        }.bind(this));
-    }
-
-    public getSessionWorkspace(sessionGuid: string): Promise<WorkspaceInfo> {
-        //todo: get rid off Promise here
-        return new Promise<WorkspaceInfo>(function (resolve, reject) {
-            if (sessionGuid === undefined || sessionGuid === "" || sessionGuid === null) {
-                reject("getSessionWorkspace: session id is empty");
-            }
-
-            let db = this._client.db(this._settings.current.databaseName);
-            assert.notEqual(db, null);
-
-            // first find not closed sessions, and join each with corresponding workspace
-            db.collection(this.envCollectionName("sessions")).aggregate([
-                {
-                    $match: {
-                        guid: sessionGuid
-                    }
-                },
-                {
-                    $lookup:
-                      {
-                        from: "workspaces",
-                        localField: "workspaceGuid",
-                        foreignField: "guid",
-                        as: "workspace"
-                      }
-                },
-                { 
-                    $unwind : "$workspace" 
-                }
-            ]).toArray(async function(err, res) {
-                if (err) {
-                    console.error(err);
-                    reject(`getSessionWorkspace: failed to find workspace by session guid: ${sessionGuid}`);
-                    return;
-                }
-
-                if (res.length > 1) {
-                    console.error(`getSessionWorkspace: found more than one session with guid: ${sessionGuid}`);
-                }
-
-                if (res.length === 0) {
-                    console.log(`getSessionWorkspace: session not found: ${sessionGuid}`);
-                    resolve(undefined);
-                }
-
-                //todo: extract to method touchSession(guid)
-                await db.collection(this.envCollectionName("sessions")).updateOne(
-                    { guid: sessionGuid },
-                    { $set: { lastSeen : new Date() } });
-
-                //todo: extract to method touchWorkspace(guid)
-                await db.collection(this.envCollectionName("workspaces")).updateOne(
-                    { guid: res[0].workspace.guid },
-                    { $set: { lastSeen : new Date() } });
-                
-                let workspace = WorkspaceInfo.fromJSON(res[0].workspace);
-                console.log(`getSessionWorkspace: found a workspace for session ${sessionGuid}: ${JSON.stringify(workspace)}`);
-                resolve(workspace);
-            }.bind(this));
-        }.bind(this));
     }
     //#endregion
 
     //#region Workers
-    public getAvailableWorkers(): Promise<Worker[]> {
-        //todo: get rid off Promise here
-        return new Promise<Worker[]>(function (resolve, reject) {
-            let db = this._client.db(this._settings.current.databaseName);
-            assert.notEqual(db, null);
+    public async getAvailableWorkers(): Promise<Worker[]> {
+        let db = this._client.db(this._settings.current.databaseName);
+        assert.notEqual(db, null);
 
-            let recentOnlineDate = new Date(Date.now() - 2 * 1000);
-            db.collection(this.envCollectionName("workers")).find({ 
-                workgroup: { $eq: this._settings.current.workgroup },
-                lastSeen : { $gte: recentOnlineDate },
-                sessionGuid: null
-            }).sort({
-                cpuUsage: 1 //sort by cpu load, less loaded first
-            }).toArray().then(function(arr: any[]){
-                let workers: Worker[] = arr.map(e => new Worker(e));
-                resolve(workers);
-            }.bind(this)).catch(function(err){
-                reject(err);
-            }.bind(this));
-        }.bind(this));
+        let recentOnlineDate = new Date(Date.now() - 2 * 1000);
+        let result = await db.collection(this.envCollectionName("workers")).find({ 
+            workgroup: { $eq: this._settings.current.workgroup },
+            lastSeen : { $gte: recentOnlineDate },
+            sessionGuid: null
+        }).sort({
+            cpuUsage: 1 //sort by cpu load, less loaded first
+        }).toArray();
+
+        return result.map(e => new Worker(e));
     }
 
     public storeWorker(worker: Worker): Promise<boolean> {
@@ -441,209 +334,125 @@ export class Database implements IDatabase {
         return this.findOneAndUpdate<Worker>("workers", worker.filter, worker.toJSON(), obj => new Worker(obj));
     }
 
-    public getWorker(sessionGuid: string): Promise<Worker> {
-        //todo: get rid off Promise here
-        return new Promise<Worker>(function (resolve, reject) {
-            if (sessionGuid === undefined || sessionGuid === "" || sessionGuid === null) {
-                reject("getWorker: session id is empty");
-            }
+    public async deleteDeadWorkers(): Promise<number> {
+        let expirationDate = new Date(Date.now() - 30*60*1000); // delete workers that are more than 30 minutes offline
 
-            let db = this._client.db(this._settings.current.databaseName);
-            assert.notEqual(db, null);
+        let db = this._client.db(this._settings.current.databaseName);
+        assert.notEqual(db, null);
 
-            // first find not closed sessions, and join each with corresponding workers
-            db.collection(this.envCollectionName("sessions")).aggregate([
-                {
-                    $match: {
-                        guid: sessionGuid
-                    }
-                },
-                {
-                    $lookup:
-                      {
-                        from: "workers",
-                        localField: "workerEndpoint",
-                        foreignField: "endpoint",
-                        as: "worker"
-                      }
-                },
-                { 
-                    $unwind : "$worker" 
-                }
-            ]).toArray(async function(err, res) {
-                if (err) {
-                    console.error(err);
-                    reject(`getWorker: failed to find worker by session guid: ${sessionGuid}`);
-                    return;
-                }
-
-                if (res.length > 1) {
-                    console.error(`getWorker: found more than one session with guid: ${sessionGuid}`);
-                }
-
-                if (res.length === 0) {
-                    console.log(`getWorker: session not found: ${sessionGuid}`);
-                    resolve(undefined);
-                }
-
-                await db.collection(this.envCollectionName("sessions")).updateOne(
-                    { guid: sessionGuid },
-                    { $set: { lastSeen : new Date() } });
-                
-                throw Error("getWorker not implemented");
-
-                // let worker = Worker.fromJSON(res[0].worker);
-                // console.log(`getWorker: found a worker for session ${sessionGuid}: ${JSON.stringify(worker)}`);
-                // resolve(worker);
-            }.bind(this));
-        }.bind(this));
-    }
-
-    public deleteDeadWorkers(): Promise<number> {
-        //todo: get rid off Promise here
-        return new Promise<number>(function (resolve, reject) {
-            let expirationDate = new Date(Date.now() - 30*60*1000); // delete workers that are more than 30 minutes offline
-
-            let db = this._client.db(this._settings.current.databaseName);
-            assert.notEqual(db, null);
-
-            db.collection(this.envCollectionName("workers")).deleteMany(
-                { 
-                    lastSeen : { $lte: expirationDate }
-                })
-                .then(function(value){
-                    if (value && value.deletedCount > 0) {
-                        resolve(value.deletedCount);
-                    } else {
-                        resolve(0);
-                    }
-                }.bind(this))
-                .catch(function(err){
-                    reject(err);
-                }.bind(this)); // end of db.collection(this.envCollectionName("workers").deleteMany promise
-        }.bind(this));
+        let result = await db.collection(this.envCollectionName("workers")).deleteMany(
+            { 
+                lastSeen : { $lte: expirationDate }
+            });
+        
+        return result.deletedCount;
     }
     //#endregion
 
     //#region Vray spawners
-    public storeVraySpawner(vraySpawnerInfo: VraySpawnerInfo): Promise<VraySpawnerInfo> {
-        //todo: get rid off Promise here
-        return new Promise<VraySpawnerInfo>(function (resolve, reject) {
-            let db = this._client.db(this._settings.current.databaseName);
-            assert.notEqual(db, null);
+    //public async storeVraySpawner(vraySpawnerInfo: VraySpawnerInfo): Promise<VraySpawnerInfo> {
+        // let db = this._client.db(this._settings.current.databaseName);
+        // assert.notEqual(db, null);
 
-            db.collection(this.envCollectionName("vray-spawners")).findOneAndUpdate(
-                { mac: vraySpawnerInfo.mac, ip: vraySpawnerInfo.ip },
-                { $set: vraySpawnerInfo.toDatabase() },
-                { returnOriginal: false, upsert: true })
-                .then(function(obj) {
-                    if (obj.value) {
-                        resolve(VraySpawnerInfo.fromJSON(obj.value));
-                    } else {
-                        reject(`unable to find vray spawner with mac ${vraySpawnerInfo.mac} and ip ${vraySpawnerInfo.ip}`);
-                    }
-                }.bind(this))
-                .catch(function(err) {
-                    reject(err);
-                }.bind(this));
-        }.bind(this));
-    }
+        // let result = await db.collection(this.envCollectionName("vray-spawners")).findOneAndUpdate(
+        //     { mac: vraySpawnerInfo.mac, ip: vraySpawnerInfo.ip },
+        //     { $set: vraySpawnerInfo.toDatabase() },
+        //     { returnOriginal: false, upsert: true });
+
+        // if (result.value) {
+        //     resolve(VraySpawnerInfo.fromJSON(obj.value));
+        // } else {
+        //     reject(`unable to find vray spawner with mac ${vraySpawnerInfo.mac} and ip ${vraySpawnerInfo.ip}`);
+        // }
+    //}
     //#endregion
 
     //#region Jobs
-    public async storeJob(jobInfo: JobInfo): Promise<JobInfo> {
-        throw Error("storeJob not implemented");
-        let db = this._client.db(this._settings.current.databaseName);
-        assert.notEqual(db, null);
+    //public async storeJob(jobInfo: JobInfo): Promise<JobInfo> {
+        // throw Error("storeJob not implemented");
+        // let db = this._client.db(this._settings.current.databaseName);
+        // assert.notEqual(db, null);
 
-        let jobJson = jobInfo.toDatabase();
+        // let jobJson = jobInfo.toDatabase();
 
-        db.collection(this.envCollectionName("jobs")).findOneAndUpdate(
-            { guid: jobInfo.guid },
-            { $set: jobJson },
-            { returnOriginal: false, upsert: true })
-            .then(function(obj) {
-                if (obj.value) {
-                    // resolve(WorkerInfo.fromJSON(obj.value));
-                } else {
-                    // reject(`unable to find job with guid ${jobInfo.guid}`);
-                }
-            }.bind(this))
-            .catch(function(err) {
-                // reject(err);
-            }.bind(this));
-    }
+        // db.collection(this.envCollectionName("jobs")).findOneAndUpdate(
+        //     { guid: jobInfo.guid },
+        //     { $set: jobJson },
+        //     { returnOriginal: false, upsert: true })
+        //     .then(function(obj) {
+        //         if (obj.value) {
+        //             // resolve(WorkerInfo.fromJSON(obj.value));
+        //         } else {
+        //             // reject(`unable to find job with guid ${jobInfo.guid}`);
+        //         }
+        //     }.bind(this))
+        //     .catch(function(err) {
+        //         // reject(err);
+        //     }.bind(this));
+    //}
 
-    public getJob(jobGuid: string): Promise<JobInfo> {
+    //public getJob(jobGuid: string): Promise<JobInfo> {
         //todo: get rid off Promise here
-        return new Promise<JobInfo>(function (resolve, reject) {
-            let db = this._client.db(this._settings.current.databaseName);
-            assert.notEqual(db, null);
+        // return new Promise<JobInfo>(function (resolve, reject) {
+        //     let db = this._client.db(this._settings.current.databaseName);
+        //     assert.notEqual(db, null);
 
-            db.collection(this.envCollectionName("jobs")).findOne(
-                { 
-                    guid: jobGuid
-                })
-                .then(function(obj) {
-                    if (obj) {
-                        let jobInfo = JobInfo.fromJSON(obj);
-                        resolve(jobInfo);
-                    } else {
-                        reject(`unable to find job with guid ${jobGuid}`);
-                    }
-                }.bind(this))
-                .catch(function(err) {
-                    console.error(err);
-                    reject(`failed to query available workers`);
-                    return
-                }.bind(this)); // end of db.collection(this.envCollectionName("jobs").findOne promise
-        }.bind(this));
-    }
+        //     db.collection(this.envCollectionName("jobs")).findOne(
+        //         { 
+        //             guid: jobGuid
+        //         })
+        //         .then(function(obj) {
+        //             if (obj) {
+        //                 let jobInfo = JobInfo.fromJSON(obj);
+        //                 resolve(jobInfo);
+        //             } else {
+        //                 reject(`unable to find job with guid ${jobGuid}`);
+        //             }
+        //         }.bind(this))
+        //         .catch(function(err) {
+        //             console.error(err);
+        //             reject(`failed to query available workers`);
+        //             return
+        //         }.bind(this)); // end of db.collection(this.envCollectionName("jobs").findOne promise
+        // }.bind(this));
+    //}
 
-    public getSessionActiveJobs(sessionGuid: string): Promise<JobInfo[]> {
+    //public getSessionActiveJobs(sessionGuid: string): Promise<JobInfo[]> {
         //todo: get rid off Promise here
-        return new Promise<JobInfo[]>(function (resolve, reject) {
-            let db = this._client.db(this._settings.current.databaseName);
-            assert.notEqual(db, null);
+        // return new Promise<JobInfo[]>(function (resolve, reject) {
+        //     let db = this._client.db(this._settings.current.databaseName);
+        //     assert.notEqual(db, null);
 
-            //todo: implement it
-        }.bind(this));
-    }
+        //     //todo: implement it
+        // }.bind(this));
+    //}
     //#endregion
 
     //#region internal methods, i.e. does not belong to IDatabase
-    public getOne<T extends IDbEntity>(collection: string, filter: any, ctor: (obj: any) => T): Promise<T> {
-        //todo: get rid off Promise here
-        return new Promise<T>(function(resolve, reject) {
-            let db = this._client.db(this._settings.current.databaseName);
-            assert.notEqual(db, null);
-
-            db.collection(this.envCollectionName(collection))
-                .findOne(filter)
-                .then(function(obj){
-                    if (obj) {
-                        resolve(ctor(obj));
-                    } else {
-                        reject(`nothing was filtered from ${collection} by ${JSON.stringify(filter)}`);
-                    }
-                }.bind(this))
-                .catch(function(err){
-                    reject(err);
-                }.bind(this));
-        }.bind(this));
-    }
-
-    public async getOneAndUpdate<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T> {
+    public async getOne<T extends IDbEntity>(collection: string, filter: any, ctor: (obj: any) => T): Promise<T> {
         await this.ensureClientConnection();
 
         let db = this._client.db(this._settings.current.databaseName);
         assert.notEqual(db, null);
 
+        let obj = await db.collection(this.envCollectionName(collection)).findOne(filter);
+
+        return ctor(obj);
+    }
+
+    public async findOneAndUpdate<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T> {
+        await this.ensureClientConnection();
+
+        let db = this._client.db(this._settings.current.databaseName);
+        assert.notEqual(db, null);
+
+        let arr = await db.collection(this.envCollectionName(collection)).find({}).toArray();
+
         let obj = await db.collection(this.envCollectionName(collection)).findOneAndUpdate(
             filter,
-            { $set: setter },
+            setter,
             { returnOriginal: false });
-
+        
         if (obj.ok === 1 && obj.value) {
             return ctor(obj.value);
         } else {
@@ -651,71 +460,38 @@ export class Database implements IDatabase {
         }
     }
 
-    public insertOne<T extends IDbEntity>(collection: string, entity: IDbEntity, ctor: (obj: any) => T): Promise<T> {
-        //todo: get rid off Promise here
-        return new Promise<T>(function(resolve, reject) {
-            let db = this._client.db(this._settings.current.databaseName);
-            assert.notEqual(db, null);
+    public async insertOne<T extends IDbEntity>(collection: string, entity: IDbEntity, ctor: (obj: any) => T): Promise<T> {
+        await this.ensureClientConnection();
 
-            db.collection(this.envCollectionName(collection)).insertOne(entity.toJSON())
-                .then(function(obj){
-                    if (obj.result.ok === 1 && obj.insertedCount === 1) {
-                        resolve(ctor(obj.ops[0]));
-                    } else {
-                        reject(`failed to insert in ${collection}`);
-                    }
-                }.bind(this))
-                .catch(function(err){
-                    reject(err);
-                }.bind(this));
-        }.bind(this));
+        let db = this._client.db(this._settings.current.databaseName);
+        assert.notEqual(db, null);
+
+        let obj = await db.collection(this.envCollectionName(collection)).insertOne(entity.toJSON());
+
+        if (obj.result.ok === 1 && obj.insertedCount === 1) {
+            return ctor(obj.ops[0]);
+        } else {
+            throw Error(`failed to insert in ${collection}`);
+        }
     }
 
-    public findOneAndUpdate<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T> {
-        //todo: get rid off Promise here
-        return new Promise<T>(function(resolve, reject) {
-            let db = this._client.db(this._settings.current.databaseName);
-            assert.notEqual(db, null);
+    public async updateOne<T extends IDbEntity>(collection: string, entity: T, upsert: boolean): Promise<boolean> {
+        await this.ensureClientConnection();
 
-            db.collection(this.envCollectionName(collection)).findOneAndUpdate(
-                filter, // like { apiKey: apiKey }
-                setter,
-                { returnOriginal: false })
-                .then(function(obj){
-                    if (obj.ok === 1 && obj.value) {
-                        resolve(ctor(obj.value));
-                    } else {
-                        reject(`nothing was filtered from ${collection} by ${JSON.stringify(filter)}`);
-                    }
-                }.bind(this))
-                .catch(function(err){
-                    reject(err);
-                }.bind(this));
-        }.bind(this));
-    }
+        let db = this._client.db(this._settings.current.databaseName);
+        assert.notEqual(db, null);
 
-    public updateOne<T extends IDbEntity>(collection: string, obj: T, upsert: boolean): Promise<boolean> {
-        //todo: get rid off Promise here
-        return new Promise<boolean>(function(resolve, reject) {
-            let db = this._client.db(this._settings.current.databaseName);
-            assert.notEqual(db, null);
+        let obj = await db.collection(this.envCollectionName(collection)).updateOne(
+            entity.filter,
+            { $set: entity.toJSON() },
+            { upsert: upsert });
 
-            db.collection(this.envCollectionName(collection)).updateOne(
-                obj.filter,
-                { $set: obj.toJSON() },
-                { upsert: upsert })
-                .then(function(obj){
-                    // result: { ok: 1, nModified: 0, n: 1, upserted: [ [Object] ] },
-                    if (obj && obj.result && obj.result.ok === 1 && obj.result.n > 0) {
-                        resolve(true);
-                    } else {
-                        resolve(false);
-                    }
-                }.bind(this))
-                .catch(function(err){
-                    reject(err);
-                }.bind(this));
-        }.bind(this));
+        // result: { ok: 1, nModified: 0, n: 1, upserted: [ [Object] ] },
+        if (obj && obj.result && obj.result.ok === 1 && obj.result.n > 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public async updateMany(collection: string, filter: any, setter: any): Promise<number> {
