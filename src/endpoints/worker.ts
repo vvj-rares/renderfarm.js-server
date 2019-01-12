@@ -51,8 +51,13 @@ export class WorkerEndpoint implements IEndpoint {
     }
 
     private onWorkerUpdate(worker: Worker) {
-        console.log(JSON.stringify(worker));
-        this._database.storeWorker(worker);
+        this._database.updateWorker(
+            worker, 
+            { $set: { 
+                lastSeen: new Date(),
+                cpuUsage: worker.cpuUsage,
+                ramUsage: worker.ramUsage
+            } });
     }
 
     private onSpawnerUpdate(spawner: VraySpawnerInfo) {

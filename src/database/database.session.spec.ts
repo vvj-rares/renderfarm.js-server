@@ -134,14 +134,14 @@ describe("Database Session", function() {
             expect(worker.totalRam).toBe(newWorker.totalRam);
             expect(new Date().getTime() - worker.firstSeen.getTime()).toBeLessThan(3000); // db time minus now is less than 3 seconds
             expect(new Date().getTime() - worker.lastSeen.getTime()).toBeLessThan(3000); // db time minus now is less than 3 seconds
-            expect(worker.firstSeen.getTime()).toBeLessThan(worker.lastSeen.getTime());
+            expect(worker.firstSeen.getTime()).toBeLessThanOrEqual(worker.lastSeen.getTime());
             expect(worker.sessionGuid).toBe(session.guid);
         })
 
         it("closes session and releases worker", async function() {
             let newWorker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
             let workspace = await helpers.createSomeWorkspace();
-            let session = await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
+            let session = await database.createSession(helpers.existingApiKey, workspace.guid);
 
             let closedSession = await database.closeSession(session.guid);
             
@@ -160,7 +160,7 @@ describe("Database Session", function() {
         it("expires one session and releases one worker", async function() {
             let newWorker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
             let workspace = await helpers.createSomeWorkspace();
-            let session = await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
+            let session = await database.createSession(helpers.existingApiKey, workspace.guid);
 
             let grabbedWorker = await database.getOne<Worker>("workers", { guid: newWorker.guid }, obj => new Worker(obj));
 
@@ -182,7 +182,7 @@ describe("Database Session", function() {
             expect(expiredSessions[0].workerRef.guid).toBe(newWorker.guid);
         })
 
-        fit("checks that workers with less CPU load are grabbed first", async function() {
+        it("checks that workers with less CPU load are grabbed first", async function() {
             let worker0 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.9);
             let worker1 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.1);
             let worker2 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.3);
@@ -191,25 +191,16 @@ describe("Database Session", function() {
             let workspace = await helpers.createSomeWorkspace();
 
             await helpers.touchWorkers(worker0, worker1, worker2, worker3);
-            let session0 = await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
-            let av0 = await database.getAvailableWorkers();
-            console.log(av0.length);
+            let session0 = await database.createSession(helpers.existingApiKey, workspace.guid);
 
             await helpers.touchWorkers(worker0, worker1, worker2, worker3);
-            let session1 = await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
-            let av1 = await database.getAvailableWorkers();
-            console.log(av1.length);
+            let session1 = await database.createSession(helpers.existingApiKey, workspace.guid);
 
             await helpers.touchWorkers(worker0, worker1, worker2, worker3);
-            let session2 = await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
-            let av2 = await database.getAvailableWorkers();
-            console.log(av2.length);
-
-            fail();
-            return;
+            let session2 = await database.createSession(helpers.existingApiKey, workspace.guid);
 
             await helpers.touchWorkers(worker0, worker1, worker2, worker3);
-            let session3 = await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
+            let session3 = await database.createSession(helpers.existingApiKey, workspace.guid);
 
             let grabbedWorker0 = await database.getOne<Worker>("workers", { sessionGuid: session0.guid }, obj => new Worker(obj));
             expect(grabbedWorker0).toBeTruthy();
@@ -237,11 +228,11 @@ describe("Database Session", function() {
             await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.1);
             let workspace = await helpers.createSomeWorkspace();
 
-            let session0 = await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
+            let session0 = await database.createSession(helpers.existingApiKey, workspace.guid);
             expect(session0).toBeTruthy();
 
             try {
-                await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
+                await database.createSession(helpers.existingApiKey, workspace.guid);
                 fail();
             } catch (err) {
                 expect(isError(err));
@@ -253,14 +244,14 @@ describe("Database Session", function() {
             let worker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.1);
             let workspace = await helpers.createSomeWorkspace();
 
-            let session0 = await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
+            let session0 = await database.createSession(helpers.existingApiKey, workspace.guid);
             expect(session0).toBeTruthy();
             expect(session0.workerGuid).toBe(worker.guid);
 
             let closedSession0 = await database.closeSession(session0.guid);
             expect(closedSession0).toBeTruthy();
 
-            let session1 = await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
+            let session1 = await database.createSession(helpers.existingApiKey, workspace.guid);
             expect(session1).toBeTruthy();
             expect(session1.workerGuid).toBe(worker.guid);
         })
@@ -284,7 +275,7 @@ describe("Database Session", function() {
             expect(new Date().getTime() - offlineWorker.lastSeen.getTime()).toBeGreaterThan(2000);
 
             try {
-                await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
+                await database.createSession(helpers.existingApiKey, workspace.guid);
                 fail();
             } catch (err) {
                 expect(isError(err));
@@ -302,7 +293,7 @@ describe("Database Session", function() {
             //worker is younger than 2 seconds => means worker is most likely alive
             expect(new Date().getTime() - onlineWorker.lastSeen.getTime()).toBeLessThan(2000);
 
-            let session = await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
+            let session = await database.createSession(helpers.existingApiKey, workspace.guid);
             expect(session).toBeTruthy();
         })
 
@@ -310,7 +301,7 @@ describe("Database Session", function() {
             let worker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
             let workspace = await helpers.createSomeWorkspace();
 
-            let session0 = await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
+            let session0 = await database.createSession(helpers.existingApiKey, workspace.guid);
             expect(session0).toBeTruthy();
             expect(session0.workerGuid).toBe(worker.guid);
 
@@ -330,7 +321,7 @@ describe("Database Session", function() {
             let worker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
             let workspace = await helpers.createSomeWorkspace();
 
-            let session0 = await helpers.createSomeSession(helpers.existingApiKey, workspace.guid);
+            let session0 = await database.createSession(helpers.existingApiKey, workspace.guid);
             expect(session0).toBeTruthy();
             expect(session0.workerGuid).toBe(worker.guid);
 

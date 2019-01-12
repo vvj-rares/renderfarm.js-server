@@ -49,16 +49,17 @@ export class JasmineHelpers {
         newWorker.totalRam = 32;
 
         // add fresh worker for the session
-        let isWorkerStored = await this.database.storeWorker(newWorker);
-        expect(isWorkerStored).toBeTruthy();
+        await this.database.insertWorker(newWorker);
 
         return newWorker;
     }
 
-    public touchWorkers = async function(...workers: Worker[]) {
+    public async touchWorkers(...workers: Worker[]) {
         for(let wi in workers) {
-            workers[wi].lastSeen = new Date();
-            await this.database.storeWorker(workers[wi]);
+            await this.database.updateOne<Worker>(
+                "workers",
+                { guid: workers[wi].guid },
+                { $set: { lastSeen: new Date() } });
         }
     }
 
@@ -72,23 +73,8 @@ export class JasmineHelpers {
         newWorkspace.name = "Test Workspace";
 
         // add fresh worker for the session
-        let isWorkspaceStored = await this.database.insertOne<Workspace>("workspaces", newWorkspace, obj => new Workspace(obj));
-        expect(isWorkspaceStored).toBeTruthy();
+        await this.database.insertOne<Workspace>("workspaces", newWorkspace, obj => new Workspace(obj));
 
         return newWorkspace;
     }
-
-    public async createSomeSession(apiKey: string, workspaceGuid: string) {
-        let session: Session = await this.database.createSession(apiKey, workspaceGuid);
-        expect(session).toBeTruthy();
-        // check that refs were resolved well
-        expect(session.workerRef).toBeTruthy();
-        expect(session.workerRef.sessionGuid).toBe(session.guid);
-
-        expect(session.workspaceRef).toBeTruthy();
-        expect(session.workspaceRef.guid).toBe(workspaceGuid);
-
-        return session;
-    }
-
 }

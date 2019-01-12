@@ -84,7 +84,7 @@ describe("Database Worker", function() {
             newWorker.ramUsage = 0.2;
             newWorker.totalRam = 32;
 
-            let workerAdded = await database.storeWorker(newWorker);
+            let workerAdded = await database.insertWorker(newWorker);
             expect(workerAdded).toBeTruthy();
 
             let worker = await database.getOne<Worker>("workers", { guid: newWorker.guid }, obj => new Worker(obj));
@@ -108,22 +108,29 @@ describe("Database Worker", function() {
             let worker2 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
 
             worker1.firstSeen = new Date( worker1.firstSeen.getTime() - 90*1000 ); // 90sec ago
-            worker1.lastSeen = new Date( worker1.lastSeen.getTime() - 61*1000 ); // 61sec ago
+            worker1.lastSeen = new Date( worker1.lastSeen.getTime() - 31*1000 ); // 31sec ago
 
             worker2.firstSeen = new Date( worker2.firstSeen.getTime() - 120*1000 ); // 120sec ago
             worker2.lastSeen = new Date( worker2.lastSeen.getTime() - 3*1000 ); // 3sec ago
 
-            let stored0 = await database.storeWorker(worker0);
-            expect(stored0).toBeTruthy();
-            let stored1 = await database.storeWorker(worker1);
+            let stored1 = await database.findOneAndUpdate(
+                "workers", 
+                worker1.filter, 
+                { $set: { firstSeen: worker1.firstSeen, lastSeen: worker1.lastSeen } }, 
+                obj => new Worker(obj));
             expect(stored1).toBeTruthy();
-            let stored2 = await database.storeWorker(worker2);
+
+            let stored2 = await database.findOneAndUpdate(
+                "workers", 
+                worker2.filter, 
+                { $set: { firstSeen: worker2.firstSeen, lastSeen: worker2.lastSeen } }, 
+                obj => new Worker(obj));
             expect(stored2).toBeTruthy();
 
             return [
                 worker0, // must be online, with most recent lastSeen
-                worker1, // must be older than "dead threshold"
-                worker2  // must be "most recent, but yet considered offline"
+                stored1, // must be older than "dead threshold"
+                stored2  // must be "most recent, but yet considered offline"
             ];
         }
 
@@ -139,7 +146,7 @@ describe("Database Worker", function() {
         })
 
         it("checks that old workers are removed from the database", async function() {
-            let workers = await createOnlineAndOfflineWorkers();
+            await createOnlineAndOfflineWorkers();
 
             let recentWorkers = await database.getRecentWorkers();
             expect(recentWorkers.length).toBe(3);

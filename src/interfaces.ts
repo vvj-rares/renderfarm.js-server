@@ -26,8 +26,8 @@ export interface IDatabase {
     //workspaces
     getWorkspace(workspaceGuid: string): Promise<Workspace>;
 
-    storeWorker(worker: Worker): Promise<boolean>;
-    updateWorker(worker: Worker): Promise<Worker>;
+    insertWorker(worker: Worker): Promise<Worker>;
+    updateWorker(worker: Worker, setter: any): Promise<Worker>;
 
     getRecentWorkers(): Promise<Worker[]>;
     getAvailableWorkers(): Promise<Worker[]>;

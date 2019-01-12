@@ -186,19 +186,14 @@ export class Database implements IDatabase {
 
         // pick only the workers who were seen not less than 2 seconds ago
         let workers = await this.getAvailableWorkers();
-        console.log(" >> createSession, getAvailableWorkers returned: ", workers.length);
 
         // this will prevent multiple worker assignment, if top most worker was set busy = true,
         // then we just pick underlying least loaded worker.
         for(let wi in workers) {
             let candidate = workers[wi];
-            console.log(`    candidate ${wi}: ${candidate.guid}`);
             let createdSession = await this.tryCreateSessionAtWorker(apiKey, workspace, candidate);
             if (createdSession) {
-                console.log(`    OK! ${wi}: ${candidate.guid}, assigned session: ${createdSession.guid}`);
                 return createdSession;
-            } else {
-                console.log(`  MISS! ${wi}: ${candidate.guid}, worker was busy`);
             }
         }
 
@@ -207,29 +202,16 @@ export class Database implements IDatabase {
 
     private async tryCreateSessionAtWorker(apiKey: string, workspace: Workspace, candidate: Worker): Promise<Session> {
         try {
-            console.log(" >> tryCreateSessionAtWorker: ", candidate.guid);
-
-            let recentOnlineDate = new Date(Date.now() - 2 * 1000);
             let filter: any = {
-                workgroup: this._settings.current.workgroup,
-                lastSeen : { $gte: recentOnlineDate },
-                sessionGuid: { $eq: null },
-                guid: candidate.guid
+                guid: candidate.guid,
+                sessionGuid: { $eq: null }
             };
             let sessionGuid = uuidv4();
             let setter: any = { $set: { 
-                sessionGuid: sessionGuid, 
-                lastSeen: new Date() 
-            } };
-
-            let workersBefore = await this.getAvailableWorkers();
-            console.log(" >> this.getAvailableWorkers BEFORE: ", workersBefore.length, " << end of available workers");
+                sessionGuid: sessionGuid
+            }};
 
             let caputuredWorker = await this.findOneAndUpdate<Worker>("workers", filter, setter, (obj: any) => new Worker(obj));
-            console.log(" >> caputuredWorker: ", caputuredWorker.guid, "\r\n\r\n");
-
-            let workersAfter = await this.getAvailableWorkers();
-            console.log(" >> this.getAvailableWorkers AFTER: ", workersAfter.length, " << end of available workers");
 
             let session = new Session(null);
             session.apiKey = apiKey;
@@ -349,17 +331,15 @@ export class Database implements IDatabase {
             cpuUsage: 1 //sort by cpu load, less loaded first
         }).toArray();
 
-        console.log(result, "\r\n");
-
         return result.map(e => new Worker(e));
     }
 
-    public storeWorker(worker: Worker): Promise<boolean> {
-        return this.updateOne<Worker>("workers", worker, true);
+    public insertWorker(worker: Worker): Promise<Worker> {
+        return this.insertOne<Worker>("workers", worker, obj => new Worker(obj));
     }
 
-    public updateWorker(worker: Worker): Promise<Worker> {
-        return this.findOneAndUpdate<Worker>("workers", worker.filter, worker.toJSON(), obj => new Worker(obj));
+    public updateWorker(worker: Worker, setter: any): Promise<Worker> {
+        return this.findOneAndUpdate<Worker>("workers", worker.filter, setter, obj => new Worker(obj));
     }
 
     public async deleteDeadWorkers(): Promise<number> {
@@ -372,7 +352,7 @@ export class Database implements IDatabase {
             { 
                 lastSeen : { $lte: expirationDate }
             });
-        
+
         return result.deletedCount;
     }
     //#endregion
@@ -501,16 +481,16 @@ export class Database implements IDatabase {
         }
     }
 
-    public async updateOne<T extends IDbEntity>(collection: string, entity: T, upsert: boolean): Promise<boolean> {
+    public async updateOne<T extends IDbEntity>(collection: string, filter: any, setter: any): Promise<boolean> {
         await this.ensureClientConnection();
 
         let db = this._client.db(this._settings.current.databaseName);
         assert.notEqual(db, null);
 
         let obj = await db.collection(this.envCollectionName(collection)).updateOne(
-            entity.filter,
-            { $set: entity.toJSON() },
-            { upsert: upsert });
+            filter,
+            setter,
+            { upsert: false });
 
         // result: { ok: 1, nModified: 0, n: 1, upserted: [ [Object] ] },
         if (obj && obj.result && obj.result.ok === 1 && obj.result.n > 0) {
