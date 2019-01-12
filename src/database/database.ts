@@ -2,7 +2,7 @@
 
 import "reflect-metadata";
 
-import { MongoClient, CollectionInsertOneOptions } from "mongodb";
+import { MongoClient, CollectionInsertOneOptions, InsertOneWriteOpResult, MongoCallback, MongoError } from "mongodb";
 import { injectable, inject } from "inversify";
 import { IDatabase, ISettings } from "../interfaces"
 
@@ -467,19 +467,27 @@ export class Database implements IDatabase {
     }
 
     public async insertOne<T extends IDbEntity>(collection: string, entity: IDbEntity, ctor: (obj: any) => T): Promise<T> {
-        await this.ensureClientConnection();
+        return new Promise<T>(async function(resolve, reject) {
+            await this.ensureClientConnection();
 
-        let db = this._client.db(this._settings.current.databaseName);
-        assert.notEqual(db, null);
+            let db = this._client.db(this._settings.current.databaseName);
+            assert.notEqual(db, null);
 
-        let opt: CollectionInsertOneOptions = { w: 1 };
-        let obj = await db.collection(this.envCollectionName(collection)).insertOne(entity.toJSON(), opt);
+            let opt: CollectionInsertOneOptions = { w: "majority" };
+            opt.j = true;
+            let callback: MongoCallback<InsertOneWriteOpResult> = function (error: MongoError, res: InsertOneWriteOpResult) {
+                if (res.result.ok === 1 && res.insertedCount === 1) {
+                    resolve(ctor(res.ops[0]));
+                } else {
+                    reject(Error(error.message));
+                }
+            }.bind(this);
 
-        if (obj.result.ok === 1 && obj.insertedCount === 1) {
-            return ctor(obj.ops[0]);
-        } else {
-            throw Error(`failed to insert in ${collection}`);
-        }
+            db.collection(this.envCollectionName(collection)).insertOne(
+                entity.toJSON(), 
+                opt,
+                callback);
+        }.bind(this));
     }
 
     public async updateOne(collection: string, filter: any, setter: any): Promise<boolean> {

@@ -113,14 +113,14 @@ describe("Database Worker", function() {
             worker2.firstSeen = new Date( worker2.firstSeen.getTime() - 120*1000 ); // 120sec ago
             worker2.lastSeen = new Date( worker2.lastSeen.getTime() - 3*1000 ); // 3sec ago
 
-            let stored1 = await database.findOneAndUpdate(
+            let stored1 = await database.findOneAndUpdate<Worker>(
                 "workers", 
                 worker1.filter, 
                 { $set: { firstSeen: worker1.firstSeen, lastSeen: worker1.lastSeen } }, 
                 obj => new Worker(obj));
             expect(stored1).toBeTruthy();
 
-            let stored2 = await database.findOneAndUpdate(
+            let stored2 = await database.findOneAndUpdate<Worker>(
                 "workers", 
                 worker2.filter, 
                 { $set: { firstSeen: worker2.firstSeen, lastSeen: worker2.lastSeen } }, 
