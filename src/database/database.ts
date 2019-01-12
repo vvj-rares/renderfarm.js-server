@@ -310,6 +310,19 @@ export class Database implements IDatabase {
     //#endregion
 
     //#region Workers
+    public async getRecentWorkers(): Promise<Worker[]> {
+        let db = this._client.db(this._settings.current.databaseName);
+        assert.notEqual(db, null);
+
+        let result = await db.collection(this.envCollectionName("workers")).find({ 
+            workgroup: { $eq: this._settings.current.workgroup }
+        }).sort({
+            cpuUsage: 1 //sort by cpu load, less loaded first
+        }).toArray();
+
+        return result.map(e => new Worker(e));
+    }
+
     public async getAvailableWorkers(): Promise<Worker[]> {
         let db = this._client.db(this._settings.current.databaseName);
         assert.notEqual(db, null);
@@ -335,7 +348,7 @@ export class Database implements IDatabase {
     }
 
     public async deleteDeadWorkers(): Promise<number> {
-        let expirationDate = new Date(Date.now() - 30*60*1000); // delete workers that are more than 30 minutes offline
+        let expirationDate = new Date(Date.now() - 30*1000); // delete workers that are more than 30 seconds offline
 
         let db = this._client.db(this._settings.current.databaseName);
         assert.notEqual(db, null);

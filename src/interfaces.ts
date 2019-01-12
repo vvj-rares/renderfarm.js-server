@@ -29,7 +29,8 @@ export interface IDatabase {
     storeWorker(worker: Worker): Promise<boolean>;
     updateWorker(worker: Worker): Promise<Worker>;
 
-    // getWorker(sessionGuid: string): Promise<WorkerInfo>;
+    getRecentWorkers(): Promise<Worker[]>;
+    getAvailableWorkers(): Promise<Worker[]>;
     deleteDeadWorkers(): Promise<number>;
 
     //storeVraySpawner(vraySpawnerInfo: VraySpawnerInfo): Promise<VraySpawnerInfo>;

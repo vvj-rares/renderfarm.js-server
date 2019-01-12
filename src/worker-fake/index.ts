@@ -3,7 +3,7 @@ import { isFunction } from "util";
 
 const dgram = require('dgram');
 
-const simulateWorkersCount = 10;
+const simulateWorkersCount = 2;
 
 const settings = new Settings("dev");
 

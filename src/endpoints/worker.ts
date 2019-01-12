@@ -2,7 +2,6 @@ import { injectable, inject } from "inversify";
 import * as express from "express";
 import { IEndpoint, IDatabase, IWorkerHeartbeatListener, ISettings } from "../interfaces";
 import { TYPES } from "../types";
-import { isString } from "util";
 import { VraySpawnerInfo } from "../model/vray_spawner_info";
 import { Worker } from "../database/model/worker";
 
@@ -29,27 +28,30 @@ export class WorkerEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get(`/v${this._settings.majorVersion}/worker`, function (req, res) {
-            let apiKey = req.query.api_key;
-            console.log(`GET on ${req.path} with api key: ${apiKey}`);
-            this._database.getApiKey(apiKey)
-                .then(function() {
-                    let response = Object.keys(this._workers).map(function(key) {
-                        return this._workers[key].toJSON();
-                    }.bind(this));
-                    console.log(`    OK | api key ${apiKey} accepted`);
-                    res.end(JSON.stringify(response, null, 2));
-                }.bind(this))
-                .catch(function(err) {
-                    let errorText = "failed to check api key";
-                    console.error(`  FAIL | ${errorText}: ${apiKey}, `, err);
-                    res.status(500);
-                    res.end(JSON.stringify({ error: ( isString(err) ? err : errorText ) }));
-                }.bind(this));
+        express.get(`/v${this._settings.majorVersion}/worker`, async function (req, res) {
+            console.log(`GET on ${req.path} with api key: ${req.query.api_key}`);
+            try {
+                await this._database.getApiKey(req.query.api_key);
+            }
+            catch (err) {
+                res.status(403);
+                res.end(JSON.stringify({ ok: false, message: "api key rejected", error: err }, null, 2));
+                return;
+            }
+
+            try {
+                let workers = await this._database.getAvailableWorkers();
+                res.end(JSON.stringify({ ok: true, type: "worker", data: workers }, null, 2));
+            } catch (err) {
+                res.status(500);
+                res.end(JSON.stringify({ ok: false, message: "failed to get workers", error: err }, null, 2));
+                return;
+            }
         }.bind(this));
     }
 
     private onWorkerUpdate(worker: Worker) {
+        console.log(JSON.stringify(worker));
         this._database.storeWorker(worker);
     }
 
