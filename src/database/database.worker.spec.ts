@@ -42,7 +42,7 @@ describe("Database Worker", function() {
             await database.disconnect();
         })
 
-        it("checks that recent workers belongs to current workgroup only", async function() {
+        it("checks that recent workers belongs to current workgroup only", async function(done) {
             let defaultWorkers = await database.getRecentWorkers();
             expect(defaultWorkers.length).toBe(4);
 
@@ -50,6 +50,7 @@ describe("Database Worker", function() {
 
             let otherWorkers = await database.getRecentWorkers();
             expect(otherWorkers.length).toBe(2);
+            done();
         });
     }); // end of read-only tests
 
@@ -71,7 +72,7 @@ describe("Database Worker", function() {
             await database.disconnect();
         })
 
-        it("checks that worker was correctly persisted", async function() {
+        it("checks that worker was correctly persisted", async function(done) {
             let newWorker = new Worker(null);
             newWorker.guid = uuidv4();
             newWorker.ip = helpers.rndIp();
@@ -100,6 +101,8 @@ describe("Database Worker", function() {
             expect(worker.cpuUsage).toBe(newWorker.cpuUsage);
             expect(worker.ramUsage).toBe(newWorker.ramUsage);
             expect(worker.totalRam).toBe(newWorker.totalRam);
+
+            done();
         })
 
         async function createOnlineAndOfflineWorkers(): Promise<Worker[]> {
@@ -134,7 +137,7 @@ describe("Database Worker", function() {
             ];
         }
 
-        it("checks that available and recent workers are returned correctly", async function() {
+        it("checks that available and recent workers are returned correctly", async function(done) {
             let workers = await createOnlineAndOfflineWorkers();
 
             let availableWorkers = await database.getAvailableWorkers();
@@ -143,9 +146,10 @@ describe("Database Worker", function() {
 
             let recentWorkers = await database.getRecentWorkers();
             expect(recentWorkers.length).toBe(3);
+            done();
         })
 
-        it("checks that old workers are removed from the database", async function() {
+        it("checks that old workers are removed from the database", async function(done) {
             await createOnlineAndOfflineWorkers();
 
             let recentWorkers = await database.getRecentWorkers();
@@ -153,6 +157,7 @@ describe("Database Worker", function() {
 
             let deleted = await database.deleteDeadWorkers();
             expect(deleted).toBe(1);
+            done();
         })
 
     }); // end of write tests

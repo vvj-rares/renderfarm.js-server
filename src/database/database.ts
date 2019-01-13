@@ -457,14 +457,14 @@ export class Database implements IDatabase {
             let db = this._client.db(this._settings.current.databaseName);
             assert.notEqual(db, null);
     
-            let opt: FindOneAndUpdateOption = { w: "majority", j: true };
+            let opt: FindOneAndUpdateOption = { w: "majority", j: true, returnOriginal: false };
 
             let callback: MongoCallback<FindAndModifyWriteOpResultObject> = function (error: MongoError, res: FindAndModifyWriteOpResultObject) {
-                console.log(" >> findOneAndUpdate result: ", res.value);
+                // console.log(res);
                 if (res && res.ok === 1 && res.value) {
                     resolve(ctor(res.value));
                 } else if (error) { 
-                    console.error(" >> findOneAndUpdate error: ", error);
+                    console.error(error);
                     reject(Error(error.message));
                 } else {
                     reject(Error(`nothing was updated in ${collection} by ${JSON.stringify(filter)}`));
@@ -492,6 +492,7 @@ export class Database implements IDatabase {
                 if (res && res.result.ok === 1 && res.insertedCount === 1) {
                     resolve(ctor(res.ops[0]));
                 } else if (error) {
+                    console.error(error);
                     reject(Error(error.message));
                 } else {
                     reject(Error(`nothing was inserted into ${collection}, ${JSON.stringify(entity)}`));
@@ -518,6 +519,7 @@ export class Database implements IDatabase {
                 if (res && res.result && res.result.ok === 1 && res.result.n > 0) {
                     resolve(true);
                 } else if (error) {
+                    console.error(error);
                     reject(Error(error.message));
                 } else {
                     reject(Error(`nothing was updated in ${collection} by ${JSON.stringify(filter)}`));
@@ -534,38 +536,67 @@ export class Database implements IDatabase {
     }
 
     public async updateMany(collection: string, filter: any, setter: any): Promise<number> {
-        
-        let db = this._client.db(this._settings.current.databaseName);
-        assert.notEqual(db, null);
+        return new Promise<number>(function(resolve, reject){
 
-        let trans = uuidv4();
-        setter.$set._trans = trans; //remember transaction
-        let ops: UpdateManyOptions = { w: "majority", j: true, upsert: false };
-        let callback: MongoCallback<UpdateWriteOpResult> = function(error:MongoError, res:UpdateWriteOpResult) {
-            if (res) {
-                resolve()
-            }
-        }.bind(this);
+            let db = this._client.db(this._settings.current.databaseName);
+            assert.notEqual(db, null);
+    
+            let trans = uuidv4();
+            setter.$set._trans = trans; //remember transaction
 
-        db.collection(this.envCollectionName(collection)).updateMany(filter, setter, ops, callback);
+            let ops: UpdateManyOptions = { w: "majority", j: true, upsert: false };
+            let callback: MongoCallback<UpdateWriteOpResult> = function(error:MongoError, res:UpdateWriteOpResult) {
+                if (res && res.modifiedCount > 0) {
+                    resolve(res.modifiedCount);
+                } else if (error) {
+                    console.error(error);
+                    reject(Error(error.message));
+                } else {
+                    reject(Error(`failed to modify multiple entities in ${collection} by ${JSON.stringify(filter)}`));
+                }
+            }.bind(this);
+    
+            db.collection(this.envCollectionName(collection)).updateMany(
+                filter, 
+                setter, 
+                ops, 
+                callback);
+    
+        }.bind(this));
     }
 
     public async findManyAndUpdate<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T[]> {
-        let db = this._client.db(this._settings.current.databaseName);
-        assert.notEqual(db, null);
+        return new Promise<T[]>(function(resolve, reject){
 
-        let trans = uuidv4();
-        setter.$set._trans = trans; //remember transaction
-
-        let updateResult = await db.collection(this.envCollectionName(collection)).updateMany(filter, setter);
-
-        if (updateResult.matchedCount > 0 && updateResult.modifiedCount > 0) {
-            // query updated documents with given transaction
-            let findResult = await db.collection(this.envCollectionName(collection)).find({ _trans: trans }).toArray();
-            return findResult.map(e => ctor(e));
-        } else {
-            return [];
-        }
+            let db = this._client.db(this._settings.current.databaseName);
+            assert.notEqual(db, null);
+    
+            let trans = uuidv4();
+            setter.$set._trans = trans; //remember transaction
+    
+            let ops: UpdateManyOptions = { w: "majority", j: true, upsert: false };
+            let callback: MongoCallback<UpdateWriteOpResult> = async function(error:MongoError, res:UpdateWriteOpResult) {
+                if (res && res.matchedCount === 0) {
+                    resolve([]);
+                } else if (res && res.matchedCount > 0 && res.modifiedCount > 0) {
+                    // query updated documents with given transaction
+                    let findResult = await db.collection(this.envCollectionName(collection)).find({ _trans: trans }).toArray();
+                    resolve( findResult.map(e => ctor(e)) );
+                } else if (error) {
+                    console.error(error);
+                    reject(Error(error.message));
+                } else {
+                    reject(Error(`failed to modify multiple entities in ${collection} by ${JSON.stringify(filter)}`));
+                }
+            }.bind(this);
+    
+            db.collection(this.envCollectionName(collection)).updateMany(
+                filter, 
+                setter, 
+                ops, 
+                callback);
+    
+        }.bind(this));
     }
 
     public async ensureClientConnection() {

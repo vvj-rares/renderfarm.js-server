@@ -34,7 +34,7 @@ describe("Database Session", function() {
             await database.disconnect();
         })
 
-        it("checks existing session", async function() {
+        it("checks existing session", async function(done) {
             let session: Session = await database.getSession(helpers.existingSessionGuid);
     
             expect(session).toBeTruthy();
@@ -50,25 +50,29 @@ describe("Database Session", function() {
 
             expect(session.workerRef).toBeTruthy();
             expect(session.workerRef.guid).toBe(session.workerGuid);
+            done();
         });
     
-        it("checks not existing session", async function() {
+        it("checks not existing session", async function(done) {
             let result: Session;
             try {
                 result = await database.getSession(helpers.notExistingSessionGuid);
             } catch (err) {
                 expect(isError(err)).toBeTruthy();
-                expect(err.message.indexOf("nothing was filtered from sessions")).not.toBe(-1);
+                console.log(err);
+                expect(err.message).toMatch("nothing was updated in sessions by \{.*?\}");
             }
             expect(result).toBeUndefined();
+            done();
         });
     
-        it("reconnects on not connected database when trying to get session", async function() {
+        it("reconnects on not connected database when trying to get session", async function(done) {
             await database.disconnect();
     
             let session = await database.getSession(helpers.existingSessionGuid);
             expect(session).toBeTruthy();
             expect(session.guid).toBe(helpers.existingSessionGuid);
+            done();
         });
     }); // end of read-only tests
 
@@ -96,7 +100,7 @@ describe("Database Session", function() {
             await database.disconnect();
         })
 
-        it("creates session and grabs available worker", async function() {
+        it("creates session and grabs available worker", async function(done) {
             let newWorker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
             let workspace = await helpers.createSomeWorkspace();
             let session: Session = await database.createSession(helpers.existingApiKey, workspace.guid);
@@ -136,9 +140,10 @@ describe("Database Session", function() {
             expect(new Date().getTime() - worker.lastSeen.getTime()).toBeLessThan(3000); // db time minus now is less than 3 seconds
             expect(worker.firstSeen.getTime()).toBeLessThanOrEqual(worker.lastSeen.getTime());
             expect(worker.sessionGuid).toBe(session.guid);
+            done();
         })
 
-        it("closes session and releases worker", async function() {
+        it("closes session and releases worker", async function(done) {
             let newWorker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
             let workspace = await helpers.createSomeWorkspace();
             let session = await database.createSession(helpers.existingApiKey, workspace.guid);
@@ -155,9 +160,10 @@ describe("Database Session", function() {
             expect(closedSession.workerGuid).toBe(newWorker.guid);
             expect(closedSession.workerRef).toBeTruthy();
             expect(closedSession.workerRef.sessionGuid).toBeNull();
+            done();
         })
 
-        it("expires one session and releases one worker", async function() {
+        it("expires one session and releases one worker", async function(done) {
             let newWorker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
             let workspace = await helpers.createSomeWorkspace();
             let session = await database.createSession(helpers.existingApiKey, workspace.guid);
@@ -180,9 +186,10 @@ describe("Database Session", function() {
             expect(expiredSessions[0].workerRef).toBeTruthy();
             expect(expiredSessions[0].workerRef.sessionGuid).toBeNull();
             expect(expiredSessions[0].workerRef.guid).toBe(newWorker.guid);
+            done();
         })
 
-        it("checks that workers with less CPU load are grabbed first", async function() {
+        it("checks that workers with less CPU load are grabbed first", async function(done) {
             let worker0 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.9);
             let worker1 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.1);
             let worker2 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.3);
@@ -222,9 +229,10 @@ describe("Database Session", function() {
             expect(grabbedWorker1.cpuUsage).toBe(0.3);
             expect(grabbedWorker2.cpuUsage).toBe(0.5);
             expect(grabbedWorker3.cpuUsage).toBe(0.9);
+            done();
         })
 
-        it("checks that session fails to open when no more workers available", async function() {
+        it("checks that session fails to open when no more workers available", async function(done) {
             await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.1);
             let workspace = await helpers.createSomeWorkspace();
 
@@ -237,10 +245,11 @@ describe("Database Session", function() {
             } catch (err) {
                 expect(isError(err));
                 expect(err.message).toBe("all workers busy");
+                done();
             }
         })
 
-        it("checks that another session can reuse previously released worker", async function() {
+        it("checks that another session can reuse previously released worker", async function(done) {
             let worker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.1);
             let workspace = await helpers.createSomeWorkspace();
 
@@ -254,9 +263,10 @@ describe("Database Session", function() {
             let session1 = await database.createSession(helpers.existingApiKey, workspace.guid);
             expect(session1).toBeTruthy();
             expect(session1.workerGuid).toBe(worker.guid);
+            done();
         })
 
-        it("checks that session does not grab offline worker", async function() {
+        it("checks that session does not grab offline worker", async function(done) {
             let worker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.1);
             let workspace = await helpers.createSomeWorkspace();
 
@@ -295,9 +305,10 @@ describe("Database Session", function() {
 
             let session = await database.createSession(helpers.existingApiKey, workspace.guid);
             expect(session).toBeTruthy();
+            done();
         })
 
-        it("checks that closed session can not be closed twice", async function() {
+        it("checks that closed session can not be closed twice", async function(done) {
             let worker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
             let workspace = await helpers.createSomeWorkspace();
 
@@ -314,10 +325,11 @@ describe("Database Session", function() {
             } catch (err) {
                 expect(isError(err));
                 expect(err.message).toBe("session not found");
+                done();
             }
         })
 
-        it("checks that expired session can not be closed", async function() {
+        it("checks that expired session can not be closed", async function(done) {
             let worker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
             let workspace = await helpers.createSomeWorkspace();
 
@@ -335,6 +347,7 @@ describe("Database Session", function() {
             } catch (err) {
                 expect(isError(err));
                 expect(err.message).toBe("session not found");
+                done();
             }
         })
     }); // end of write tests
