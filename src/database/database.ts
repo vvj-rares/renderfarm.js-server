@@ -2,7 +2,7 @@
 
 import "reflect-metadata";
 
-import { MongoClient, CollectionInsertOneOptions, InsertOneWriteOpResult, MongoCallback, MongoError } from "mongodb";
+import { MongoClient, CollectionInsertOneOptions, InsertOneWriteOpResult, MongoCallback, MongoError, FindOneAndUpdateOption, FindAndModifyWriteOpResultObject, UpdateOneOptions, UpdateWriteOpResult, UpdateManyOptions } from "mongodb";
 import { injectable, inject } from "inversify";
 import { IDatabase, ISettings } from "../interfaces"
 
@@ -13,6 +13,7 @@ import { Workspace } from "./model/workspace";
 import { Session } from "./model/session";
 import { Worker } from "./model/worker";
 import { TYPES } from "../types";
+import { resolve } from "url";
 
 const uuidv4 = require('uuid/v4');
 
@@ -448,38 +449,52 @@ export class Database implements IDatabase {
         return ctor(obj);
     }
 
-    public async findOneAndUpdate<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T> {
-        await this.ensureClientConnection();
+    public findOneAndUpdate<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T> {
+        return new Promise<T>(async function(resolve, reject){
 
-        let db = this._client.db(this._settings.current.databaseName);
-        assert.notEqual(db, null);
+            await this.ensureClientConnection();
 
-        let obj = await db.collection(this.envCollectionName(collection)).findOneAndUpdate(
-            filter,
-            setter,
-            { returnOriginal: false });
+            let db = this._client.db(this._settings.current.databaseName);
+            assert.notEqual(db, null);
+    
+            let opt: FindOneAndUpdateOption = { w: "majority", j: true };
 
-        if (obj.ok === 1 && obj.value) {
-            return ctor(obj.value);
-        } else {
-            throw Error(`nothing was filtered from ${collection} by ${JSON.stringify(filter)}`);
-        }
+            let callback: MongoCallback<FindAndModifyWriteOpResultObject> = function (error: MongoError, res: FindAndModifyWriteOpResultObject) {
+                console.log(" >> findOneAndUpdate result: ", res.value);
+                if (res && res.ok === 1 && res.value) {
+                    resolve(ctor(res.value));
+                } else if (error) { 
+                    console.error(" >> findOneAndUpdate error: ", error);
+                    reject(Error(error.message));
+                } else {
+                    reject(Error(`nothing was updated in ${collection} by ${JSON.stringify(filter)}`));
+                }
+            }.bind(this);
+    
+            db.collection(this.envCollectionName(collection)).findOneAndUpdate(
+                filter,
+                setter,
+                opt,
+                callback);
+    
+        }.bind(this));
     }
 
-    public async insertOne<T extends IDbEntity>(collection: string, entity: IDbEntity, ctor: (obj: any) => T): Promise<T> {
+    public insertOne<T extends IDbEntity>(collection: string, entity: IDbEntity, ctor: (obj: any) => T): Promise<T> {
         return new Promise<T>(async function(resolve, reject) {
             await this.ensureClientConnection();
 
             let db = this._client.db(this._settings.current.databaseName);
             assert.notEqual(db, null);
 
-            let opt: CollectionInsertOneOptions = { w: "majority" };
-            opt.j = true;
+            let opt: CollectionInsertOneOptions = { w: "majority", j: true };
             let callback: MongoCallback<InsertOneWriteOpResult> = function (error: MongoError, res: InsertOneWriteOpResult) {
-                if (res.result.ok === 1 && res.insertedCount === 1) {
+                if (res && res.result.ok === 1 && res.insertedCount === 1) {
                     resolve(ctor(res.ops[0]));
-                } else {
+                } else if (error) {
                     reject(Error(error.message));
+                } else {
+                    reject(Error(`nothing was inserted into ${collection}, ${JSON.stringify(entity)}`));
                 }
             }.bind(this);
 
@@ -487,37 +502,52 @@ export class Database implements IDatabase {
                 entity.toJSON(), 
                 opt,
                 callback);
+
         }.bind(this));
     }
 
-    public async updateOne(collection: string, filter: any, setter: any): Promise<boolean> {
-        await this.ensureClientConnection();
+    public updateOne(collection: string, filter: any, setter: any): Promise<boolean> {
+        return new Promise<boolean>(async function(resolve, reject){
+            await this.ensureClientConnection();
 
-        let db = this._client.db(this._settings.current.databaseName);
-        assert.notEqual(db, null);
-
-        let obj = await db.collection(this.envCollectionName(collection)).updateOne(
-            filter,
-            setter,
-            { upsert: false });
-
-        // result: { ok: 1, nModified: 0, n: 1, upserted: [ [Object] ] },
-        if (obj && obj.result && obj.result.ok === 1 && obj.result.n > 0) {
-            return true;
-        } else {
-            return false;
-        }
+            let db = this._client.db(this._settings.current.databaseName);
+            assert.notEqual(db, null);
+    
+            let opt: UpdateOneOptions = { upsert: false, w: "majority", j: true };
+            let callback: MongoCallback<UpdateWriteOpResult> = function(error: MongoError, res: UpdateWriteOpResult) {
+                if (res && res.result && res.result.ok === 1 && res.result.n > 0) {
+                    resolve(true);
+                } else if (error) {
+                    reject(Error(error.message));
+                } else {
+                    reject(Error(`nothing was updated in ${collection} by ${JSON.stringify(filter)}`));
+                }
+            }.bind(this);
+    
+            db.collection(this.envCollectionName(collection)).updateOne(
+                filter,
+                setter,
+                opt, 
+                callback);
+    
+        }.bind(this));
     }
 
     public async updateMany(collection: string, filter: any, setter: any): Promise<number> {
+        
         let db = this._client.db(this._settings.current.databaseName);
         assert.notEqual(db, null);
 
         let trans = uuidv4();
         setter.$set._trans = trans; //remember transaction
+        let ops: UpdateManyOptions = { w: "majority", j: true, upsert: false };
+        let callback: MongoCallback<UpdateWriteOpResult> = function(error:MongoError, res:UpdateWriteOpResult) {
+            if (res) {
+                resolve()
+            }
+        }.bind(this);
 
-        let updateResult = await db.collection(this.envCollectionName(collection)).updateMany(filter, setter);
-        return updateResult.modifiedCount;
+        db.collection(this.envCollectionName(collection)).updateMany(filter, setter, ops, callback);
     }
 
     public async findManyAndUpdate<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T[]> {
