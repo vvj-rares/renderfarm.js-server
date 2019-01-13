@@ -13,7 +13,7 @@ export class Settings implements ISettings {
     constructor(env: string) {
         this._env = env;
 
-        let settings = require("./settings/app.settings.js");
+        let settings = require("./settings/app.settings.js")();
         this._settings = settings.common;
 
         //now merge environment specific settings into common settings

@@ -14,19 +14,11 @@ describe("Database Session", function() {
     var database: Database;
     var helpers: JasmineHelpers;
 
-    beforeEach(async function() {
-        settings = new Settings("test");
-        database = new Database(settings);
-        helpers = new JasmineHelpers(database, settings);
-        await database.connect();
-        await database.dropAllCollections(/_testrun\d+/);
-        await database.disconnect();
-    });
-
     describe("read-only test", function() {
         beforeEach(async function() {
             settings = new Settings("test");
             database = new Database(settings);
+            helpers = new JasmineHelpers(database, settings);
             await database.connect();
         });
     
@@ -59,7 +51,6 @@ describe("Database Session", function() {
                 result = await database.getSession(helpers.notExistingSessionGuid);
             } catch (err) {
                 expect(isError(err)).toBeTruthy();
-                console.log(err);
                 expect(err.message).toMatch("nothing was updated in sessions by \{.*?\}");
             }
             expect(result).toBeUndefined();
@@ -89,6 +80,7 @@ describe("Database Session", function() {
             settings = new Settings("test");
             settings.current.collectionPrefix = `${collectionPrefix}${settings.current.collectionPrefix}`;
             database = new Database(settings);
+            helpers = new JasmineHelpers(database, settings);
             await database.connect();
             await database.createCollections();
         })
@@ -96,7 +88,7 @@ describe("Database Session", function() {
         afterEach(async function() {
             jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
 
-            await database.dropCollections();
+            await database.dropAllCollections(/_testrun\d+/);
             await database.disconnect();
         })
 

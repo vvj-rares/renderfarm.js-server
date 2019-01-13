@@ -13,7 +13,6 @@ import { Workspace } from "./model/workspace";
 import { Session } from "./model/session";
 import { Worker } from "./model/worker";
 import { TYPES } from "../types";
-import { resolve } from "url";
 
 const uuidv4 = require('uuid/v4');
 
@@ -310,9 +309,13 @@ export class Database implements IDatabase {
         let db = this._client.db(this._settings.current.databaseName);
         assert.notEqual(db, null);
 
-        let result = await db.collection(this.envCollectionName("workers")).find({ 
-            workgroup: { $eq: this._settings.current.workgroup }
-        }).sort({
+        let filter = { 
+            workgroup: this._settings.current.workgroup
+        };
+
+        let result = await db.collection(this.envCollectionName("workers"))
+        .find(filter)
+        .sort({
             cpuUsage: 1 //sort by cpu load, less loaded first
         }).toArray();
 
@@ -325,9 +328,9 @@ export class Database implements IDatabase {
 
         let recentOnlineDate = new Date(Date.now() - 2 * 1000);
         let result = await db.collection(this.envCollectionName("workers")).find({ 
-            workgroup: { $eq: this._settings.current.workgroup },
+            workgroup: this._settings.current.workgroup,
             lastSeen : { $gte: recentOnlineDate },
-            sessionGuid: { $eq: null }
+            sessionGuid: null
         }).sort({
             cpuUsage: 1 //sort by cpu load, less loaded first
         }).toArray();
@@ -449,6 +452,17 @@ export class Database implements IDatabase {
         return ctor(obj);
     }
 
+    public async find<T extends IDbEntity>(collection: string, filter: any, ctor: (obj: any) => T): Promise<T[]> {
+        await this.ensureClientConnection();
+
+        let db = this._client.db(this._settings.current.databaseName);
+        assert.notEqual(db, null);
+
+        let arr = await db.collection(this.envCollectionName(collection)).find(filter).toArray();
+
+        return arr.map(e => ctor(e)) 
+    }
+
     public findOneAndUpdate<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T> {
         return new Promise<T>(async function(resolve, reject){
 
@@ -460,7 +474,6 @@ export class Database implements IDatabase {
             let opt: FindOneAndUpdateOption = { w: "majority", j: true, returnOriginal: false };
 
             let callback: MongoCallback<FindAndModifyWriteOpResultObject> = function (error: MongoError, res: FindAndModifyWriteOpResultObject) {
-                // console.log(res);
                 if (res && res.ok === 1 && res.value) {
                     resolve(ctor(res.value));
                 } else if (error) { 

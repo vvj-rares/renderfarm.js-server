@@ -1,4 +1,4 @@
-module.exports = {
+module.exports = function() { return {
     version: "1.0.0",
     common: {
         workgroup: "default",
@@ -50,4 +50,4 @@ module.exports = {
         expireSessions: true,
         sessionTimeoutMinutes: 30
     }
-};
+} };

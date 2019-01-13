@@ -15,26 +15,11 @@ describe("Database Worker", function() {
     var database: Database;
     var helpers: JasmineHelpers;
 
-    beforeEach(async function() {
-        originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
-
-        settings = new Settings("test");
-        database = new Database(settings);
-        helpers = new JasmineHelpers(database, settings);
-        await database.connect();
-        await database.dropAllCollections(/_testrun\d+/);
-        await database.disconnect();
-    });
-
-    afterEach(function() {
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
-    });
-
     describe("read-only test", function() {
         beforeEach(async function() {
             settings = new Settings("test");
             database = new Database(settings);
+            helpers = new JasmineHelpers(database, settings);
             await database.connect();
         });
     
@@ -50,6 +35,7 @@ describe("Database Worker", function() {
 
             let otherWorkers = await database.getRecentWorkers();
             expect(otherWorkers.length).toBe(2);
+
             done();
         });
     }); // end of read-only tests
@@ -58,17 +44,23 @@ describe("Database Worker", function() {
         var collectionPrefix: string;
 
         beforeEach(async function() {
+            originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
+            jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
+    
             var randomPart = Math.round(9e9 * Math.random()).toFixed(0);
             collectionPrefix = `_testrun${randomPart}`;
             settings = new Settings("test");
             settings.current.collectionPrefix = `${collectionPrefix}${settings.current.collectionPrefix}`;
             database = new Database(settings);
+            helpers = new JasmineHelpers(database, settings);
             await database.connect();
             await database.createCollections();
         })
     
         afterEach(async function() {
-            await database.dropCollections();
+            jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
+
+            await database.dropAllCollections(/_testrun\d+/);
             await database.disconnect();
         })
 
@@ -138,14 +130,14 @@ describe("Database Worker", function() {
         }
 
         it("checks that available and recent workers are returned correctly", async function(done) {
-            let workers = await createOnlineAndOfflineWorkers();
-
-            let availableWorkers = await database.getAvailableWorkers();
-            expect(availableWorkers.length).toBe(1);
-            expect(availableWorkers[0].guid).toBe(workers[0].guid);
+            await createOnlineAndOfflineWorkers();
 
             let recentWorkers = await database.getRecentWorkers();
             expect(recentWorkers.length).toBe(3);
+
+            let availableWorkers = await database.getAvailableWorkers();
+            expect(availableWorkers.length).toBe(1);
+
             done();
         })
 

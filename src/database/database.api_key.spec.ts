@@ -13,22 +13,14 @@ describe("Database ApiKey", function() {
     var database: Database;
     var helpers: JasmineHelpers;
 
-    beforeEach(async function() {
-        settings = new Settings("test");
-        database = new Database(settings);
-        helpers = new JasmineHelpers(database, settings);
-        await database.connect();
-        await database.dropAllCollections(/_testrun\d+/);
-        await database.disconnect();
-    });
-
-    describe("(read-only tests):", function() {
+    describe("read-only tests", function() {
         beforeEach(async function() {
             settings = new Settings("test");
             database = new Database(settings);
+            helpers = new JasmineHelpers(database, settings);
             await database.connect();
         });
-
+    
         afterEach(async function() {
             await database.disconnect();
         })
