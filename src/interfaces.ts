@@ -93,5 +93,7 @@ export interface IMaxscriptClientFactory {
 }
 
 export interface IWorkerHeartbeatListener {
-    Listen(workerCb: (worker: Worker) => void, spawnerCb: (spawner: VraySpawnerInfo) => void): void;
+    Listen(workerAddedCb: (worker: Worker) => void,
+        workerUpdatedCb: (worker: Worker) => void,
+        spawnerCb: (spawner: VraySpawnerInfo) => void): void;
 }

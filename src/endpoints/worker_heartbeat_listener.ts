@@ -5,6 +5,7 @@ import { TYPES } from "../types";
 import { Worker } from "../database/model/worker";
 
 const uuidv4 = require('uuid/v4');
+const dgram = require('dgram');
 
 @injectable()
 export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
@@ -16,7 +17,8 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
         [id: string]: VraySpawnerInfo;
     } = {};
 
-    private _workerCb: (worker: Worker) => void;
+    private _workerAddedCb: (worker: Worker) => void;
+    private _workerUpdatedCb: (worker: Worker) => void;
     private _spawnerCb: (worker: VraySpawnerInfo) => void;
 
     private _settings: ISettings;
@@ -26,15 +28,22 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
         this._settings = settings;
     }
 
-    public Listen(workerCb: (worker: Worker) => void, spawnerCb: (spawner: VraySpawnerInfo) => void) {
-        this._workerCb = workerCb;
+    public Listen(
+        workerAddedCb: (worker: Worker) => void,
+        workerUpdatedCb: (worker: Worker) => void,
+        spawnerCb: (spawner: VraySpawnerInfo) => void)
+    {
+        this._workerAddedCb = workerAddedCb;
+        this._workerUpdatedCb = workerUpdatedCb;
         this._spawnerCb = spawnerCb;
-        const dgram = require('dgram');
+
         const server = dgram.createSocket('udp4');
+
         server.on('error', function (err) {
             console.log(`Worker monitor error:\n${err.stack}`);
             server.close();
         }.bind(this));
+
         server.on('message', async function (msg, rinfo) {
             var rec = JSON.parse(msg.toString());
             // console.log(rec);
@@ -45,10 +54,12 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
                 this.handleHeartbeatFromWorkerManager(msg, rinfo, rec);
             }
         }.bind(this));
+
         server.on('listening', function () {
             const address = server.address();
             console.log(`    OK | Worker monitor is listening on ${address.address}:${address.port}`);
         }.bind(this));
+
         server.bind(this._settings.current.heartbeatPort);
     }
 
@@ -62,8 +73,8 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
             knownWorker.ramUsage = rec.ram_usage;
             knownWorker.totalRam = rec.total_ram;
 
-            if (this._workerCb) {
-                this._workerCb(knownWorker);
+            if (this._workerUpdatedCb) {
+                this._workerUpdatedCb(knownWorker);
             }
         }
         else {
@@ -82,11 +93,11 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
 
             this._workers[workerId] = newWorker;
 
-            if (this._workerCb) {
-                this._workerCb(newWorker);
+            if (this._workerAddedCb) {
+                this._workerAddedCb(newWorker);
             }
 
-            console.log(`new worker: ${msg} from ${rinfo.address}:${rinfo.port}`);
+            console.log(`    OK | new worker, ${msg} from ${rinfo.address}:${rinfo.port}`);
         }
     }
 

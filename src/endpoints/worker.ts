@@ -24,7 +24,7 @@ export class WorkerEndpoint implements IEndpoint {
             setInterval(this.tryDeleteDeadWorkers.bind(this), 5*1000); // check once per 5 sec
         }
 
-        this._workerHeartbeatListener.Listen( this.onWorkerUpdate.bind(this), this.onSpawnerUpdate.bind(this) );
+        this._workerHeartbeatListener.Listen( this.onWorkerAdded.bind(this), this.onWorkerUpdated.bind(this), this.onSpawnerUpdate.bind(this) );
     }
 
     bind(express: express.Application) {
@@ -50,17 +50,32 @@ export class WorkerEndpoint implements IEndpoint {
         }.bind(this));
     }
 
-    private onWorkerUpdate(worker: Worker) {
-        this._database.updateWorker(
-            worker, 
-            { $set: { 
-                lastSeen: new Date(),
-                cpuUsage: worker.cpuUsage,
-                ramUsage: worker.ramUsage
-            } });
+    private async onWorkerAdded(worker: Worker) {
+        try {
+            await this._database.insertWorker(worker);
+        } catch (err) {
+            console.error("failed to insert worker in database: ", err);
+        }
     }
 
-    private onSpawnerUpdate(spawner: VraySpawnerInfo) {
+    private async onWorkerUpdated(worker: Worker)
+    {
+        try {
+            await this._database.updateWorker(
+                worker,
+                {
+                    $set: {
+                        lastSeen: new Date(),
+                        cpuUsage: worker.cpuUsage,
+                        ramUsage: worker.ramUsage
+                    }
+                });
+        } catch (err) {
+            console.error("failed to update worker in database: ", err);
+        }
+    }
+
+private onSpawnerUpdate(spawner: VraySpawnerInfo) {
         // this._database.storeVraySpawner(spawner);
     }
 
