@@ -8,6 +8,10 @@ import { Workspace } from "./database/model/workspace";
 import { Session } from "./database/model/session";
 import { Worker } from "./database/model/worker";
 
+export interface IGetSessionOptions {
+    allowClosed: boolean;
+}
+
 export interface IDatabase {
     connect(): Promise<any>;
     disconnect(): Promise<any>;
@@ -18,7 +22,7 @@ export interface IDatabase {
     //api keys
     getApiKey(apiKey: string): Promise<ApiKey>;
 
-    getSession(sessionGuid: string): Promise<Session>;
+    getSession(sessionGuid: string, options?: any): Promise<Session>;
     createSession(apiKey: string, workspace: string): Promise<Session>;
     expireSessions(olderThanMinutes: number): Promise<Session[]>;
     closeSession(sessionGuid: string): Promise<Session>;

@@ -4,7 +4,7 @@ import "reflect-metadata";
 
 import { MongoClient, CollectionInsertOneOptions, InsertOneWriteOpResult, MongoCallback, MongoError, FindOneAndUpdateOption, FindAndModifyWriteOpResultObject, UpdateOneOptions, UpdateWriteOpResult, UpdateManyOptions } from "mongodb";
 import { injectable, inject } from "inversify";
-import { IDatabase, ISettings } from "../interfaces"
+import { IDatabase, ISettings, IGetSessionOptions } from "../interfaces"
 
 import assert = require("assert");
 import { ApiKey } from "./model/api_key";
@@ -161,19 +161,30 @@ export class Database implements IDatabase {
     //#endregion
 
     //#region Sessions
-    public async getSession(sessionGuid: string): Promise<Session> {
+    public async getSession(sessionGuid: string, options?: IGetSessionOptions): Promise<Session> {
+
+        let filter: any = { guid: sessionGuid, closed: { $ne: true } };
+
+        //todo: spec is required, test how options work
+        if (options && options.allowClosed) {
+            delete filter.closed;
+        }
+
         let session = await this.findOneAndUpdate<Session>(
             "sessions", 
-            { guid: sessionGuid, closed: { $ne: true } },
+            filter,
             { $set: { lastSeen: new Date() } },
             (obj) => new Session(obj));
 
-        session.workerRef = await this.getOne<Worker>(
-            "workers", 
-            { 
-                guid: session.workerGuid 
-            }, 
-            obj => new Worker(obj));
+        //todo: spec is required
+        if (!session.closed) {
+            session.workerRef = await this.getOne<Worker>(
+                "workers", 
+                { 
+                    guid: session.workerGuid 
+                }, 
+                obj => new Worker(obj));
+        }
 
         return session;
     }

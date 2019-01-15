@@ -196,6 +196,8 @@ describe(`Api`, function() {
 
         expect(json.data.closed).toBeNull();
         expect(json.data.expired).toBeNull();
+
+        console.log("Response on GET: ", json);
     }
 
     async function getClosedSessionAndCheck(apiKey: string, workspaceGuid: string, sessionGuid: string) {
@@ -219,6 +221,8 @@ describe(`Api`, function() {
 
         expect(json.data.closed).toBeTruthy();
         expect(json.data.expired).toBeNull();
+
+        console.log("Response on GET: ", json);
     }
 
     it("should return session guid on POST /session and be able to GET it back", async function(done) {
@@ -239,6 +243,8 @@ describe(`Api`, function() {
         expect(json.data.guid).toBeTruthy();
         expect(json.data.guid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
 
+        console.log("Response on POST: ", json);
+
         await getOpenSessionAndCheck(
             JasmineDeplHelpers.existingApiKey, 
             JasmineDeplHelpers.existingWorkspaceGuid, 
@@ -247,7 +253,7 @@ describe(`Api`, function() {
         done();
     })
 
-    it("should return closed session on DELETE /session and be able to GET it", async function(done) {
+    fit("should return closed session on DELETE /session and be able to GET it", async function(done) {
         let sessionGuid: string;
         { // open session
             let data: any = {
@@ -267,6 +273,8 @@ describe(`Api`, function() {
             expect(json.data.guid).toBeTruthy();
             expect(json.data.guid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
 
+            console.log("Response on POST: ", json);
+
             sessionGuid = json.data.guid;
         }
 
@@ -281,6 +289,8 @@ describe(`Api`, function() {
             expect(json.data).toBeTruthy();
             expect(json.data.guid).toBeTruthy();
             expect(json.data.guid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
+
+            console.log("Response on DELETE: ", json);
 
             await getClosedSessionAndCheck(
                 JasmineDeplHelpers.existingApiKey, 
