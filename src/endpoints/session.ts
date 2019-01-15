@@ -117,6 +117,7 @@ class SessionEndpoint implements IEndpoint {
             try {
                 session = await this._database.createSession(apiKey, workspaceGuid);
             } catch (err) {
+                console.log(`  FAIL | failed to create session, `, err);
                 res.status(500);
                 res.end(JSON.stringify({ ok: false, message: "failed to create session", error: err }, null, 2));
                 return;
@@ -201,54 +202,74 @@ class SessionEndpoint implements IEndpoint {
         }.bind(this));
 
         express.delete(`/v${this._settings.majorVersion}/session/:uid`, async function (req, res) {
-            console.log(`DELETE on /v1/session/${req.params.uid}`);
+            console.log(`DELETE on ${req.path}`);
 
             let sessionGuid = req.params.uid;
 
-            this._database.closeSession(sessionGuid)
-                .then(function(value){
+            let closedSession: Session;
+            try {
+                closedSession = await this._database.closeSession(sessionGuid);
+            } catch (err) {
+                console.log(`  FAIL | failed to close session, `, err);
+                res.status(500);
+                res.end(JSON.stringify({ ok: false, message: "failed to close session", error: err }, null, 2));
+                return;
+            }
 
-                    //now we're going to reset 3ds max as this session is being closed
-                    this._database.getWorker(sessionGuid)
-                    .then(function(worker){
+            res.status(200);
+            res.end(JSON.stringify({ 
+                ok: true, 
+                type: "session", 
+                data: { 
+                    guid: closedSession.guid, 
+                    firstSeen: closedSession.firstSeen,
+                    closedAt: closedSession.closedAt,
+                    closed: closedSession.closed
+                } }, null, 2));
+
+                // .then(function(value){
+
+                //     //now we're going to reset 3ds max as this session is being closed
+                //     this._database.getWorker(sessionGuid)
+                //     .then(function(worker){
     
-                        let maxscriptClient = this._maxscriptClientFactory.create();
-                        maxscriptClient.connect(worker.ip, worker.port)
-                            .then(function(value) {
+                //         let maxscriptClient = this._maxscriptClientFactory.create();
+                //         maxscriptClient.connect(worker.ip, worker.port)
+                //             .then(function(value) {
 
-                                maxscriptClient.resetScene()
-                                    .then(function(value) {
-                                        maxscriptClient.disconnect();
-                                        console.log(`    OK | scene reset`);
-                                        res.end(JSON.stringify({ success: true }, null, 2));
-                                    }.bind(this))
-                                    .catch(function(err) {
-                                        maxscriptClient.disconnect();
-                                        res.status(500);
-                                        console.error(`  FAIL | failed to reset worker scene, `, err);
-                                        res.end(JSON.stringify({ error: "failed to reset worker scene" }, null, 2));
-                                    }.bind(this)); // end of maxscriptClient.resetScene promise
+                //                 maxscriptClient.resetScene()
+                //                     .then(function(value) {
+                //                         maxscriptClient.disconnect();
+                //                         console.log(`    OK | scene reset`);
+                //                         res.end(JSON.stringify({ success: true }, null, 2));
+                //                     }.bind(this))
+                //                     .catch(function(err) {
+                //                         maxscriptClient.disconnect();
+                //                         res.status(500);
+                //                         console.error(`  FAIL | failed to reset worker scene, `, err);
+                //                         res.end(JSON.stringify({ error: "failed to reset worker scene" }, null, 2));
+                //                     }.bind(this)); // end of maxscriptClient.resetScene promise
                 
-                            }.bind(this))
-                            .catch(function(err) {
-                                res.status(500);
-                                console.error("failed to connect session worker, ", err);
-                                res.end(JSON.stringify({ error: "failed to connect session worker" }, null, 2));
-                            }.bind(this)); // end of maxscriptClient.connect promise
+                //             }.bind(this))
+                //             .catch(function(err) {
+                //                 res.status(500);
+                //                 console.error("failed to connect session worker, ", err);
+                //                 res.end(JSON.stringify({ error: "failed to connect session worker" }, null, 2));
+                //             }.bind(this)); // end of maxscriptClient.connect promise
     
-                    }.bind(this))
-                    .catch(function(err){
-                        res.status(500);
-                        console.error(`  FAIL | failed to get session worker, `, err);
-                        res.end(JSON.stringify({ error: "failed to get session worker" }, null, 2));
-                    }.bind(this)); // end of this._database.getWorker promise
+                //     }.bind(this))
+                //     .catch(function(err){
+                //         res.status(500);
+                //         console.error(`  FAIL | failed to get session worker, `, err);
+                //         res.end(JSON.stringify({ error: "failed to get session worker" }, null, 2));
+                //     }.bind(this)); // end of this._database.getWorker promise
                     
-                }.bind(this))
-                .catch(function(err){
-                    res.status(500);
-                    console.error(`  FAIL | failed to close session\n`, err);
-                    res.end(JSON.stringify({ error: "failed to close session" }, null, 2));
-                }.bind(this));
+                // }.bind(this))
+                // .catch(function(err){
+                //     res.status(500);
+                //     console.error(`  FAIL | failed to close session\n`, err);
+                //     res.end(JSON.stringify({ error: "failed to close session" }, null, 2));
+                // }.bind(this));
 
         }.bind(this));
     }

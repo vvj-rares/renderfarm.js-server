@@ -198,6 +198,29 @@ describe(`Api`, function() {
         expect(json.data.expired).toBeNull();
     }
 
+    async function getClosedSessionAndCheck(apiKey: string, workspaceGuid: string, sessionGuid: string) {
+        let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
+
+        JasmineDeplHelpers.checkResponse(res);
+        let json = res.data;
+
+        expect(json.ok).toBeTruthy();
+        expect(json.type).toBe("session");
+        expect(json.data.guid).toBe(sessionGuid);
+        expect(json.data.apiKey).toBe(apiKey);
+        expect(json.data.workspaceGuid).toBe(workspaceGuid);
+        expect(json.data.workerGuid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
+
+        let firstSeen = new Date(json.data.firstSeen);
+        let lastSeen = new Date(json.data.lastSeen);
+        let closedAt = new Date(json.data.closedAt);
+        expect(lastSeen.getTime()).toBeGreaterThan(firstSeen.getTime());
+        expect(closedAt.getTime()).toBeGreaterThanOrEqual(lastSeen.getTime());
+
+        expect(json.data.closed).toBeTruthy();
+        expect(json.data.expired).toBeNull();
+    }
+
     it("should return session guid on POST /session and be able to GET it back", async function(done) {
         let data: any = {
             api_key: JasmineDeplHelpers.existingApiKey,
@@ -220,6 +243,50 @@ describe(`Api`, function() {
             JasmineDeplHelpers.existingApiKey, 
             JasmineDeplHelpers.existingWorkspaceGuid, 
             json.data.guid);
+
+        done();
+    })
+
+    it("should return closed session on DELETE /session and be able to GET it", async function(done) {
+        let sessionGuid: string;
+        { // open session
+            let data: any = {
+                api_key: JasmineDeplHelpers.existingApiKey,
+                workspace_guid: JasmineDeplHelpers.existingWorkspaceGuid
+            };
+            let config: AxiosRequestConfig = {};
+
+            let res: any = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+
+            JasmineDeplHelpers.checkResponse(res);
+            let json = res.data;
+
+            expect(json.ok).toBeTruthy();
+            expect(json.type).toBe("session");
+            expect(json.data).toBeTruthy();
+            expect(json.data.guid).toBeTruthy();
+            expect(json.data.guid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
+
+            sessionGuid = json.data.guid;
+        }
+
+        { //now close the session
+            let res: any = await axios.delete(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
+
+            JasmineDeplHelpers.checkResponse(res);
+            let json = res.data;
+
+            expect(json.ok).toBeTruthy();
+            expect(json.type).toBe("session");
+            expect(json.data).toBeTruthy();
+            expect(json.data.guid).toBeTruthy();
+            expect(json.data.guid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
+
+            await getClosedSessionAndCheck(
+                JasmineDeplHelpers.existingApiKey, 
+                JasmineDeplHelpers.existingWorkspaceGuid, 
+                json.data.guid);
+        }
 
         done();
     })
