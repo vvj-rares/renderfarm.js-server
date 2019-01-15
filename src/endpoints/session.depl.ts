@@ -297,4 +297,21 @@ describe(`Api`, function() {
 
         done();
     })
+
+    it("should reject POST on /session when there's no available workers", async function (done) {
+        let workerCount: number;
+        { // first check how many available workers we have
+            let config: AxiosRequestConfig = {};
+            config.params = {
+                api_key: JasmineDeplHelpers.existingApiKey
+            };
+            let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
+            JasmineDeplHelpers.checkResponse(res);
+            let json = res.data;
+
+            workerCount = json.data.length;
+            console.log(`Available workers count: ${workerCount}`);
+            expect(workerCount).toBeGreaterThan(0);
+        }
+    });
 });
