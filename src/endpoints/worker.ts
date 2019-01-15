@@ -29,8 +29,9 @@ export class WorkerEndpoint implements IEndpoint {
 
     bind(express: express.Application) {
         express.get(`/v${this._settings.majorVersion}/worker`, async function (req, res) {
-            console.log(`GET on ${req.path} with api_key: ${req.query.api_key}`);
-            let apiKey = req.body.api_key;
+            let apiKey = req.query.api_key;
+            console.log(`GET on ${req.path} with api_key: ${apiKey}`);
+
             if (!apiKey) {
                 console.log(`REJECT | api_key empty`);
                 res.status(400);
@@ -39,7 +40,7 @@ export class WorkerEndpoint implements IEndpoint {
             }
 
             try {
-                await this._database.getApiKey(req.query.api_key);
+                await this._database.getApiKey(apiKey);
             }
             catch (err) {
                 res.status(403);

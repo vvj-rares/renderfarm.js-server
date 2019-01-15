@@ -50,7 +50,7 @@ class SessionEndpoint implements IEndpoint {
     bind(express: express.Application) {
         express.post(`/v${this._settings.majorVersion}/session`, async function (req, res) {
             let apiKey = req.body.api_key;
-            let workspaceGuid = req.body.workspace_giud;
+            let workspaceGuid = req.body.workspace_guid;
             console.log(`POST on ${req.path} with api_key: ${apiKey} with workspace: ${workspaceGuid}`);
 
             if (!apiKey) {
@@ -61,9 +61,9 @@ class SessionEndpoint implements IEndpoint {
             }
 
             if (!workspaceGuid) {
-                console.log(`REJECT | workspace_giud is empty`);
+                console.log(`REJECT | workspace_guid is empty`);
                 res.status(400);
-                res.end(JSON.stringify({ ok: false, message: "workspace_giud is missing", error: {} }, null, 2));
+                res.end(JSON.stringify({ ok: false, message: "workspace_guid is missing", error: {} }, null, 2));
                 return;
             }
 
