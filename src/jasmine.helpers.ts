@@ -78,6 +78,7 @@ export class JasmineSpecHelpers {
 export class JasmineDeplHelpers {
     public static existingApiKey: string = "75f5-4d53-b0f4";
     public static notExistingApiKey: string = "ffff-ffff-ffff";
+    public static notExistingWorkspaceGuid: string = "ffffffff-ffff-ffff-ffff-fffffffffffe";
 
     public static checkResponse = function(res) {
         expect(res).toBeTruthy();

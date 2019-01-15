@@ -63,9 +63,10 @@ describe(`Api`, function() {
         message: 'api_key is missing', 
         error: {} 
     } */
-    it("should reject POST on /session when api_key is invalid", async function() {
+    fit("should reject POST on /session when api_key is invalid", async function() {
         let data: any = {
-            api_key: JasmineDeplHelpers.notExistingApiKey
+            api_key: JasmineDeplHelpers.notExistingApiKey,
+            workspace_guid: JasmineDeplHelpers.notExistingWorkspaceGuid
         };
         let config: AxiosRequestConfig = {};
 
@@ -79,6 +80,7 @@ describe(`Api`, function() {
 
         JasmineDeplHelpers.checkErrorResponse(res, 403);
         let json = res.data;
+
         expect(json.ok).toBeFalsy();
         expect(json.message).toBeTruthy();
         expect(json.message).toBe("api_key rejected");
