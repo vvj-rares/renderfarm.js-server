@@ -164,16 +164,20 @@ export class Database implements IDatabase {
     public async getSession(sessionGuid: string, options?: IGetSessionOptions): Promise<Session> {
 
         let filter: any = { guid: sessionGuid, closed: { $ne: true } };
+        let setter: any = { $set: { lastSeen: new Date() } };
 
         //todo: spec is required, test how options work
         if (options && options.allowClosed) {
             delete filter.closed;
         }
+        if (options && options.readonly) {
+            setter = { };
+        }
 
         let session = await this.findOneAndUpdate<Session>(
             "sessions", 
             filter,
-            { $set: { lastSeen: new Date() } },
+            setter,
             (obj) => new Session(obj));
 
         //todo: spec is required
