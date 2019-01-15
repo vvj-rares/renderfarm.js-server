@@ -35,8 +35,7 @@ class SessionEndpoint implements IEndpoint {
         }
     }
 
-    async validateApiKey(apiKey: string, res: any) {
-        // validate apiKey
+    async validateApiKey(res: any, apiKey: string) {
         try {
             await this._database.getApiKey(apiKey);
             return true;
@@ -68,9 +67,7 @@ class SessionEndpoint implements IEndpoint {
                 return;
             }
 
-            if (!await this.validateApiKey(apiKey)) {
-                return;
-            }
+            if (!await this.validateApiKey(res, apiKey)) return;
 
             if (!await this.checkWorkspace(res, apiKey, workspaceGuid)) return;
 
