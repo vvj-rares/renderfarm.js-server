@@ -35,9 +35,24 @@ class SessionEndpoint implements IEndpoint {
         }
     }
 
+    async validateApiKey(apiKey: string, res: any) {
+        // validate apiKey
+        try {
+            await this._database.getApiKey(apiKey);
+        } catch (err) {
+            console.log(`REJECT | api_key rejected`);
+            res.status(403);
+            res.end(JSON.stringify({ ok: false, message: "api_key rejected", error: {} }, null, 2));
+            return;
+        }
+    }
+
     bind(express: express.Application) {
         express.post(`/v${this._settings.majorVersion}/session`, async function (req, res) {
             let apiKey = req.body.api_key;
+            let workspaceGuid = req.body.workspace_giud;
+            console.log(`POST on ${req.path} with api_key: ${apiKey} with workspace: ${workspaceGuid}`);
+
             if (!apiKey) {
                 console.log(`REJECT | api_key empty`);
                 res.status(400);
@@ -45,7 +60,6 @@ class SessionEndpoint implements IEndpoint {
                 return;
             }
 
-            let workspaceGuid = req.body.workspace_giud;
             if (!workspaceGuid) {
                 console.log(`REJECT | workspace_giud is empty`);
                 res.status(400);
@@ -53,9 +67,8 @@ class SessionEndpoint implements IEndpoint {
                 return;
             }
 
-            console.log(`POST on /session with api_key: ${apiKey} with workspace: ${workspaceGuid}`);
+            await this.validateApiKey(apiKey);
 
-            if (!await this.checkApiKey(res, apiKey)) return;
             if (!await this.checkWorkspace(res, apiKey, workspaceGuid)) return;
 
             const uuidv4 = require('uuid/v4');
