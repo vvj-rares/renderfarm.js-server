@@ -125,25 +125,55 @@ describe(`Api`, function() {
         error: {} 
     } */
     it("should reject POST on /session when workspace_guid is invalid", async function() {
-        // let data: any = {
-        //     api_key: JasmineDeplHelpers.existingApiKey
-        // };
-        // let config: AxiosRequestConfig = {};
+        let data: any = {
+            api_key: JasmineDeplHelpers.existingApiKey,
+            workspace_guid: JasmineDeplHelpers.notExistingWorkspaceGuid
+        };
+        let config: AxiosRequestConfig = {};
 
-        // let res: any;
-        // try {
-        //     await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
-        //     fail();
-        // } catch (err) {
-        //     res = err.response;
-        // }
+        let res: any;
+        try {
+            await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+            fail();
+        } catch (err) {
+            res = err.response;
+        }
 
-        // JasmineDeplHelpers.checkErrorResponse(res, 400);
-        // let json = res.data;
-        // expect(json.ok).toBeFalsy();
-        // expect(json.message).toBeTruthy();
-        // expect(json.message).toBe("workspace_guid is missing");
-        // expect(json.error).toBeTruthy();
+        JasmineDeplHelpers.checkErrorResponse(res, 403);
+        let json = res.data;
+        expect(json.ok).toBeFalsy();
+        expect(json.message).toBeTruthy();
+        expect(json.message).toBe("workspace_guid rejected");
+        expect(json.error).toBeTruthy();
     });
 
+    //request:  /POST https://dev1.renderfarmjs.com:8000/v1/session
+    //response: StatusCode=400
+    /* {
+        ok: false,
+        message: 'workspace_guid does not belong to provided api_key',
+        error: {}
+    } */
+    it("should reject POST on /session when workspace_guid does not belong to provided api_key", async function() {
+        let data: any = {
+            api_key: JasmineDeplHelpers.existingApiKey,
+            workspace_guid: JasmineDeplHelpers.existingWorkspaceGuid2
+        };
+        let config: AxiosRequestConfig = {};
+
+        let res: any;
+        try {
+            await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+            fail();
+        } catch (err) {
+            res = err.response;
+        }
+
+        JasmineDeplHelpers.checkErrorResponse(res, 403);
+        let json = res.data;
+        expect(json.ok).toBeFalsy();
+        expect(json.message).toBeTruthy();
+        expect(json.message).toBe("workspace_guid does not belong to provided api_key");
+        expect(json.error).toBeTruthy();
+    })
 });

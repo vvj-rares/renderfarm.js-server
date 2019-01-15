@@ -76,9 +76,16 @@ export class JasmineSpecHelpers {
 }
 
 export class JasmineDeplHelpers {
-    public static existingApiKey: string = "75f5-4d53-b0f4";
+    public static existingApiKey:  string = "75f5-4d53-b0f4";
+    public static existingApiKey2: string = "f39b-41cd-9315";
     public static notExistingApiKey: string = "ffff-ffff-ffff";
+
+    public static existingWorkspaceGuid: string    = "cfc3754f-0bf1-4b15-86a5-66e1d077c850";
+    public static otherWorkspaceGuid: string       = "94ea71ec-9560-482a-95b8-31a7af5e46dc";
     public static notExistingWorkspaceGuid: string = "ffffffff-ffff-ffff-ffff-fffffffffffe";
+
+    public static existingWorkspaceGuid2: string   = "886215aa-9082-4278-bb60-57328fce632b";
+    public static otherWorkspaceGuid2: string      = "7331b172-c31c-4a06-975f-b44c648e55f7";
 
     public static checkResponse = function(res) {
         expect(res).toBeTruthy();

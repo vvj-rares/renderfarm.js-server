@@ -47,6 +47,28 @@ class SessionEndpoint implements IEndpoint {
         }
     }
 
+    async validateWorkspaceGuid(res: any, apiKey: string, workspaceGuid: string)
+    {
+        try {
+            let workspace = await this._database.getWorkspace(workspaceGuid);
+
+            if (workspace.apiKey !== apiKey) {
+                console.log(`REJECT | workspace_guid does not belong to provided api_key`);
+                res.status(403);
+                res.end(JSON.stringify({ ok: false, message: "workspace_guid does not belong to provided api_key", error: {} }, null, 2));
+                return false;
+            }
+
+            return true;
+
+        } catch (err) {
+            console.log(`REJECT | workspace_guid rejected`);
+            res.status(403);
+            res.end(JSON.stringify({ ok: false, message: "workspace_guid rejected", error: {} }, null, 2));
+            return false;
+        }
+    }
+
     bind(express: express.Application) {
         express.post(`/v${this._settings.majorVersion}/session`, async function (req, res) {
             let apiKey = req.body.api_key;
@@ -69,7 +91,7 @@ class SessionEndpoint implements IEndpoint {
 
             if (!await this.validateApiKey(res, apiKey)) return;
 
-            if (!await this.checkWorkspace(res, apiKey, workspaceGuid)) return;
+            if (!await this.validateWorkspaceGuid(res, apiKey, workspaceGuid)) return;
 
             const uuidv4 = require('uuid/v4');
             let newSessionGuid = uuidv4();
