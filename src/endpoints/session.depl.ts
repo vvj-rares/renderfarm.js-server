@@ -192,7 +192,7 @@ describe(`Api`, function() {
 
         let firstSeen = new Date(json.data.firstSeen);
         let lastSeen = new Date(json.data.lastSeen);
-        expect(lastSeen.getTime()).toBeGreaterThan(firstSeen.getTime());
+        expect(lastSeen.getTime()).toBeGreaterThanOrEqual(firstSeen.getTime());
 
         expect(json.data.closed).toBeNull();
         expect(json.data.expired).toBeNull();
