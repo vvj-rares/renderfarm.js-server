@@ -3,6 +3,7 @@ import axios, { AxiosRequestConfig } from "axios";
 import { Settings } from "../settings";
 import { isArray, isNumber } from "util";
 import { JasmineDeplHelpers } from "../jasmine.helpers";
+import { Session } from "../database/model/session";
 
 require("../jasmine.config")();
 
@@ -299,8 +300,45 @@ describe(`Api`, function() {
     })
 
     it("should reject POST on /session when there's no available workers", async function (done) {
-        let workerCount: number;
+        let initialWorkerCount: number;
         { // first check how many available workers we have
+            let config: AxiosRequestConfig = {};
+            config.params = {
+                api_key: JasmineDeplHelpers.existingApiKey
+            };
+            let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
+            JasmineDeplHelpers.checkResponse(res);
+            let json = res.data;
+
+            initialWorkerCount = json.data.length;
+            console.log(`Available workers count: ${initialWorkerCount}`);
+            expect(initialWorkerCount).toBeGreaterThan(0);
+        }
+
+        let openSessions: Session[] = [];
+        for (let k = 0; k < initialWorkerCount; k++) {
+
+            // now create one session after another until we grab all workers
+            console.log(`Creating session ${k + 1} of ${initialWorkerCount}`);
+            let data: any = {
+                api_key: JasmineDeplHelpers.existingApiKey,
+                workspace_guid: JasmineDeplHelpers.existingWorkspaceGuid
+            };
+            let config: AxiosRequestConfig = {};
+
+            let res: any = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+
+            JasmineDeplHelpers.checkResponse(res);
+            let json = res.data;
+
+            expect(json.ok).toBeTruthy();
+            expect(json.type).toBe("session");
+
+            openSessions.push(json.data.guid);
+        }
+
+        let workerCount: number;
+        { // now check how many available workers left (must be zero)
             let config: AxiosRequestConfig = {};
             config.params = {
                 api_key: JasmineDeplHelpers.existingApiKey
@@ -311,7 +349,36 @@ describe(`Api`, function() {
 
             workerCount = json.data.length;
             console.log(`Available workers count: ${workerCount}`);
-            expect(workerCount).toBeGreaterThan(0);
+            expect(workerCount).toBe(0);
         }
+
+        { // now close sessions that we opened
+            for (let si in openSessions) {
+                let sessionGuid = openSessions[si];
+                let res: any = await axios.delete(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
+
+                JasmineDeplHelpers.checkResponse(res);
+                let json = res.data;
+
+                expect(json.ok).toBeTruthy();
+                expect(json.type).toBe("session");
+            }
+        }
+
+        { // and how many workers we have now?
+            let config: AxiosRequestConfig = {};
+            config.params = {
+                api_key: JasmineDeplHelpers.existingApiKey
+            };
+            let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
+            JasmineDeplHelpers.checkResponse(res);
+            let json = res.data;
+
+            workerCount = json.data.length;
+            console.log(`Available workers count: ${workerCount}`);
+            expect(workerCount).toBe(initialWorkerCount);
+        }
+
+        done();
     });
 });
