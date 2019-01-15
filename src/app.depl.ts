@@ -6,6 +6,10 @@ import { JasmineDeplHelpers } from "./jasmine.helpers";
 
 require("./jasmine.config")();
 
+// IMPORTANT!!! - spec namimg template
+// it("should return {what} on {HttpMethod} {path}")
+// it("should reject {HttpMethod} {path} when {what is wrong}")
+
 describe(`Api`, function() {
     var settings: Settings;
 
@@ -94,7 +98,6 @@ describe(`Api`, function() {
         expect(worker.sessionGuid).toBeNull();
     });
 
-    //TODO: 
     //request:  /GET https://dev1.renderfarmjs.com:8000/v1/worker
     /* response: 
     {

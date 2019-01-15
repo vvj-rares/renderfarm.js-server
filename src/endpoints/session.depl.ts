@@ -6,6 +6,10 @@ import { JasmineDeplHelpers } from "../jasmine.helpers";
 
 require("../jasmine.config")();
 
+// IMPORTANT!!! - spec namimg template
+// it("should return {what} on {HttpMethod} {path}")
+// it("should reject {HttpMethod} on {path} when {what is wrong}")
+
 describe(`Api`, function() {
     var settings: Settings;
 
@@ -59,6 +63,35 @@ describe(`Api`, function() {
         message: 'api_key is missing', 
         error: {} 
     } */
+    it("should reject POST on /session when api_key is invalid", async function() {
+        let data: any = {
+            api_key: JasmineDeplHelpers.notExistingApiKey
+        };
+        let config: AxiosRequestConfig = {};
+
+        let res: any;
+        try {
+            await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+            fail();
+        } catch (err) {
+            res = err.response;
+        }
+
+        JasmineDeplHelpers.checkErrorResponse(res, 403);
+        let json = res.data;
+        expect(json.ok).toBeFalsy();
+        expect(json.message).toBeTruthy();
+        expect(json.message).toBe("api_key rejected");
+        expect(json.error).toBeTruthy();
+    });
+
+    //request:  /POST https://dev1.renderfarmjs.com:8000/v1/session
+    //response: StatusCode=400
+    /* { 
+        ok: false, 
+        message: 'workspace_guid is missing', 
+        error: {} 
+    } */
     it("should reject POST on /session when workspace_guid is not provided", async function() {
         let data: any = {
             api_key: JasmineDeplHelpers.existingApiKey
@@ -79,6 +112,36 @@ describe(`Api`, function() {
         expect(json.message).toBeTruthy();
         expect(json.message).toBe("workspace_guid is missing");
         expect(json.error).toBeTruthy();
+    });
+
+    //todo: implement spec
+    //request:  /POST https://dev1.renderfarmjs.com:8000/v1/session
+    //response: StatusCode=400
+    /* { 
+        ok: false, 
+        message: 'workspace_guid is missing', 
+        error: {} 
+    } */
+    it("should reject POST on /session when workspace_guid is invalid", async function() {
+        // let data: any = {
+        //     api_key: JasmineDeplHelpers.existingApiKey
+        // };
+        // let config: AxiosRequestConfig = {};
+
+        // let res: any;
+        // try {
+        //     await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+        //     fail();
+        // } catch (err) {
+        //     res = err.response;
+        // }
+
+        // JasmineDeplHelpers.checkErrorResponse(res, 400);
+        // let json = res.data;
+        // expect(json.ok).toBeFalsy();
+        // expect(json.message).toBeTruthy();
+        // expect(json.message).toBe("workspace_guid is missing");
+        // expect(json.error).toBeTruthy();
     });
 
 });
