@@ -178,7 +178,9 @@ describe(`Api`, function() {
     })
 
     async function getOpenSessionAndCheck(apiKey: string, workspaceGuid: string, sessionGuid: string) {
+        console.log(`GET open session and check: apiKey=${apiKey}, workspaceGuid=${workspaceGuid}, sessionGuid=${sessionGuid}`);
         let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
+        console.log("Response on GET: ", res.data);
 
         JasmineDeplHelpers.checkResponse(res);
         let json = res.data;
@@ -196,12 +198,12 @@ describe(`Api`, function() {
 
         expect(json.data.closed).toBeNull();
         expect(json.data.expired).toBeNull();
-
-        console.log("Response on GET: ", json);
     }
 
     async function getClosedSessionAndCheck(apiKey: string, workspaceGuid: string, sessionGuid: string) {
+        console.log(`GET closed session and check: apiKey=${apiKey}, workspaceGuid=${workspaceGuid}, sessionGuid=${sessionGuid}`);
         let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
+        console.log("Response on GET: ", res.data);
 
         JasmineDeplHelpers.checkResponse(res);
         let json = res.data;
@@ -221,8 +223,6 @@ describe(`Api`, function() {
 
         expect(json.data.closed).toBeTruthy();
         expect(json.data.expired).toBeNull();
-
-        console.log("Response on GET: ", json);
     }
 
     it("should return session guid on POST /session and be able to GET it back", async function(done) {
@@ -233,6 +233,7 @@ describe(`Api`, function() {
         let config: AxiosRequestConfig = {};
 
         let res: any = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+        console.log("Response on POST: ", res.data);
 
         JasmineDeplHelpers.checkResponse(res);
         let json = res.data;
@@ -242,8 +243,6 @@ describe(`Api`, function() {
         expect(json.data).toBeTruthy();
         expect(json.data.guid).toBeTruthy();
         expect(json.data.guid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
-
-        console.log("Response on POST: ", json);
 
         await getOpenSessionAndCheck(
             JasmineDeplHelpers.existingApiKey, 
@@ -263,6 +262,7 @@ describe(`Api`, function() {
             let config: AxiosRequestConfig = {};
 
             let res: any = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+            console.log("Response on POST: ", res.data);
 
             JasmineDeplHelpers.checkResponse(res);
             let json = res.data;
@@ -272,14 +272,13 @@ describe(`Api`, function() {
             expect(json.data).toBeTruthy();
             expect(json.data.guid).toBeTruthy();
             expect(json.data.guid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
-
-            console.log("Response on POST: ", json);
 
             sessionGuid = json.data.guid;
         }
 
         { //now close the session
             let res: any = await axios.delete(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
+            console.log("Response on DELETE: ", res.data);
 
             JasmineDeplHelpers.checkResponse(res);
             let json = res.data;
@@ -289,8 +288,6 @@ describe(`Api`, function() {
             expect(json.data).toBeTruthy();
             expect(json.data.guid).toBeTruthy();
             expect(json.data.guid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
-
-            console.log("Response on DELETE: ", json);
 
             await getClosedSessionAndCheck(
                 JasmineDeplHelpers.existingApiKey, 
