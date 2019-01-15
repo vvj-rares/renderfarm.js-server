@@ -180,14 +180,15 @@ export class Database implements IDatabase {
             setter,
             (obj) => new Session(obj));
 
-        //todo: spec is required
-        if (!session.closed) {
+        try {
             session.workerRef = await this.getOne<Worker>(
                 "workers", 
                 { 
                     guid: session.workerGuid 
                 }, 
                 obj => new Worker(obj));
+        } catch (err) {
+            // well, workers are not guaranteed to exist
         }
 
         return session;
