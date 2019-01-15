@@ -217,7 +217,7 @@ describe(`Api`, function() {
         let lastSeen = new Date(json.data.lastSeen);
         let closedAt = new Date(json.data.closedAt);
         expect(lastSeen.getTime()).toBeGreaterThan(firstSeen.getTime());
-        expect(closedAt.getTime()).toBeGreaterThanOrEqual(lastSeen.getTime());
+        expect(closedAt.getTime()).toBe(lastSeen.getTime());
 
         expect(json.data.closed).toBeTruthy();
         expect(json.data.expired).toBeNull();
@@ -253,7 +253,7 @@ describe(`Api`, function() {
         done();
     })
 
-    fit("should return closed session on DELETE /session and be able to GET it", async function(done) {
+    it("should return closed session on DELETE /session and be able to GET it", async function(done) {
         let sessionGuid: string;
         { // open session
             let data: any = {
