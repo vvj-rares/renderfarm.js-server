@@ -39,11 +39,12 @@ class SessionEndpoint implements IEndpoint {
         // validate apiKey
         try {
             await this._database.getApiKey(apiKey);
+            return true;
         } catch (err) {
             console.log(`REJECT | api_key rejected`);
             res.status(403);
             res.end(JSON.stringify({ ok: false, message: "api_key rejected", error: {} }, null, 2));
-            return;
+            return false;
         }
     }
 
@@ -67,7 +68,9 @@ class SessionEndpoint implements IEndpoint {
                 return;
             }
 
-            await this.validateApiKey(apiKey);
+            if (!await this.validateApiKey(apiKey)) {
+                return;
+            }
 
             if (!await this.checkWorkspace(res, apiKey, workspaceGuid)) return;
 

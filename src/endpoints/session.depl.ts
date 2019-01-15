@@ -63,7 +63,7 @@ describe(`Api`, function() {
         message: 'api_key is missing', 
         error: {} 
     } */
-    fit("should reject POST on /session when api_key is invalid", async function() {
+    it("should reject POST on /session when api_key is invalid", async function() {
         let data: any = {
             api_key: JasmineDeplHelpers.notExistingApiKey,
             workspace_guid: JasmineDeplHelpers.notExistingWorkspaceGuid
