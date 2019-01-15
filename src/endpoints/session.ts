@@ -71,6 +71,25 @@ class SessionEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
+        express.get(`/v${this._settings.majorVersion}/session/:uid`, async function (req, res) {
+            let sessionGuid = req.params.uid;
+            console.log(`GET on ${req.path}`);
+
+            let session: Session;
+            try {
+                session = await this._database.getSession(sessionGuid);
+            } catch (err) {
+                console.log(`  FAIL | failed to get session: ${sessionGuid}`);
+                res.status(500);
+                res.end(JSON.stringify({ ok: false, message: "failed to get session", error: err }, null, 2));
+                return;
+            }
+
+            res.status(200);
+            res.end(JSON.stringify({ ok: true, type: "session", data: session.toJSON() }, null, 2));
+
+        }.bind(this));
+
         express.post(`/v${this._settings.majorVersion}/session`, async function (req, res) {
             let apiKey = req.body.api_key;
             let workspaceGuid = req.body.workspace_guid;
@@ -100,6 +119,7 @@ class SessionEndpoint implements IEndpoint {
             } catch (err) {
                 res.status(500);
                 res.end(JSON.stringify({ ok: false, message: "failed to create session", error: err }, null, 2));
+                return;
             }
 
             res.status(200);
