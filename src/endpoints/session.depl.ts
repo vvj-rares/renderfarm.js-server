@@ -176,4 +176,21 @@ describe(`Api`, function() {
         expect(json.message).toBe("workspace_guid does not belong to provided api_key");
         expect(json.error).toBeTruthy();
     })
+
+    it("should return session guid on POST /session", async function() {
+        let data: any = {
+            api_key: JasmineDeplHelpers.existingApiKey,
+            workspace_guid: JasmineDeplHelpers.existingWorkspaceGuid
+        };
+        let config: AxiosRequestConfig = {};
+
+        let res: any = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+
+        JasmineDeplHelpers.checkErrorResponse(res, 200);
+        let json = res.data;
+        console.log(json);
+        expect(json.ok).toBeTruthy();
+
+        //todo: add more checks
+    })
 });
