@@ -170,15 +170,20 @@ export class Database implements IDatabase {
         if (options && options.allowClosed) {
             delete filter.closed;
         }
-        if (options && options.readOnly) {
-            setter = { };
-        }
 
-        let session = await this.findOneAndUpdate<Session>(
-            "sessions", 
-            filter,
-            setter,
-            (obj) => new Session(obj));
+        let session: Session;
+        if (options && options.readOnly) {
+            session = await this.getOne<Session>(
+                "sessions", 
+                filter,
+                (obj) => new Session(obj));
+        } else {
+            session = await this.findOneAndUpdate<Session>(
+                "sessions", 
+                filter,
+                setter,
+                (obj) => new Session(obj));
+        }
 
         try {
             session.workerRef = await this.getOne<Worker>(
