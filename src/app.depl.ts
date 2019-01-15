@@ -95,11 +95,11 @@ describe(`Api`, function() {
     });
 
     //TODO: 
-    //request:  /GET https://dev1.renderfarmjs.com:8000/v1/worker/?api_key=ffff-ffff-ffff
+    //request:  /GET https://dev1.renderfarmjs.com:8000/v1/worker
     /* response: 
     {
         "ok": false,
-        "message": "api key rejected",
+        "message": "api_key is missing",
         "error": {}
     } */
     it("should reject GET /worker when no api_key is provided", async function() {
@@ -116,12 +116,12 @@ describe(`Api`, function() {
             res = err.response;
         }
 
-        JasmineDeplHelpers.checkErrorResponse(res, 403);
+        JasmineDeplHelpers.checkErrorResponse(res, 400);
         let json = res.data;
 
         expect(json.ok).toBeFalsy();
         expect(json.message).toBeTruthy();
-        expect(json.message).toBe("api key rejected");
+        expect(json.message).toBe("api_key is missing");
         expect(json.error).toBeTruthy();
     })
 
@@ -129,7 +129,7 @@ describe(`Api`, function() {
     /* response: 
     {
         "ok": false,
-        "message": "api key rejected",
+        "message": "api_key rejected",
         "error": {}
     } */
     it("should reject /GET worker when invalid api_key is provided", async function() {
@@ -151,7 +151,7 @@ describe(`Api`, function() {
 
         expect(json.ok).toBeFalsy();
         expect(json.message).toBeTruthy();
-        expect(json.message).toBe("api key rejected");
+        expect(json.message).toBe("api_key rejected");
         expect(json.error).toBeTruthy();
     })
 });

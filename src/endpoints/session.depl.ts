@@ -32,7 +32,7 @@ describe(`Api`, function() {
         message: 'api_key is missing', 
         error: {} 
     } */
-    fit("should reject POST on /session when api_key is not provided", async function() {
+    it("should reject POST on /session when api_key is not provided", async function() {
         let data: any = {};
         let config: AxiosRequestConfig = {};
 
@@ -59,7 +59,7 @@ describe(`Api`, function() {
         message: 'api_key is missing', 
         error: {} 
     } */
-    fit("should reject POST on /session when  workspace_guid is not provided", async function() {
+    it("should reject POST on /session when workspace_guid is not provided", async function() {
         let data: any = {
             api_key: JasmineDeplHelpers.existingApiKey
         };
