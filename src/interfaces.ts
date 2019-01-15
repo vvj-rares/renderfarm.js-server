@@ -10,7 +10,7 @@ import { Worker } from "./database/model/worker";
 
 export interface IGetSessionOptions {
     allowClosed: boolean;
-    readonly: boolean;
+    readOnly: boolean;
 }
 
 export interface IDatabase {

@@ -170,7 +170,7 @@ export class Database implements IDatabase {
         if (options && options.allowClosed) {
             delete filter.closed;
         }
-        if (options && options.readonly) {
+        if (options && options.readOnly) {
             setter = { };
         }
 
