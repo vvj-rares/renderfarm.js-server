@@ -29,13 +29,21 @@ export class WorkerEndpoint implements IEndpoint {
 
     bind(express: express.Application) {
         express.get(`/v${this._settings.majorVersion}/worker`, async function (req, res) {
-            console.log(`GET on ${req.path} with api key: ${req.query.api_key}`);
+            console.log(`GET on ${req.path} with api_key: ${req.query.api_key}`);
+            let apiKey = req.body.api_key;
+            if (!apiKey) {
+                console.log(`REJECT | api_key empty`);
+                res.status(400);
+                res.end(JSON.stringify({ ok: false, message: "api_key is missing", error: {} }, null, 2));
+                return;
+            }
+
             try {
                 await this._database.getApiKey(req.query.api_key);
             }
             catch (err) {
                 res.status(403);
-                res.end(JSON.stringify({ ok: false, message: "api key rejected", error: err }, null, 2));
+                res.end(JSON.stringify({ ok: false, message: "api_key rejected", error: err }, null, 2));
                 return;
             }
 

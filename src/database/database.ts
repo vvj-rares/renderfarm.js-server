@@ -477,7 +477,6 @@ export class Database implements IDatabase {
                 if (res && res.ok === 1 && res.value) {
                     resolve(ctor(res.value));
                 } else if (error) { 
-                    console.error(error);
                     reject(Error(error.message));
                 } else {
                     reject(Error(`nothing was updated in ${collection} by ${JSON.stringify(filter)}`));

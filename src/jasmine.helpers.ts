@@ -6,7 +6,7 @@ import { Session } from "./database/model/session";
 
 const uuidv4 = require('uuid/v4');
 
-export class JasmineHelpers {
+export class JasmineSpecHelpers {
     public existingApiKey: string = "0000-0001";
     public existingUserGuid: string = "00000000-0000-0000-0000-000000000001";
     public existingSessionGuid: string = "00000000-1111-0000-0000-000000000001";
@@ -72,5 +72,28 @@ export class JasmineHelpers {
 
         // add fresh worker for the session
         return this.database.insertOne<Workspace>("workspaces", newWorkspace, obj => new Workspace(obj));
+    }
+}
+
+export class JasmineDeplHelpers {
+    public static existingApiKey: string = "75f5-4d53-b0f4";
+    public static notExistingApiKey: string = "ffff-ffff-ffff";
+
+    public static checkResponse = function(res) {
+        expect(res).toBeTruthy();
+        expect(res.status).toBe(200);
+        expect(res.headers['access-control-allow-origin']).toBe('*');
+        expect(res.headers['access-control-allow-headers']).toBe('Origin, X-Requested-With, Content-Type, Accept');
+        expect(res.headers['access-control-allow-methods']).toBe('PUT, POST, GET, DELETE, OPTIONS');
+        expect(res.data).toBeTruthy();
+    }
+
+    public static checkErrorResponse = function(res, expectedStatus) {
+        expect(res).toBeTruthy();
+        expect(res.status).toBe(expectedStatus);
+        expect(res.headers['access-control-allow-origin']).toBe('*');
+        expect(res.headers['access-control-allow-headers']).toBe('Origin, X-Requested-With, Content-Type, Accept');
+        expect(res.headers['access-control-allow-methods']).toBe('PUT, POST, GET, DELETE, OPTIONS');
+        expect(res.data).toBeTruthy();
     }
 }

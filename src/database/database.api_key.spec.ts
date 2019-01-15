@@ -4,20 +4,20 @@ import { Settings } from "../settings";
 import { Database } from "./database";
 import { ApiKey } from "./model/api_key";
 import { isError } from "util";
-import { JasmineHelpers } from "../jasmine.helpers";
+import { JasmineSpecHelpers } from "../jasmine.helpers";
 
 require("../jasmine.config")();
 
 describe("Database ApiKey", function() {
     var settings: Settings;
     var database: Database;
-    var helpers: JasmineHelpers;
+    var helpers: JasmineSpecHelpers;
 
     describe("read-only tests", function() {
         beforeEach(async function() {
             settings = new Settings("test");
             database = new Database(settings);
-            helpers = new JasmineHelpers(database, settings);
+            helpers = new JasmineSpecHelpers(database, settings);
             await database.connect();
         });
     

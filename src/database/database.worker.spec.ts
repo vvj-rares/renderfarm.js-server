@@ -2,7 +2,7 @@ import "reflect-metadata";
 
 import { Settings } from "../settings";
 import { Database } from "./database";
-import { JasmineHelpers } from "../jasmine.helpers";
+import { JasmineSpecHelpers } from "../jasmine.helpers";
 import { Worker } from "./model/worker";
 
 require("../jasmine.config")();
@@ -13,13 +13,13 @@ describe("Database Worker", function() {
 
     var settings: Settings;
     var database: Database;
-    var helpers: JasmineHelpers;
+    var helpers: JasmineSpecHelpers;
 
     describe("read-only test", function() {
         beforeEach(async function() {
             settings = new Settings("test");
             database = new Database(settings);
-            helpers = new JasmineHelpers(database, settings);
+            helpers = new JasmineSpecHelpers(database, settings);
             await database.connect();
         });
     
@@ -52,7 +52,7 @@ describe("Database Worker", function() {
             settings = new Settings("test");
             settings.current.collectionPrefix = `${collectionPrefix}${settings.current.collectionPrefix}`;
             database = new Database(settings);
-            helpers = new JasmineHelpers(database, settings);
+            helpers = new JasmineSpecHelpers(database, settings);
             await database.connect();
             await database.createCollections();
         })

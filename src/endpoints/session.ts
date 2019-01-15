@@ -20,7 +20,7 @@ class SessionEndpoint implements IEndpoint {
         //expire sessions by timer
         if (this._settings.current.expireSessions) {
             setInterval(async function() {
-                await this._database.expireSessions(this._settings.current.sessionTimeoutMinutes)
+                this._database.expireSessions(this._settings.current.sessionTimeoutMinutes)
                     .then(function(guids){
                         if (guids.length === 0) {
                             return;
@@ -35,62 +35,21 @@ class SessionEndpoint implements IEndpoint {
         }
     }
 
-    async checkApiKey(res: any, apiKey: string): Promise<boolean> {
-        try {
-            let apiKeyRec = await this._database.getApiKey(apiKey);
-            if (!apiKeyRec) {
-                console.error(`  FAIL | rejected api key: ${apiKey}\n`);
-
-                res.status(403);
-                res.end(JSON.stringify({ error: "api_key rejected" }, null, 2));
-                return false;
-            }
-
-            console.log(`    OK | accepted api key: ${apiKey}`);
-
-            return true;
-        }
-        catch(exc) {
-            console.error(`  FAIL | failed to check api key: ${apiKey}\n`, exc);
-
-            res.status(500);
-            res.end(JSON.stringify({ error: "failed to check api key" }, null, 2));
-            return false;
-        }
-    }
-
-    async checkWorkspace(res: any, apiKey: string, workspaceGuid: string): Promise<boolean> {
-        try {
-            let workspaceInfo = await this._database.getWorkspace(workspaceGuid);
-
-            console.log(`    OK | accepted workspace guid: ${workspaceInfo.guid}`);
-
-            return true;
-        }
-        catch(exc) {
-            console.error(`  FAIL | workspace guid rejected: ${workspaceGuid}\n`, exc);
-
-            res.status(500);
-            res.end(JSON.stringify({ error: "workspace guid rejected" }, null, 2));
-            return false;
-        }
-    }
-
     bind(express: express.Application) {
         express.post(`/v${this._settings.majorVersion}/session`, async function (req, res) {
             let apiKey = req.body.api_key;
             if (!apiKey) {
                 console.log(`REJECT | api_key empty`);
                 res.status(400);
-                res.end(JSON.stringify({ error: "api_key is missing" }, null, 2));
+                res.end(JSON.stringify({ ok: false, message: "api_key is missing", error: {} }, null, 2));
                 return;
             }
 
-            let workspaceGuid = req.body.workspace;
+            let workspaceGuid = req.body.workspace_giud;
             if (!workspaceGuid) {
-                console.log(`REJECT | workspace guid is not provided`);
+                console.log(`REJECT | workspace_giud is empty`);
                 res.status(400);
-                res.end(JSON.stringify({ error: "workspace is missing" }, null, 2));
+                res.end(JSON.stringify({ ok: false, message: "workspace_giud is missing", error: {} }, null, 2));
                 return;
             }
 

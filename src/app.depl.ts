@@ -1,21 +1,13 @@
 import "reflect-metadata";
 import axios, { AxiosRequestConfig } from "axios";
 import { Settings } from "./settings";
-import { JasmineHelpers } from "./jasmine.helpers";
 import { isArray, isNumber } from "util";
+import { JasmineDeplHelpers } from "./jasmine.helpers";
 
 require("./jasmine.config")();
 
 describe(`Api`, function() {
     var settings: Settings;
-
-    var checkResponse = function(res) {
-        expect(res).toBeTruthy();
-        expect(res.status).toBe(200);
-        expect(res.headers['access-control-allow-origin']).toBe('*');
-        expect(res.headers['access-control-allow-headers']).toBe('Origin, X-Requested-With, Content-Type, Accept');
-        expect(res.headers['access-control-allow-methods']).toBe('PUT, POST, GET, DELETE, OPTIONS');
-    };
 
     beforeEach(function() {
         const host = "dev1.renderfarmjs.com";
@@ -33,21 +25,44 @@ describe(`Api`, function() {
         axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
     });
 
-    it("should return own version on simple GET request", async function() {
+    //request:  /GET https://dev1.renderfarmjs.com:8000/
+    //response: {"env":"dev","version":"1.0.0.57"}
+    it("should return own version on GET / request", async function() {
         let res: any = await axios.get(settings.current.publicUrl);
-        checkResponse(res);
+        JasmineDeplHelpers.checkResponse(res);
         expect(res.data).toBeTruthy();
         expect(res.data.version).toBe(settings.version);
     });
 
-    it("should return at least one available worker", async function() {
+    //request:  /GET https://dev1.renderfarmjs.com:8000/v1/worker/?api_key=75f5-4d53-b0f4
+    /* response: 
+    {
+        "ok": true,
+        "type": "worker",
+        "data": [
+            {
+            "guid": "32cd3e58-5ac7-4ad9-9db4-5a79b2d0c0b9",
+            "mac": "00000000000000",
+            "ip": "127.0.0.1",
+            "port": 53334,
+            "endpoint": "127.0.0.1:53334",
+            "workgroup": "default",
+            "firstSeen": "2019-01-14T19:47:02.925Z",
+            "lastSeen": "2019-01-15T06:17:02.861Z",
+            "cpuUsage": 0.06411851693063886,
+            "ramUsage": 0.10791498673546315,
+            "totalRam": 32,
+            "sessionGuid": null
+            }
+        ]
+    } */
+    it("should return at least one available worker on GET /worker", async function() {
         let config: AxiosRequestConfig = {};
         config.params = {
-            api_key: "75f5-4d53-b0f4"
+            api_key: JasmineDeplHelpers.existingApiKey
         };
         let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
-        checkResponse(res);
-        expect(res.data).toBeTruthy();
+        JasmineDeplHelpers.checkResponse(res);
         let json = res.data;
 
         expect(json.ok).toBeTruthy();
@@ -78,4 +93,65 @@ describe(`Api`, function() {
 
         expect(worker.sessionGuid).toBeNull();
     });
+
+    //TODO: 
+    //request:  /GET https://dev1.renderfarmjs.com:8000/v1/worker/?api_key=ffff-ffff-ffff
+    /* response: 
+    {
+        "ok": false,
+        "message": "api key rejected",
+        "error": {}
+    } */
+    it("should reject GET /worker when no api_key is provided", async function() {
+        let config: AxiosRequestConfig = {};
+        config.params = {
+            // api_key: undefined
+        };
+
+        let res: any;
+        try {
+            await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
+            fail();
+        } catch (err) {
+            res = err.response;
+        }
+
+        JasmineDeplHelpers.checkErrorResponse(res, 403);
+        let json = res.data;
+
+        expect(json.ok).toBeFalsy();
+        expect(json.message).toBeTruthy();
+        expect(json.message).toBe("api key rejected");
+        expect(json.error).toBeTruthy();
+    })
+
+    //request:  /GET https://dev1.renderfarmjs.com:8000/v1/worker/?api_key=ffff-ffff-ffff
+    /* response: 
+    {
+        "ok": false,
+        "message": "api key rejected",
+        "error": {}
+    } */
+    it("should reject /GET worker when invalid api_key is provided", async function() {
+        let config: AxiosRequestConfig = {};
+        config.params = {
+            api_key: JasmineDeplHelpers.notExistingApiKey
+        };
+
+        let res: any;
+        try {
+            await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
+            fail();
+        } catch (err) {
+            res = err.response;
+        }
+
+        JasmineDeplHelpers.checkErrorResponse(res, 403);
+        let json = res.data;
+
+        expect(json.ok).toBeFalsy();
+        expect(json.message).toBeTruthy();
+        expect(json.message).toBe("api key rejected");
+        expect(json.error).toBeTruthy();
+    })
 });
