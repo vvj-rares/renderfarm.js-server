@@ -37,7 +37,7 @@ describe(`Api`, function() {
         message: 'api_key is missing', 
         error: {} 
     } */
-    it("should reject POST on /session when api_key is not provided", async function() {
+    it("should reject POST on /session when api_key is not provided", async function(done) {
         let data: any = {};
         let config: AxiosRequestConfig = {};
 
@@ -49,12 +49,8 @@ describe(`Api`, function() {
             res = err.response;
         }
 
-        JasmineDeplHelpers.checkErrorResponse(res, 400);
-        let json = res.data;
-        expect(json.ok).toBeFalsy();
-        expect(json.message).toBeTruthy();
-        expect(json.message).toBe("api_key is missing");
-        expect(json.error).toBeTruthy();
+        JasmineDeplHelpers.checkErrorResponse(res, 400, "api_key is missing", "[1]");
+        done();
     });
 
     //request:  /POST https://dev1.renderfarmjs.com:8000/v1/session
@@ -64,7 +60,7 @@ describe(`Api`, function() {
         message: 'api_key is missing', 
         error: {} 
     } */
-    it("should reject POST on /session when api_key is invalid", async function() {
+    it("should reject POST on /session when api_key is invalid", async function(done) {
         let data: any = {
             api_key: JasmineDeplHelpers.notExistingApiKey,
             workspace_guid: JasmineDeplHelpers.notExistingWorkspaceGuid
@@ -79,13 +75,8 @@ describe(`Api`, function() {
             res = err.response;
         }
 
-        JasmineDeplHelpers.checkErrorResponse(res, 403);
-        let json = res.data;
-
-        expect(json.ok).toBeFalsy();
-        expect(json.message).toBeTruthy();
-        expect(json.message).toBe("api_key rejected");
-        expect(json.error).toBeTruthy();
+        JasmineDeplHelpers.checkErrorResponse(res, 403, "api_key rejected", "[2]");
+        done();
     });
 
     //request:  /POST https://dev1.renderfarmjs.com:8000/v1/session
@@ -95,7 +86,7 @@ describe(`Api`, function() {
         message: 'workspace_guid is missing', 
         error: {} 
     } */
-    it("should reject POST on /session when workspace_guid is not provided", async function() {
+    it("should reject POST on /session when workspace_guid is not provided", async function(done) {
         let data: any = {
             api_key: JasmineDeplHelpers.existingApiKey
         };
@@ -109,12 +100,8 @@ describe(`Api`, function() {
             res = err.response;
         }
 
-        JasmineDeplHelpers.checkErrorResponse(res, 400);
-        let json = res.data;
-        expect(json.ok).toBeFalsy();
-        expect(json.message).toBeTruthy();
-        expect(json.message).toBe("workspace_guid is missing");
-        expect(json.error).toBeTruthy();
+        JasmineDeplHelpers.checkErrorResponse(res, 400, "workspace_guid is missing", "[2]");
+        done();
     });
 
     //todo: implement spec
@@ -125,7 +112,7 @@ describe(`Api`, function() {
         message: 'workspace_guid is missing', 
         error: {} 
     } */
-    it("should reject POST on /session when workspace_guid is invalid", async function() {
+    it("should reject POST on /session when workspace_guid is invalid", async function(done) {
         let data: any = {
             api_key: JasmineDeplHelpers.existingApiKey,
             workspace_guid: JasmineDeplHelpers.notExistingWorkspaceGuid
@@ -140,12 +127,8 @@ describe(`Api`, function() {
             res = err.response;
         }
 
-        JasmineDeplHelpers.checkErrorResponse(res, 403);
-        let json = res.data;
-        expect(json.ok).toBeFalsy();
-        expect(json.message).toBeTruthy();
-        expect(json.message).toBe("workspace_guid rejected");
-        expect(json.error).toBeTruthy();
+        JasmineDeplHelpers.checkErrorResponse(res, 403, "workspace_guid rejected", "[3]");
+        done();
     });
 
     //request:  /POST https://dev1.renderfarmjs.com:8000/v1/session
@@ -155,7 +138,7 @@ describe(`Api`, function() {
         message: 'workspace_guid does not belong to provided api_key',
         error: {}
     } */
-    it("should reject POST on /session when workspace_guid does not belong to provided api_key", async function() {
+    it("should reject POST on /session when workspace_guid does not belong to provided api_key", async function(done) {
         let data: any = {
             api_key: JasmineDeplHelpers.existingApiKey,
             workspace_guid: JasmineDeplHelpers.existingWorkspaceGuid2
@@ -170,12 +153,8 @@ describe(`Api`, function() {
             res = err.response;
         }
 
-        JasmineDeplHelpers.checkErrorResponse(res, 403);
-        let json = res.data;
-        expect(json.ok).toBeFalsy();
-        expect(json.message).toBeTruthy();
-        expect(json.message).toBe("workspace_guid does not belong to provided api_key");
-        expect(json.error).toBeTruthy();
+        JasmineDeplHelpers.checkErrorResponse(res, 403, "workspace_guid does not belong to provided api_key", "[5]");
+        done();
     })
 
     async function getOpenSessionAndCheck(apiKey: string, workspaceGuid: string, sessionGuid: string) {
@@ -236,11 +215,9 @@ describe(`Api`, function() {
         let res: any = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
         console.log("Response on POST: ", res.data);
 
-        JasmineDeplHelpers.checkResponse(res);
+        JasmineDeplHelpers.checkResponse(res, "session");
         let json = res.data;
 
-        expect(json.ok).toBeTruthy();
-        expect(json.type).toBe("session");
         expect(json.data).toBeTruthy();
         expect(json.data.guid).toBeTruthy();
         expect(json.data.guid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
@@ -281,11 +258,9 @@ describe(`Api`, function() {
             let res: any = await axios.delete(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
             console.log("Response on DELETE: ", res.data);
 
-            JasmineDeplHelpers.checkResponse(res);
+            JasmineDeplHelpers.checkResponse(res, "session");
             let json = res.data;
 
-            expect(json.ok).toBeTruthy();
-            expect(json.type).toBe("session");
             expect(json.data).toBeTruthy();
             expect(json.data.guid).toBeTruthy();
             expect(json.data.guid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
@@ -307,7 +282,7 @@ describe(`Api`, function() {
                 api_key: JasmineDeplHelpers.existingApiKey
             };
             let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
-            JasmineDeplHelpers.checkResponse(res);
+            JasmineDeplHelpers.checkResponse(res, "worker");
             let json = res.data;
 
             initialWorkerCount = json.data.length;
@@ -316,7 +291,7 @@ describe(`Api`, function() {
         }
 
         let openSessions: Session[] = [];
-        for (let k = 0; k <= initialWorkerCount; k++) {
+        for (let k = 0; k <= initialWorkerCount; k++) { // !! one more time that collection length
 
             // now create one session after another until we grab all workers
             console.log(`Creating session ${k + 1} of ${initialWorkerCount}`);
@@ -330,17 +305,12 @@ describe(`Api`, function() {
             try {
                 res = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
             } catch (err) {
-                JasmineDeplHelpers.checkErrorResponse(err.response, 500);
-                console.log(err.response.data);
+                JasmineDeplHelpers.checkErrorResponse(err.response, 500, "failed to create session", "all workers busy");
                 continue;
             }
 
-            JasmineDeplHelpers.checkResponse(res);
+            JasmineDeplHelpers.checkResponse(res, "session");
             let json = res.data;
-
-            expect(json.ok).toBeTruthy();
-            expect(json.type).toBe("session");
-
             openSessions.push(json.data.guid);
         }
 
@@ -351,7 +321,7 @@ describe(`Api`, function() {
                 api_key: JasmineDeplHelpers.existingApiKey
             };
             let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
-            JasmineDeplHelpers.checkResponse(res);
+            JasmineDeplHelpers.checkResponse(res, "worker");
             let json = res.data;
 
             workerCount = json.data.length;
@@ -364,11 +334,7 @@ describe(`Api`, function() {
                 let sessionGuid = openSessions[si];
                 let res: any = await axios.delete(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
 
-                JasmineDeplHelpers.checkResponse(res);
-                let json = res.data;
-
-                expect(json.ok).toBeTruthy();
-                expect(json.type).toBe("session");
+                JasmineDeplHelpers.checkResponse(res, "session");
             }
         }
 
@@ -378,7 +344,7 @@ describe(`Api`, function() {
                 api_key: JasmineDeplHelpers.existingApiKey
             };
             let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
-            JasmineDeplHelpers.checkResponse(res);
+            JasmineDeplHelpers.checkResponse(res, "worker");
             let json = res.data;
 
             workerCount = json.data.length;

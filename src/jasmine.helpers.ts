@@ -87,21 +87,36 @@ export class JasmineDeplHelpers {
     public static existingWorkspaceGuid2: string   = "886215aa-9082-4278-bb60-57328fce632b";
     public static otherWorkspaceGuid2: string      = "7331b172-c31c-4a06-975f-b44c648e55f7";
 
-    public static checkResponse = function(res) {
+    public static checkResponse = function(res: any, expectedType?: string) {
         expect(res).toBeTruthy();
         expect(res.status).toBe(200);
         expect(res.headers['access-control-allow-origin']).toBe('*');
         expect(res.headers['access-control-allow-headers']).toBe('Origin, X-Requested-With, Content-Type, Accept');
         expect(res.headers['access-control-allow-methods']).toBe('PUT, POST, GET, DELETE, OPTIONS');
         expect(res.data).toBeTruthy();
+
+        expect(res.data.ok).toBeTruthy();
+
+        if (expectedType !== undefined) {
+            expect(res.data.type).toBe(expectedType);
+        }
     }
 
-    public static checkErrorResponse = function(res, expectedStatus) {
+    public static checkErrorResponse = function(res: any, expectedStatus: number, expectedMessage?: string, expectedError?: string) {
         expect(res).toBeTruthy();
         expect(res.status).toBe(expectedStatus);
         expect(res.headers['access-control-allow-origin']).toBe('*');
         expect(res.headers['access-control-allow-headers']).toBe('Origin, X-Requested-With, Content-Type, Accept');
         expect(res.headers['access-control-allow-methods']).toBe('PUT, POST, GET, DELETE, OPTIONS');
         expect(res.data).toBeTruthy();
+        expect(res.data.ok).toBeFalsy();
+
+        if (expectedMessage !== undefined) {
+            expect(res.data.message).toBe(expectedMessage);
+        }
+
+        if (expectedError !== undefined) {
+            expect(res.data.error).toBe(expectedError);
+        }
     }
 }
