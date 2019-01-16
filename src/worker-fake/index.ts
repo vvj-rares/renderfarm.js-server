@@ -6,7 +6,6 @@ const net   = require('net');
 const fs    = require('fs');
 
 function fileAppendText(filename: string, text: string) {
-    console.log(` >> fileAppendText to ${filename}: ${text}`);
     let fd;
 
     try {
@@ -77,9 +76,6 @@ for (let i=0; i<simulateWorkersCount; i++) {
                         w[j] = controlJson.worker[j];
                     }
                 }
-
-                console.log(" >> workers: ", workers);
-                console.log(" >> this: ", this);
 
                 socket.write("{ \"result\": true }");
 

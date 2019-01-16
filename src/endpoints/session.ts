@@ -259,6 +259,42 @@ class SessionEndpoint implements IEndpoint {
                 return;
             }
 
+            // try connect to worker
+            let maxscript: IMaxscriptClient = this._maxscriptClientFactory.create();
+            try {
+                await maxscript.connect(closedSession.workerRef.ip, closedSession.workerRef.port);
+                console.log(`    OK | SessionEndpoint connected to maxscript client`);
+            } catch (err) {
+                console.log(`  FAIL | failed to connect to worker, `, err);
+                res.status(500);
+                res.end(JSON.stringify({ ok: false, message: "failed to connect to worker", error: err.message }, null, 2));
+                return;
+            }
+
+            // try to reset maxscript SessionGuid global variable
+            try {
+                await maxscript.setSession("");
+                console.log(`    OK | SessionGuid on worker was updated`);
+            } catch (err) {
+                console.log(`  FAIL | failed to update SessionGuid on worker, `, err);
+                res.status(500);
+                res.end(JSON.stringify({ ok: false, type: "session", message: "failed to update SessionGuid on worker", error: err.message }, null, 2));
+                return;
+            }
+
+            // try to reset 3ds max to initial state
+            try {
+                await maxscript.resetScene();
+                console.log(`    OK | resetScene complete`);
+            } catch (err) {
+                console.log(`  FAIL | failed to revert 3ds max to initial state, `, err);
+                res.status(500);
+                res.end(JSON.stringify({ ok: false, type: "session", message: "failed to revert 3ds max to initial state", error: err.message }, null, 2));
+                return;
+            }
+
+            maxscript.disconnect();
+
             res.status(200);
             res.end(JSON.stringify({ 
                 ok: true, 

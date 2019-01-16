@@ -362,8 +362,62 @@ describe(`Api`, function() {
         done();
     });
 
-    xit("should reject POST on /session when there's no available workers", async function (done) {
-        { // first check how many available workers we have
+    function getWorkerLogFilename(workerPort: number, testName: string, version: string): string {
+        return `/home/rfarm-api/www/html/logs/${version}.renderfarm.js-server/out.worker-fake.test=${testName}.port=${workerPort}.log`;
+    }
+
+    function setWorkerLogFile(workerPort: number, testName: string, version: string) {
+        return new Promise<any>(function(resolve, reject) {
+            // send commands directly to fake worker
+            let client = new net.Socket();
+
+            console.log(`Connecting to fake worker ${host}:${workerPort}`);
+            client.connect(workerPort, host, function() {
+                console.log(`Connected to fake worker: ${host}:${workerPort}`);
+                let workerConfig: any;
+                if (testName) {
+                    workerConfig = { worker: { logFile: getWorkerLogFilename(workerPort, testName, version) } };
+                } else {
+                    // when test name is not defined, worker should stop writing to logfile
+                    workerConfig = { worker: { logFile: null } };
+                }
+                client.write(JSON.stringify(workerConfig));
+            });
+
+            client.on('error', function(err) {
+                console.log('Error: ' + err);
+                client.destroy(); // kill client after server's response
+                reject(err);
+            });
+
+            client.on('data', function(data) {
+                console.log('Received: ' + data);
+                client.destroy(); // kill client after server's response
+                resolve(data);
+            });
+            
+            client.on('close', async function() {
+                console.log('Fake worker connection closed');
+            });
+        });
+    }
+
+    // this helper configures workers to write communication logs to some predictable place
+    // where the logs can be found and downloaded
+    async function setWorkersLogFile(testName: string, fail: Function, done: Function) {
+        let currentVersion: string;
+
+        { // find out current DEV version
+            let res: any = await axios.get(settings.current.publicUrl);
+            JasmineDeplHelpers.checkResponse(res, 200, "version");
+            let json = res.data;
+            expect(json.data.env).toBe(settings.env);
+            expect(json.data.version).toMatch(/\d+\.\d+\.\d+\.\d+/);
+            currentVersion = json.data.version;
+            console.log(`currentVersion: ${currentVersion}`);
+        }
+
+        { // first configure all available workers to write logfiles
             let config: AxiosRequestConfig = {};
             config.params = {
                 api_key: JasmineDeplHelpers.existingApiKey
@@ -383,7 +437,23 @@ describe(`Api`, function() {
                 done();
                 return;
             }
+
+            let availableWorkers = json.data;
+            for (let k in availableWorkers) {
+                try {
+                    await setWorkerLogFile(availableWorkers[k].port, testName, currentVersion);
+                } catch (err) {
+                    console.log("failed to set worker log file, ", err);
+                    fail();
+                    done();
+                    return;
+                }
+            }
         }
+    }
+
+    xit("should reject POST on /session when there's no available workers", async function (done) {
+        await setWorkersLogFile("test1", fail, done);
 
         let sessionGuid: string;
         { // open one session
@@ -429,29 +499,14 @@ describe(`Api`, function() {
                 JasmineDeplHelpers.checkResponse(res, 200, "session");
             }
 
-            // send some commands directly on fake worker
-            var client = new net.Socket();
-            console.log(`Connecting`)
-            client.connect(workerPort, host, function() {
-                console.log('Connected');
-                client.write('Hello, server! Love, Client.');
-            });
-            
-            client.on('error', function(err) {
-                console.log('Error: ' + err);
-                client.destroy(); // kill client after server's response
-            });
+            await closeSession(sessionGuid);
 
-            client.on('data', function(data) {
-                console.log('Received: ' + data);
-                client.destroy(); // kill client after server's response
-            });
-            
-            client.on('close', async function() {
-                console.log('Connection closed');
-                await closeSession(sessionGuid);
-                done();
-            });
+            // prevent workers from writing more into log file
+            await setWorkersLogFile(null, fail, done);
+
+            // todo: now analyze log file
+
+            done();
         }
 
         //hey, not done() here, see how socket works
