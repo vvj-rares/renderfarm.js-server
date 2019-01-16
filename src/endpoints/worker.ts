@@ -34,7 +34,7 @@ export class WorkerEndpoint implements IEndpoint {
 
             let worker: Worker;
             try {
-                workerGuid = await this._database.getWorker(workerGuid, { allowClosed: true, readOnly: true });
+                worker = await this._database.getWorker(workerGuid, { allowClosed: true, readOnly: true });
                 if (!worker) {
                     console.log(`  FAIL | worker not found: ${workerGuid}`);
                     res.status(404);
