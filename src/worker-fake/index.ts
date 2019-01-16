@@ -44,7 +44,7 @@ for (let i=0; i<simulateWorkersCount; i++) {
         responseDelay: 100, // how much time it takes until response
         response: "OK",     // controls what gonna be the response on maxscript request
         heartbeat: true,    // control if heartbeats are being sent
-        logfile: null       // where to output maxscript commands?
+        logFile: null       // where to output maxscript commands?
     };
 
     // each worker opens port, echos requests to console and replies OK
@@ -82,11 +82,11 @@ for (let i=0; i<simulateWorkersCount; i++) {
             } else {
                 console.log(JSON.stringify({ maxscript: request }));
 
-                if (this.logfile) {
+                if (this.logFile) {
                     let testRun  = (this.testRun && isString(this.testRun))   ? this.testRun  : "undefined";
                     let testName = (this.testName && isString(this.testName)) ? this.testName : "undefined";
                     let testGuid = (this.testGuid && isString(this.testGuid)) ? this.testGuid : "undefined";
-                    fileAppendText(this.logfile, `${new Date().toISOString()}\t${testRun}\t${testName}\t${testGuid}\t[request]\t${request}\r\n`);
+                    fileAppendText(this.logFile, `${new Date().toISOString()}\t${testRun}\t${testName}\t${testGuid}\t[request]\t${request}\r\n`);
                 }
 
                 let t0 = new Date();
@@ -104,11 +104,11 @@ for (let i=0; i<simulateWorkersCount; i++) {
                     delete this.$timeout;
                     socket.write(response1);
                     console.log(JSON.stringify({ response: response1 }));
-                    if (this.logfile) {
+                    if (this.logFile) {
                         let testRun  = (this.testRun && isString(this.testRun))   ? this.testRun  : "undefined";
                         let testName = (this.testName && isString(this.testName)) ? this.testName : "undefined";
                         let testGuid = (this.testGuid && isString(this.testGuid)) ? this.testGuid : "undefined";
-                        fileAppendText(this.logfile, `${new Date().toISOString()}\t${testRun}\t${testName}\t${testGuid}\t[response]\t${response1}\r\n`);
+                        fileAppendText(this.logFile, `${new Date().toISOString()}\t${testRun}\t${testName}\t${testGuid}\t[response]\t${response1}\r\n`);
                     }
                 }.bind(this), responseDelayMs);
             }
