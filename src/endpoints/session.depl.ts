@@ -299,7 +299,7 @@ describe(`Api`, function() {
         done();
     })
 
-    fit("should reject POST on /session when there's no available workers", async function (done) {
+    it("should reject POST on /session when there's no available workers", async function (done) {
         let initialWorkerCount: number;
         { // first check how many available workers we have
             let config: AxiosRequestConfig = {};
@@ -330,7 +330,7 @@ describe(`Api`, function() {
             try {
                 res = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
             } catch (err) {
-                console.log(err);
+                console.log(err.message);
                 continue;
             }
 
