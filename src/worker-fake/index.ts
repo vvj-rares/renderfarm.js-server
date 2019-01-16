@@ -78,6 +78,9 @@ for (let i=0; i<simulateWorkersCount; i++) {
                     }
                 }
 
+                console.log(" >> workers: ", workers);
+                console.log(" >> this: ", this);
+
                 socket.write("{ \"result\": true }");
 
             } else {
