@@ -34,22 +34,22 @@ export class WorkerEndpoint implements IEndpoint {
 
             let worker: Worker;
             try {
-                workerGuid = await this._database.getSession(workerGuid, { allowClosed: true, readOnly: true });
+                workerGuid = await this._database.getWorker(workerGuid, { allowClosed: true, readOnly: true });
                 if (!worker) {
                     console.log(`  FAIL | worker not found: ${workerGuid}`);
                     res.status(404);
-                    res.end(JSON.stringify({ ok: false, message: "session not found", error: null }, null, 2));
+                    res.end(JSON.stringify({ ok: false, message: "worker not found", error: null }, null, 2));
                     return;
                 }
             } catch (err) {
                 console.log(`  FAIL | failed to get worker: ${workerGuid}`);
                 res.status(500);
-                res.end(JSON.stringify({ ok: false, message: "failed to get session", error: err.message }, null, 2));
+                res.end(JSON.stringify({ ok: false, message: "failed to get worker", error: err.message }, null, 2));
                 return;
             }
 
             res.status(200);
-            res.end(JSON.stringify({ ok: true, type: "session", data: worker.toJSON() }, null, 2));
+            res.end(JSON.stringify({ ok: true, type: "worker", data: worker.toJSON() }, null, 2));
 
         }.bind(this));
 

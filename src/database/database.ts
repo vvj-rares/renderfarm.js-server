@@ -337,6 +337,13 @@ export class Database implements IDatabase {
     //#endregion
 
     //#region Workers
+    public async getWorker(workerGuid: string): Promise<Worker> {
+        return await this.getOne<Worker>(
+                "workers", 
+                { guid: workerGuid },
+                (obj) => new Worker(obj));
+    }
+
     public async getRecentWorkers(): Promise<Worker[]> {
         await this.ensureClientConnection();
 

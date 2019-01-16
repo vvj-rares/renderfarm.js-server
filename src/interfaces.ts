@@ -34,6 +34,8 @@ export interface IDatabase {
     insertWorker(worker: Worker): Promise<Worker>;
     updateWorker(worker: Worker, setter: any): Promise<Worker>;
 
+    //workers
+    getWorker(workerGuid: string): Promise<Worker>;
     getRecentWorkers(): Promise<Worker[]>;
     getAvailableWorkers(): Promise<Worker[]>;
     deleteDeadWorkers(): Promise<number>;
