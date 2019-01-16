@@ -216,7 +216,7 @@ class SessionEndpoint implements IEndpoint {
                 return;
             }
 
-            res.status(204);
+            res.status(200);
             res.end(JSON.stringify({ 
                 ok: true, 
                 type: "session", 

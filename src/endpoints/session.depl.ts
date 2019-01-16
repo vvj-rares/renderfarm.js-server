@@ -256,7 +256,7 @@ describe(`Api`, function() {
             let res: any = await axios.delete(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
             console.log("Response on DELETE: ", res.data);
 
-            JasmineDeplHelpers.checkResponse(res, 204, "session");
+            JasmineDeplHelpers.checkResponse(res, 200, "session");
             let json = res.data;
 
             expect(json.data).toBeTruthy();
@@ -332,7 +332,7 @@ describe(`Api`, function() {
                 let sessionGuid = openSessions[si];
                 let res: any = await axios.delete(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
 
-                JasmineDeplHelpers.checkResponse(res, 204, "session");
+                JasmineDeplHelpers.checkResponse(res, 200, "session");
             }
         }
 
