@@ -295,7 +295,7 @@ describe(`Api`, function() {
         }
 
         let openSessions: Session[] = [];
-        for (let k = 0; k <= initialWorkerCount; k++) { // !! one more time that collection length
+        for (let k = 0; k < initialWorkerCount; k++) { // !! one more time that collection length
 
             // now create one session after another until we grab all workers
             console.log(`Creating session ${k + 1} of ${initialWorkerCount}`);
