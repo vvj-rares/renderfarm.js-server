@@ -28,6 +28,31 @@ export class WorkerEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
+        express.get(`/v${this._settings.majorVersion}/worker/:uid`, async function (req, res) {
+            let workerGuid = req.params.uid;
+            console.log(`GET on ${req.path}`);
+
+            let worker: Worker;
+            try {
+                workerGuid = await this._database.getSession(workerGuid, { allowClosed: true, readOnly: true });
+                if (!worker) {
+                    console.log(`  FAIL | worker not found: ${workerGuid}`);
+                    res.status(404);
+                    res.end(JSON.stringify({ ok: false, message: "session not found", error: null }, null, 2));
+                    return;
+                }
+            } catch (err) {
+                console.log(`  FAIL | failed to get worker: ${workerGuid}`);
+                res.status(500);
+                res.end(JSON.stringify({ ok: false, message: "failed to get session", error: err.message }, null, 2));
+                return;
+            }
+
+            res.status(200);
+            res.end(JSON.stringify({ ok: true, type: "session", data: worker.toJSON() }, null, 2));
+
+        }.bind(this));
+
         express.get(`/v${this._settings.majorVersion}/worker`, async function (req, res) {
             let apiKey = req.query.api_key;
             console.log(`GET on ${req.path} with api_key: ${apiKey}`);
