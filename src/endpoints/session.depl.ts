@@ -4,7 +4,9 @@ import { Settings } from "../settings";
 import { isArray, isNumber } from "util";
 import { JasmineDeplHelpers } from "../jasmine.helpers";
 import { Session } from "../database/model/session";
+import { setServers } from "dns";
 
+const uuidv4 = require('uuid/v4');
 const net = require('net');
 
 require("../jasmine.config")();
@@ -362,60 +364,93 @@ describe(`Api`, function() {
         done();
     });
 
-    function getWorkerLogFilename(workerPort: number, testName: string, version: string): string {
-        return `/home/rfarm-api/www/html/logs/${version}.renderfarm.js-server/out.worker-fake.test=${testName}.port=${workerPort}.log`;
+    // find out current DEV version
+    async function getEnvVersion(fail, done) {
+        let currentVersion: string;
+
+        let res: any;
+        try {
+            res = await axios.get(settings.current.publicUrl);
+        } catch (err) {
+            console.log(err);
+            fail();
+            done();
+            return;
+        }
+
+        JasmineDeplHelpers.checkResponse(res, 200, "version");
+
+        let json = res.data;
+
+        expect(json.data.env).toBe(settings.env);
+        expect(json.data.version).toMatch(/\d+\.\d+\.\d+\.\d+/);
+
+        currentVersion = json.data.version;
+        console.log(`currentVersion: ${currentVersion}`);
+
+        return currentVersion;
     }
 
-    function setWorkerLogFile(workerPort: number, testName: string, version: string) {
+    const wwwBaseDir = "/home/rfarm-api/www/html";
+    function getWorkerLogDownloadUrl(version: string, testName: string, testRun: number, workerPort: number): string {
+        return `http://${host}/logs/${version}.renderfarm.js-server/out.worker-fake.name=${testName}.port=${workerPort}.${testRun}.log`;
+    }
+
+    function getWorkerLogFullpath(version: string, testName: string, testRun: number, workerPort: number): string {
+        return `${wwwBaseDir}/logs/${version}.renderfarm.js-server/out.worker-fake.name=${testName}.port=${workerPort}.${testRun}.log`;
+    }
+
+    function setWorkerLogFile(version: string, testName: string, testRun: number, workerPort: number) {
         return new Promise<any>(function(resolve, reject) {
             // send commands directly to fake worker
             let client = new net.Socket();
 
-            console.log(`Connecting to fake worker ${host}:${workerPort}`);
+            console.log(`Connecting to fake worker ${host}:${workerPort} ...`);
             client.connect(workerPort, host, function() {
-                console.log(`Connected to fake worker: ${host}:${workerPort}`);
+                console.log(`    Connected`);
+
                 let workerConfig: any;
                 if (testName) {
-                    workerConfig = { worker: { logFile: getWorkerLogFilename(workerPort, testName, version) } };
+                    workerConfig = { worker: { 
+                        testRun: 0,
+                        testName: testName,
+                        logFile: getWorkerLogFullpath(version, testName, testRun, workerPort) } };
                 } else {
                     // when test name is not defined, worker should stop writing to logfile
                     workerConfig = { worker: { logFile: null } };
                 }
+
+                console.log(`    Sending fake worker config: `, workerConfig);
                 client.write(JSON.stringify(workerConfig));
             });
 
             client.on('error', function(err) {
-                console.log('Error: ' + err);
+                console.error('    Fake worker connection error: ' + err);
                 client.destroy(); // kill client after server's response
                 reject(err);
             });
 
             client.on('data', function(data) {
-                console.log('Received: ' + data);
+                let json = JSON.parse(data.toString());
+                if (json.result) {
+                    console.log(`    Fake worker configured successfully`);
+                } else {
+                    console.warn(`    Unexpected fake worker response: `, data);
+                }
                 client.destroy(); // kill client after server's response
                 resolve(data);
             });
             
             client.on('close', async function() {
-                console.log('Fake worker connection closed');
+                // do nothing
             });
         });
     }
 
     // this helper configures workers to write communication logs to some predictable place
     // where the logs can be found and downloaded
-    async function setWorkersLogFile(testName: string, fail: Function, done: Function) {
-        let currentVersion: string;
-
-        { // find out current DEV version
-            let res: any = await axios.get(settings.current.publicUrl);
-            JasmineDeplHelpers.checkResponse(res, 200, "version");
-            let json = res.data;
-            expect(json.data.env).toBe(settings.env);
-            expect(json.data.version).toMatch(/\d+\.\d+\.\d+\.\d+/);
-            currentVersion = json.data.version;
-            console.log(`currentVersion: ${currentVersion}`);
-        }
+    async function setWorkersLogFile(version: string, testName: string, testRun: number, fail: Function, done: Function) {
+        console.log("Configuring available fake workers with parameters: ", `version= \"${version}\", testName= \"${testName}\", testRun= \"${testRun}\"`);
 
         { // first configure all available workers to write logfiles
             let config: AxiosRequestConfig = {};
@@ -441,7 +476,7 @@ describe(`Api`, function() {
             let availableWorkers = json.data;
             for (let k in availableWorkers) {
                 try {
-                    await setWorkerLogFile(availableWorkers[k].port, testName, currentVersion);
+                    await setWorkerLogFile(version, testName, testRun, availableWorkers[k].port);
                 } catch (err) {
                     console.log("failed to set worker log file, ", err);
                     fail();
@@ -452,59 +487,92 @@ describe(`Api`, function() {
         }
     }
 
-    xit("should reject POST on /session when there's no available workers", async function (done) {
-        await setWorkersLogFile("test1", fail, done);
+    async function openSession(fail, done): Promise<string> {
+        let data: any = {
+            api_key: JasmineDeplHelpers.existingApiKey,
+            workspace_guid: JasmineDeplHelpers.existingWorkspaceGuid
+        };
+        let config: AxiosRequestConfig = {};
+        let res: any
+        try {
+            res = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+        } catch (err) {
+            // this is not ok, because we expected more workers to be available
+            JasmineDeplHelpers.checkErrorResponse(err.response, 500, "failed to create session", "all workers busy");
+            console.log(err.message);
+            fail();
+            done();
+            return;
+        }
 
-        let sessionGuid: string;
-        { // open one session
-            let data: any = {
-                api_key: JasmineDeplHelpers.existingApiKey,
-                workspace_guid: JasmineDeplHelpers.existingWorkspaceGuid
+        JasmineDeplHelpers.checkResponse(res, 201, "session");
+
+        let json = res.data;
+        let sessionGuid = json.data.guid;
+
+        return sessionGuid;
+    }
+
+    // helper to close sessions
+    async function closeSession(guid) {
+        console.log(`Closing session ${guid}`);
+        let res: any = await axios.delete(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${guid}`);
+        JasmineDeplHelpers.checkResponse(res, 200, "session");
+    }
+
+    fit("should send correct maxscript commands to worker on POST /session", async function (done) {
+        let currentVersion = await getEnvVersion(fail, done);
+        let testName = "POST_session";
+        let testRun = Date.now();
+
+        await setWorkersLogFile(currentVersion, testName, testRun, fail, done);
+
+        let sessionGuid = await openSession(fail, done);
+
+        let workerGuid: string;
+        let workerPort: number;
+        { // retrieve worker that was assigned to the session
+
+            // 1. get session details to know worker guid
+            let getSessionUrl = `${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`;
+            console.log(`GET on ${getSessionUrl}`);
+            let getSessionResponse = await axios.get(getSessionUrl);
+
+            console.log("session: ",    getSessionResponse.data);
+            console.log("workerGuid: ", getSessionResponse.data.data.workerGuid);
+
+            workerGuid = getSessionResponse.data.data.workerGuid;
+
+            // 2. now get worker
+            let getWorkerUrl = `${settings.current.publicUrl}/v${settings.majorVersion}/worker/${workerGuid}`;
+            console.log(`GET on ${getWorkerUrl}`);
+            let getWorkerResponse = await axios.get(getWorkerUrl);
+
+            console.log("worker: ", getWorkerResponse.data);
+            console.log("port: ",   getWorkerResponse.data.data.port);
+
+            workerPort = getWorkerResponse.data.data.port;
+        }
+
+        // we're done, can close session
+        await closeSession(sessionGuid);
+
+        // tell worker to stop writing logs
+        await setWorkersLogFile(null, null, null, fail, done);
+
+        { // Now analyze fake worker log file
+            let logGetConfig: AxiosRequestConfig = {
+                auth: {
+                    username: settings.current.dropFolderUsername,
+                    password: settings.current.dropFolderPassword
+                }
             };
-            let config: AxiosRequestConfig = {};
-            let res: any
-            try {
-                res = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
-            } catch (err) {
-                // this is not ok, because we expected more workers to be available
-                JasmineDeplHelpers.checkErrorResponse(err.response, 500, "failed to create session", "all workers busy");
-                console.log(err.message);
-                fail();
-                done();
-                return;
-            }
 
-            JasmineDeplHelpers.checkResponse(res, 201, "session");
+            let logUrl = getWorkerLogDownloadUrl(currentVersion, testName, testRun, workerPort);
+            console.log(`Getting fake worker log file: ${logUrl}`);
+            let res4: any = await axios.get(logUrl, logGetConfig);
 
-            let json = res.data;
-            sessionGuid = json.data.guid;
-
-            let url2 = `${settings.current.publicUrl}/v${settings.majorVersion}/session/${res.data.data.guid}`;
-            console.log(` >>>> GET ${url2}`);
-            let res2 = await axios.get(url2);
-            console.log(" >>>> session=", res2.data);
-            console.log(" >>>> workerGuid=", res2.data.data.workerGuid);
-            let workerGuid = res2.data.data.workerGuid;
-
-            let url3 = `${settings.current.publicUrl}/v${settings.majorVersion}/worker/${workerGuid}`;
-            console.log(` >>>> GET ${url3}`);
-            let res3 = await axios.get(url3);
-            console.log(" >>>> worker=", res3.data);
-            console.log(" >>>> port=", res3.data.data.port);
-            let workerPort = res3.data.data.port;
-
-            async function closeSession(guid) {
-                console.log(`Closing session ${guid}`);
-                let res: any = await axios.delete(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${guid}`);
-                JasmineDeplHelpers.checkResponse(res, 200, "session");
-            }
-
-            await closeSession(sessionGuid);
-
-            // prevent workers from writing more into log file
-            await setWorkersLogFile(null, fail, done);
-
-            // todo: now analyze log file
+            console.log(res4.data);
 
             done();
         }

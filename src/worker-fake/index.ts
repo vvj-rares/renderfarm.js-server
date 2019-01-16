@@ -85,8 +85,7 @@ for (let i=0; i<simulateWorkersCount; i++) {
                 if (this.logFile) {
                     let testRun  = (this.testRun && isString(this.testRun))   ? this.testRun  : "undefined";
                     let testName = (this.testName && isString(this.testName)) ? this.testName : "undefined";
-                    let testGuid = (this.testGuid && isString(this.testGuid)) ? this.testGuid : "undefined";
-                    fileAppendText(this.logFile, `${new Date().toISOString()}\t${testRun}\t${testName}\t${testGuid}\t[request]\t${request}\r\n`);
+                    fileAppendText(this.logFile, `${new Date().toISOString()}\t${testRun}\t${testName}\t[request]\t${request}\r\n`);
                 }
 
                 let t0 = new Date();
@@ -107,8 +106,7 @@ for (let i=0; i<simulateWorkersCount; i++) {
                     if (this.logFile) {
                         let testRun  = (this.testRun && isString(this.testRun))   ? this.testRun  : "undefined";
                         let testName = (this.testName && isString(this.testName)) ? this.testName : "undefined";
-                        let testGuid = (this.testGuid && isString(this.testGuid)) ? this.testGuid : "undefined";
-                        fileAppendText(this.logFile, `${new Date().toISOString()}\t${testRun}\t${testName}\t${testGuid}\t[response]\t${response1}\r\n`);
+                        fileAppendText(this.logFile, `${new Date().toISOString()}\t${testRun}\t${testName}\t[response]\t${response1}\r\n`);
                     }
                 }.bind(this), responseDelayMs);
             }

@@ -21,7 +21,9 @@ module.exports = function() { return {
         connectionUrl: "mongodb://rfarmmgr:123456@192.168.0.151:27017/rfarmdb",
         databaseName: "rfarm-dev",
         collectionPrefix: "_dev",
-        sessionTimeoutMinutes: 5
+        sessionTimeoutMinutes: 5,
+        dropFolderUsername: "username",
+        dropFolderPassword: "123456"
     },
     test: {
         connectionUrl: "mongodb://rfarmmgr:123456@192.168.0.151:27017/rfarmdb",
