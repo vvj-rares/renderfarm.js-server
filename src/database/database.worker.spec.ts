@@ -20,11 +20,19 @@ describe("Database Worker", function() {
             settings = new Settings("test");
             database = new Database(settings);
             helpers = new JasmineSpecHelpers(database, settings);
-            await database.connect();
+            try {
+                await database.connect();
+            } catch (err) {
+                console.log(`beforeEach failed with error: ${err.message}`);
+            }
         });
     
         afterEach(async function() {
-            await database.disconnect();
+            try {
+                await database.disconnect();
+            } catch (err) {
+                console.log(`afterEach failed with error: ${err.message}`);
+            }
         })
 
         it("checks that recent workers belongs to current workgroup only", async function(done) {
@@ -53,15 +61,23 @@ describe("Database Worker", function() {
             settings.current.collectionPrefix = `${collectionPrefix}${settings.current.collectionPrefix}`;
             database = new Database(settings);
             helpers = new JasmineSpecHelpers(database, settings);
-            await database.connect();
-            await database.createCollections();
+            try {
+                await database.connect();
+                await database.createCollections();
+            } catch (err) {
+                console.log(`beforeEach failed with error: ${err.message}`);
+            }
         })
     
         afterEach(async function() {
             jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
 
-            await database.dropAllCollections(/_testrun\d+/);
-            await database.disconnect();
+            try {
+                await database.dropAllCollections(/_testrun\d+/);
+                await database.disconnect();
+            } catch (err) {
+                console.log(`afterEach failed with error: ${err.message}`);
+            }
         })
 
         it("checks that worker was correctly persisted", async function(done) {

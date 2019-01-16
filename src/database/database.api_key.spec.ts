@@ -18,11 +18,20 @@ describe("Database ApiKey", function() {
             settings = new Settings("test");
             database = new Database(settings);
             helpers = new JasmineSpecHelpers(database, settings);
-            await database.connect();
+            try {
+                await database.connect();
+            } catch (err) {
+                console.log(`beforeEach failed with error: ${err.message}`);
+                fail();
+            }
         });
-    
+
         afterEach(async function() {
-            await database.disconnect();
+            try {
+                await database.disconnect();
+            } catch (err) {
+                console.log(`afterEach failed with error: ${err.message}`);
+            }
         })
 
         it("checks existing api key", async function(done) {
@@ -48,7 +57,13 @@ describe("Database ApiKey", function() {
         });
 
         it("reconnects on not connected database when trying to get api key", async function(done) {
-            await database.disconnect();
+            try {
+                await database.disconnect();
+            } catch (err) {
+                console.log(err.message);
+                fail();
+                return;
+            }
         
             let result = await database.getApiKey(helpers.existingApiKey);
             expect(result).toBeTruthy();

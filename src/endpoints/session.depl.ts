@@ -299,7 +299,7 @@ describe(`Api`, function() {
         done();
     })
 
-    it("should reject POST on /session when there's no available workers", async function (done) {
+    fit("should reject POST on /session when there's no available workers", async function (done) {
         let initialWorkerCount: number;
         { // first check how many available workers we have
             let config: AxiosRequestConfig = {};
@@ -316,7 +316,7 @@ describe(`Api`, function() {
         }
 
         let openSessions: Session[] = [];
-        for (let k = 0; k < initialWorkerCount; k++) {
+        for (let k = 0; k <= initialWorkerCount; k++) {
 
             // now create one session after another until we grab all workers
             console.log(`Creating session ${k + 1} of ${initialWorkerCount}`);
@@ -326,7 +326,13 @@ describe(`Api`, function() {
             };
             let config: AxiosRequestConfig = {};
 
-            let res: any = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+            let res: any
+            try {
+                res = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+            } catch (err) {
+                console.log(err);
+                continue;
+            }
 
             JasmineDeplHelpers.checkResponse(res);
             let json = res.data;

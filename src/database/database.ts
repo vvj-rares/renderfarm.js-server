@@ -28,26 +28,31 @@ export class Database implements IDatabase {
 
     //#region common methods
     public async connect(): Promise<any> {
-        this._client = new MongoClient(this._settings.current.connectionUrl, { useNewUrlParser: true });
-        return await this._client.connect();
+        try {
+            this._client = new MongoClient(this._settings.current.connectionUrl, { useNewUrlParser: true });
+            return await this._client.connect();
+        } catch (err) {
+            this._client = null;
+            throw Error(`failed to disconnect from database, ${err.message}`);
+        }
     }
 
     public async disconnect(): Promise<any> {
         try {
             if (this._client && this._client.isConnected) {
                 await this._client.close();
-                delete this._client;
+                this._client = null;
                 return true;
             } else {
                 return false;
             }
         } catch(err) {
-            console.error(err);
-            throw Error("failed to disconnect from database");
+            throw Error(`failed to disconnect from database, ${err.message}`);
         }
     }
 
     public async createCollections(): Promise<any> {
+        if (!this._client) throw Error("database not connected");
         let db = this._client.db(this._settings.current.databaseName);
         assert.notEqual(db, null);
 
@@ -90,6 +95,7 @@ export class Database implements IDatabase {
     }
 
     public async dropCollections(): Promise<any> {
+        if (!this._client) throw Error("database not connected");
         let db = this._client.db(this._settings.current.databaseName);
         assert.notEqual(db, null);
 
@@ -132,6 +138,7 @@ export class Database implements IDatabase {
     }
 
     public async dropAllCollections(regex: RegExp): Promise<number> {
+        if (!this._client) throw Error("database not connected");
         let db = this._client.db(this._settings.current.databaseName);
         assert.notEqual(db, null);
 
@@ -200,6 +207,8 @@ export class Database implements IDatabase {
     }
 
     public async createSession(apiKey: string, workspaceGuid: string): Promise<Session> {
+        await this.ensureClientConnection();
+
         let db = this._client.db(this._settings.current.databaseName);
         assert.notEqual(db, null);
 
@@ -329,6 +338,8 @@ export class Database implements IDatabase {
 
     //#region Workers
     public async getRecentWorkers(): Promise<Worker[]> {
+        await this.ensureClientConnection();
+
         let db = this._client.db(this._settings.current.databaseName);
         assert.notEqual(db, null);
 
@@ -346,6 +357,8 @@ export class Database implements IDatabase {
     }
 
     public async getAvailableWorkers(): Promise<Worker[]> {
+        await this.ensureClientConnection();
+
         let db = this._client.db(this._settings.current.databaseName);
         assert.notEqual(db, null);
 
@@ -370,11 +383,12 @@ export class Database implements IDatabase {
     }
 
     public async deleteDeadWorkers(): Promise<number> {
-        let expirationDate = new Date(Date.now() - 30*1000); // delete workers that are more than 30 seconds offline
+        await this.ensureClientConnection();
 
         let db = this._client.db(this._settings.current.databaseName);
         assert.notEqual(db, null);
 
+        let expirationDate = new Date(Date.now() - 30*1000); // delete workers that are more than 30 seconds offline
         let result = await db.collection(this.envCollectionName("workers")).deleteMany(
             { 
                 lastSeen : { $lte: expirationDate }
@@ -488,8 +502,12 @@ export class Database implements IDatabase {
 
     public findOneAndUpdate<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T> {
         return new Promise<T>(async function(resolve, reject){
-
-            await this.ensureClientConnection();
+            try {
+                await this.ensureClientConnection();
+            } catch (err) {
+                reject(err);
+                return;
+            }
 
             let db = this._client.db(this._settings.current.databaseName);
             assert.notEqual(db, null);
@@ -517,7 +535,12 @@ export class Database implements IDatabase {
 
     public insertOne<T extends IDbEntity>(collection: string, entity: IDbEntity, ctor: (obj: any) => T): Promise<T> {
         return new Promise<T>(async function(resolve, reject) {
-            await this.ensureClientConnection();
+            try {
+                await this.ensureClientConnection();
+            } catch (err) {
+                reject(err);
+                return;
+            }
 
             let db = this._client.db(this._settings.current.databaseName);
             assert.notEqual(db, null);
@@ -544,7 +567,12 @@ export class Database implements IDatabase {
 
     public updateOne(collection: string, filter: any, setter: any): Promise<boolean> {
         return new Promise<boolean>(async function(resolve, reject){
-            await this.ensureClientConnection();
+            try {
+                await this.ensureClientConnection();
+            } catch (err) {
+                reject(err);
+                return;
+            }
 
             let db = this._client.db(this._settings.current.databaseName);
             assert.notEqual(db, null);
@@ -571,7 +599,13 @@ export class Database implements IDatabase {
     }
 
     public async updateMany(collection: string, filter: any, setter: any): Promise<number> {
-        return new Promise<number>(function(resolve, reject){
+        return new Promise<number>(async function(resolve, reject){
+            try {
+                await this.ensureClientConnection();
+            } catch (err) {
+                reject(err);
+                return;
+            }
 
             let db = this._client.db(this._settings.current.databaseName);
             assert.notEqual(db, null);
@@ -601,7 +635,13 @@ export class Database implements IDatabase {
     }
 
     public async findManyAndUpdate<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T[]> {
-        return new Promise<T[]>(function(resolve, reject){
+        return new Promise<T[]>(async function(resolve, reject){
+            try {
+                await this.ensureClientConnection();
+            } catch (err) {
+                reject(err);
+                return;
+            }
 
             let db = this._client.db(this._settings.current.databaseName);
             assert.notEqual(db, null);
@@ -636,7 +676,11 @@ export class Database implements IDatabase {
 
     public async ensureClientConnection() {
         if (!this._client || !this._client.isConnected) {
-            await this.connect();
+            try {
+                await this.connect();
+            } catch (err) {
+                throw Error("failed to reconnect to database");
+            }
         }
     }
 
