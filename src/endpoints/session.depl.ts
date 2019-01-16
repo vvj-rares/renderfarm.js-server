@@ -5,6 +5,8 @@ import { isArray, isNumber } from "util";
 import { JasmineDeplHelpers } from "../jasmine.helpers";
 import { Session } from "../database/model/session";
 
+const net = require('net');
+
 require("../jasmine.config")();
 
 // IMPORTANT!!! - spec namimg template
@@ -14,10 +16,14 @@ require("../jasmine.config")();
 describe(`Api`, function() {
     var settings: Settings;
 
+    var host: string; // where's DEV is deployed?
+    var port: number;
+    var baseUrl: string;
+
     beforeEach(function() {
-        const host = "dev1.renderfarmjs.com";
-        const port = 8000;
-        const baseUrl = `https://${host}:${port}`;
+        host = "dev1.renderfarmjs.com";
+        port = 8000;
+        baseUrl = `https://${host}:${port}`;
 
         settings = new Settings("dev");
 
@@ -272,7 +278,7 @@ describe(`Api`, function() {
         done();
     })
 
-    it("should reject POST on /session when there's no available workers", async function (done) {
+    fit("should reject POST on /session when there's no available workers", async function (done) {
         let initialWorkerCount: number;
         { // first check how many available workers we have
             let config: AxiosRequestConfig = {};
@@ -309,6 +315,42 @@ describe(`Api`, function() {
                 fail();
                 break;
             }
+
+            // let url2 = `${settings.current.publicUrl}/v${settings.majorVersion}/session/${res.data.data.guid}`;
+            // console.log(` >>>> GET ${url2}`);
+            // let res2 = await axios.get(url2);
+            // console.log(" >>>> session=", res2.data);
+            // console.log(" >>>> workerGuid=", res2.data.data.workerGuid);
+            // let workerGuid = res2.data.data.workerGuid;
+
+            // let url3 = `${settings.current.publicUrl}/v${settings.majorVersion}/worker/${workerGuid}`;
+            // console.log(` >>>> GET ${url3}`);
+            // let res3 = await axios.get(url3);
+            // console.log(" >>>> worker=", res3.data);
+            // console.log(" >>>> port=", res3.data.data.port);
+            // let workerPort = res3.data.data.port;
+
+            // send some commands directly on fake worker
+            // var client = new net.Socket();
+            // console.log(`Connecting`)
+            // client.connect(workerPort, host, function() {
+            //     console.log('Connected');
+            //     client.write('Hello, server! Love, Client.');
+            // });
+            
+            // client.on('error', function(err) {
+            //     console.log('Error: ' + err);
+            //     client.destroy(); // kill client after server's response
+            // });
+
+            // client.on('data', function(data) {
+            //     console.log('Received: ' + data);
+            //     client.destroy(); // kill client after server's response
+            // });
+            
+            // client.on('close', function() {
+            //     console.log('Connection closed');
+            // });
 
             JasmineDeplHelpers.checkResponse(res, 201, "session");
             let json = res.data;
