@@ -289,7 +289,7 @@ describe(`Api`, function() {
         }
 
         let openSessions: Session[] = [];
-        for (let k = 0; k <= initialWorkerCount; k++) { // !! one more time that collection length
+        for (let k = 0; k < initialWorkerCount; k++) { // !! one more time that collection length
 
             // now create one session after another until we grab all workers
             console.log(`Creating session ${k + 1} of ${initialWorkerCount}`);
@@ -303,8 +303,11 @@ describe(`Api`, function() {
             try {
                 res = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
             } catch (err) {
+                // this is not ok, because we expected more workers to be available
                 JasmineDeplHelpers.checkErrorResponse(err.response, 500, "failed to create session", "all workers busy");
-                continue;
+                console.log(err.message);
+                fail();
+                break;
             }
 
             JasmineDeplHelpers.checkResponse(res, 201, "session");

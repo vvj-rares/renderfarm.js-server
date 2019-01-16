@@ -485,6 +485,7 @@ export class Database implements IDatabase {
         assert.notEqual(db, null);
 
         let obj = await db.collection(this.envCollectionName(collection)).findOne(filter);
+        console.log(" >>obj=", obj);
 
         return ctor(obj);
     }
