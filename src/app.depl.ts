@@ -31,11 +31,16 @@ describe(`Api`, function() {
 
     //request:  /GET https://dev1.renderfarmjs.com:8000/
     //response: {"env":"dev","version":"1.0.0.57"}
-    it("should return own version on GET / request", async function() {
+    it("should return own version on GET / request", async function(done) {
         let res: any = await axios.get(settings.current.publicUrl);
-        JasmineDeplHelpers.checkResponse(res);
-        expect(res.data).toBeTruthy();
-        expect(res.data.version).toBe(settings.version);
+        JasmineDeplHelpers.checkResponse(res, "version");
+
+        let json = res.data;
+
+        expect(json.data.env).toBe(settings.env);
+        expect(json.data.version).toBe(settings.version);
+
+        done();
     });
 
     //request:  /GET https://dev1.renderfarmjs.com:8000/v1/worker/?api_key=75f5-4d53-b0f4

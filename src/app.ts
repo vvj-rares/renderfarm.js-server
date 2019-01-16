@@ -49,7 +49,7 @@ class App implements IApp {
         // report server status
         this._express.get('/', function (req, res) {
             console.log(`GET on /`);
-            res.end(JSON.stringify({ env: this._settings.env, version: this._settings.version }));
+            res.end(JSON.stringify({ ok: true, type: "version", data: { env: this._settings.env, version: this._settings.version } }));
         }.bind(this));
 
         this._express.get('/favicon.ico', function (req, res) {

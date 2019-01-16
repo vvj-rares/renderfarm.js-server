@@ -43,7 +43,7 @@ class SessionEndpoint implements IEndpoint {
         } catch (err) {
             console.log(`REJECT | api_key rejected`);
             res.status(403);
-            res.end(JSON.stringify({ ok: false, message: "api_key rejected", error: {} }, null, 2));
+            res.end(JSON.stringify({ ok: false, message: "api_key rejected", error: err.message }, null, 2));
             return false;
         }
     }
@@ -56,7 +56,7 @@ class SessionEndpoint implements IEndpoint {
             if (workspace.apiKey !== apiKey) {
                 console.log(`REJECT | workspace_guid does not belong to provided api_key`);
                 res.status(403);
-                res.end(JSON.stringify({ ok: false, message: "workspace_guid does not belong to provided api_key", error: {} }, null, 2));
+                res.end(JSON.stringify({ ok: false, message: "workspace_guid does not belong to provided api_key", error: null }, null, 2));
                 return false;
             }
 
@@ -65,7 +65,7 @@ class SessionEndpoint implements IEndpoint {
         } catch (err) {
             console.log(`REJECT | workspace_guid rejected`);
             res.status(403);
-            res.end(JSON.stringify({ ok: false, message: "workspace_guid rejected", error: {} }, null, 2));
+            res.end(JSON.stringify({ ok: false, message: "workspace_guid rejected", error: err.message }, null, 2));
             return false;
         }
     }
@@ -98,14 +98,14 @@ class SessionEndpoint implements IEndpoint {
             if (!apiKey) {
                 console.log(`REJECT | api_key is missing`);
                 res.status(400);
-                res.end(JSON.stringify({ ok: false, message: "api_key is missing", error: {} }, null, 2));
+                res.end(JSON.stringify({ ok: false, message: "api_key is missing", error: null }, null, 2));
                 return;
             }
 
             if (!workspaceGuid) {
                 console.log(`REJECT | workspace_guid is missing`);
                 res.status(400);
-                res.end(JSON.stringify({ ok: false, message: "workspace_guid is missing", error: {} }, null, 2));
+                res.end(JSON.stringify({ ok: false, message: "workspace_guid is missing", error: null }, null, 2));
                 return;
             }
 
