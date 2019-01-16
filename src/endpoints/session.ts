@@ -1,8 +1,9 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings } from "../interfaces";
+import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings, IMaxscriptClient } from "../interfaces";
 import { TYPES } from "../types";
 import { Session } from "../database/model/session";
+import { MaxscriptClient } from "../maxscript_client/maxscript.client";
 
 @injectable()
 class SessionEndpoint implements IEndpoint {
@@ -123,9 +124,10 @@ class SessionEndpoint implements IEndpoint {
                 return;
             }
 
-            let maxscriptClient = this._maxscriptClientFactory.create();
+            // try connect to worker
+            let maxscript: IMaxscriptClient = this._maxscriptClientFactory.create();
             try {
-                await maxscriptClient.connect(session.workerRef.ip, session.workerRef.port);
+                await maxscript.connect(session.workerRef.ip, session.workerRef.port);
                 console.log(`    OK | SessionEndpoint connected to maxscript client`);
             } catch (err) {
                 console.log(`  FAIL | failed to connect to worker, `, err);
@@ -134,7 +136,29 @@ class SessionEndpoint implements IEndpoint {
                 return;
             }
 
-            maxscriptClient.disconnect();
+            // try to set maxscript SessionGuid global variable
+            try {
+                await maxscript.setSession(session.guid);
+                console.log(`    OK | SessionGuid on worker was updated`);
+            } catch (err) {
+                console.log(`  FAIL | failed to update SessionGuid on worker, `, err);
+                res.status(500);
+                res.end(JSON.stringify({ ok: false, type: "session", message: "failed to update SessionGuid on worker", error: err.message }, null, 2));
+                return;
+            }
+
+            // try to configure 3ds max folders from workspace
+            try {
+                await maxscript.setWorkspace(session.workspaceRef);
+                console.log(`    OK | workspace ${session.workspaceGuid} assigned to session ${session.guid}`);
+            } catch (err) {
+                console.log(`  FAIL | failed to set workspace on worker, `, err);
+                res.status(500);
+                res.end(JSON.stringify({ ok: false, type: "session", message: "failed to set workspace on worker", error: err.message }, null, 2));
+                return;
+            }
+
+            maxscript.disconnect();
 
             res.status(201);
             res.end(JSON.stringify({ ok: true, type: "session", data: { guid: session.guid } }, null, 2));
@@ -152,7 +176,7 @@ class SessionEndpoint implements IEndpoint {
 
                 //            this._database.assignSessionWorkspace(newSessionGuid, workspaceGuid)
                 //                .then(function(){
-                //                    console.log(`    OK | workspace ${workspaceGuid} assigned to session ${newSessionGuid}`);
+                //                    
 
                 //                    let maxscriptClient = this._maxscriptClientFactory.create();
                 //                    maxscriptClient.connect(workerInfo.ip, workerInfo.port)
@@ -161,7 +185,7 @@ class SessionEndpoint implements IEndpoint {
 
                 //                            maxscriptClient.setSession(newSessionGuid)
                 //                                .then(function(value) {
-                //                                    console.log(`    OK | SessionGuid on worker was updated`);
+                //                                    
 
                 //                                    maxscriptClient.setWorkspace(workspaceInfo)
                 //                                        .then(function(value) {
@@ -181,7 +205,7 @@ class SessionEndpoint implements IEndpoint {
                 //                                    maxscriptClient.disconnect();
                 //                                    console.error(`  FAIL | failed to assign session to worker\n`, err);
                 //                                    res.status(500);
-                //                                    res.end(JSON.stringify({ error: "failed to assign session to worker" }, null, 2));
+                //                                    
                 //                                }.bind(this)); // end of maxscriptClient.setSession promise
 
                 //                        }.bind(this))

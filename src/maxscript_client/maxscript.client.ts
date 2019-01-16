@@ -56,21 +56,22 @@ class MaxscriptClient implements IMaxscriptClient {
         return new Promise<boolean>(function(resolve, reject) {
             // prepare response handlers for the command
             this._responseHandler = function(data) {
+                this._responseHandler = undefined;
+
                 let maxscriptResp = data.toString();
                 if (maxscriptResp && maxscriptResp !== "OK") {
                     console.log(`       >> maxscript = ${maxscript}`);
                     console.log(`   LOG | MaxscriptClient.${actionDesc} returned: ${maxscriptResp}` );
                 }
-
-                this._responseHandler = undefined;
+                
                 if (responseChecker) {
                     if (responseChecker(maxscriptResp)) {
-                        resolve(true);
+                        resolve();
                     } else {
-                        reject(false);
+                        reject(Error(`Unexpected maxscript response: ${maxscriptResp}`));
                     }
                 } else {
-                    resolve(true);
+                    resolve();
                 }
             };
 
@@ -83,7 +84,7 @@ class MaxscriptClient implements IMaxscriptClient {
             if (maxscript) {
                 this._client.write(maxscript);
             } else {
-                resolve(true);
+                reject(Error("empty maxscript"));
             }
 
         }.bind(this));

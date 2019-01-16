@@ -62,7 +62,7 @@ export interface IEndpoint {
 
 export interface IMaxscriptClient {
     connect(ip: string, port: number): Promise<boolean>;
-    disconnect();
+    disconnect(): void;
 
     execMaxscript(maxscript: string, actionDesc: string): Promise<boolean>;
 
