@@ -294,7 +294,7 @@ describe(`Api`, function() {
             expect(initialWorkerCount).toBeGreaterThan(0);
         }
 
-        let openSessions: Session[] = [];
+        let openSessions: string[] = [];
         for (let k = 0; k < initialWorkerCount; k++) { // !! one more time that collection length
 
             // now create one session after another until we grab all workers
@@ -362,8 +362,7 @@ describe(`Api`, function() {
         done();
     });
 
-    /* fit("should reject POST on /session when there's no available workers", async function (done) {
-        let initialWorkerCount: number;
+    xit("should reject POST on /session when there's no available workers", async function (done) {
         { // first check how many available workers we have
             let config: AxiosRequestConfig = {};
             config.params = {
@@ -371,24 +370,28 @@ describe(`Api`, function() {
             };
             let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
             JasmineDeplHelpers.checkResponse(res, 200, "worker");
+
             let json = res.data;
 
-            initialWorkerCount = json.data.length;
-            console.log(`Available workers count: ${initialWorkerCount}`);
-            expect(initialWorkerCount).toBeGreaterThan(0);
+            let availableWorkerCount = json.data.length;
+            console.log(`Available workers count: ${availableWorkerCount}`);
+
+            expect(availableWorkerCount).toBeGreaterThan(0);
+
+            if (availableWorkerCount === 0) { // no reason to proceed with this test, as we need at least one worker
+                fail();
+                done();
+                return;
+            }
         }
 
-        let openSessions: Session[] = [];
-        for (let k = 0; k < initialWorkerCount; k++) { // !! one more time that collection length
-
-            // now create one session after another until we grab all workers
-            console.log(`Creating session ${k + 1} of ${initialWorkerCount}`);
+        let sessionGuid: string;
+        { // open one session
             let data: any = {
                 api_key: JasmineDeplHelpers.existingApiKey,
                 workspace_guid: JasmineDeplHelpers.existingWorkspaceGuid
             };
             let config: AxiosRequestConfig = {};
-
             let res: any
             try {
                 res = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
@@ -397,8 +400,14 @@ describe(`Api`, function() {
                 JasmineDeplHelpers.checkErrorResponse(err.response, 500, "failed to create session", "all workers busy");
                 console.log(err.message);
                 fail();
-                break;
+                done();
+                return;
             }
+
+            JasmineDeplHelpers.checkResponse(res, 201, "session");
+
+            let json = res.data;
+            sessionGuid = json.data.guid;
 
             let url2 = `${settings.current.publicUrl}/v${settings.majorVersion}/session/${res.data.data.guid}`;
             console.log(` >>>> GET ${url2}`);
@@ -414,71 +423,37 @@ describe(`Api`, function() {
             console.log(" >>>> port=", res3.data.data.port);
             let workerPort = res3.data.data.port;
 
-            // send some commands directly on fake worker
-            // var client = new net.Socket();
-            // console.log(`Connecting`)
-            // client.connect(workerPort, host, function() {
-            //     console.log('Connected');
-            //     client.write('Hello, server! Love, Client.');
-            // });
-            
-            // client.on('error', function(err) {
-            //     console.log('Error: ' + err);
-            //     client.destroy(); // kill client after server's response
-            // });
-
-            // client.on('data', function(data) {
-            //     console.log('Received: ' + data);
-            //     client.destroy(); // kill client after server's response
-            // });
-            
-            // client.on('close', function() {
-            //     console.log('Connection closed');
-            // });
-
-            JasmineDeplHelpers.checkResponse(res, 201, "session");
-            let json = res.data;
-            openSessions.push(json.data.guid);
-        }
-
-        let workerCount: number;
-        { // now check how many available workers left (must be zero)
-            let config: AxiosRequestConfig = {};
-            config.params = {
-                api_key: JasmineDeplHelpers.existingApiKey
-            };
-            let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
-            JasmineDeplHelpers.checkResponse(res, 200, "worker");
-            let json = res.data;
-
-            workerCount = json.data.length;
-            console.log(`Available workers count: ${workerCount}`);
-            expect(workerCount).toBe(0);
-        }
-
-        { // now close sessions that we opened
-            for (let si in openSessions) {
-                let sessionGuid = openSessions[si];
-                let res: any = await axios.delete(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
-
+            async function closeSession(guid) {
+                console.log(`Closing session ${guid}`);
+                let res: any = await axios.delete(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${guid}`);
                 JasmineDeplHelpers.checkResponse(res, 200, "session");
             }
+
+            // send some commands directly on fake worker
+            var client = new net.Socket();
+            console.log(`Connecting`)
+            client.connect(workerPort, host, function() {
+                console.log('Connected');
+                client.write('Hello, server! Love, Client.');
+            });
+            
+            client.on('error', function(err) {
+                console.log('Error: ' + err);
+                client.destroy(); // kill client after server's response
+            });
+
+            client.on('data', function(data) {
+                console.log('Received: ' + data);
+                client.destroy(); // kill client after server's response
+            });
+            
+            client.on('close', async function() {
+                console.log('Connection closed');
+                await closeSession(sessionGuid);
+                done();
+            });
         }
 
-        { // and how many workers we have now?
-            let config: AxiosRequestConfig = {};
-            config.params = {
-                api_key: JasmineDeplHelpers.existingApiKey
-            };
-            let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
-            JasmineDeplHelpers.checkResponse(res, 200, "worker");
-            let json = res.data;
-
-            workerCount = json.data.length;
-            console.log(`Available workers count: ${workerCount}`);
-            expect(workerCount).toBe(initialWorkerCount);
-        }
-
-        done();
-    }); */
+        //hey, not done() here, see how socket works
+    });
 });

@@ -120,7 +120,7 @@ for (let i=0; i<simulateWorkersCount; i++) {
 
     }.bind(worker));
 
-    server.listen(worker.port, '127.0.0.1');
+    server.listen(worker.port, '0.0.0.0');
     worker.server = server;
 
     console.log(JSON.stringify({ status: `Worker [${i}] is listening on port: ${worker.port}`}));
