@@ -485,9 +485,11 @@ export class Database implements IDatabase {
         assert.notEqual(db, null);
 
         let obj = await db.collection(this.envCollectionName(collection)).findOne(filter);
-        console.log(" >>obj=", obj);
-
-        return ctor(obj);
+        if (obj) {
+            return ctor(obj);
+        } else {
+            return null;
+        }
     }
 
     public async find<T extends IDbEntity>(collection: string, filter: any, ctor: (obj: any) => T): Promise<T[]> {

@@ -79,6 +79,12 @@ class SessionEndpoint implements IEndpoint {
             let session: Session;
             try {
                 session = await this._database.getSession(sessionGuid, { allowClosed: true, readOnly: true });
+                if (!session) {
+                    console.log(`  FAIL | session not found: ${sessionGuid}`);
+                    res.status(404);
+                    res.end(JSON.stringify({ ok: false, message: "session not found", error: null }, null, 2));
+                    return;
+                }
             } catch (err) {
                 console.log(`  FAIL | failed to get session: ${sessionGuid}`);
                 res.status(500);
