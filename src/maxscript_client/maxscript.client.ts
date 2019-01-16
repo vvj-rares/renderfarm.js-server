@@ -45,7 +45,10 @@ class MaxscriptClient implements IMaxscriptClient {
     }
 
     disconnect() {
-        this._client.destroy();
+        if (this._client) {
+            this._client.destroy();
+            this._client = null;
+        }
     }
 
     execMaxscript(maxscript: string, actionDesc: string, responseChecker: (resp: string) => boolean = null): Promise<boolean> {

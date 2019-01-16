@@ -97,7 +97,7 @@ export class JasmineDeplHelpers {
         expect(res.headers['access-control-allow-methods']).toBe('PUT, POST, GET, DELETE, OPTIONS');
 
         //check returned payload
-        console.log("Checking response: ", res.data, res.data.ok);
+        console.log("Checking response: ", res.data);
         expect(res.data).toBeTruthy();
         expect(res.data.ok).toBe(true);
 
@@ -116,7 +116,7 @@ export class JasmineDeplHelpers {
         expect(res.headers['access-control-allow-methods']).toBe('PUT, POST, GET, DELETE, OPTIONS');
 
         //check returned payload
-        console.log("Checking error response: ", res.data, res.data.ok);
+        console.log("Checking error response: ", res.data);
         expect(res.data).toBeTruthy()
         expect(res.data.ok).toBe(false);
 

@@ -123,6 +123,19 @@ class SessionEndpoint implements IEndpoint {
                 return;
             }
 
+            let maxscriptClient = this._maxscriptClientFactory.create();
+            try {
+                await maxscriptClient.connect(session.workerRef.ip, session.workerRef.port);
+                console.log(`    OK | SessionEndpoint connected to maxscript client`);
+            } catch (err) {
+                console.log(`  FAIL | failed to connect to worker, `, err);
+                res.status(500);
+                res.end(JSON.stringify({ ok: false, message: "failed to connect to worker", error: err.message }, null, 2));
+                return;
+            }
+
+            maxscriptClient.disconnect();
+
             res.status(201);
             res.end(JSON.stringify({ ok: true, type: "session", data: { guid: session.guid } }, null, 2));
 
