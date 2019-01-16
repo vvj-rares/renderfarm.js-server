@@ -245,8 +245,6 @@ describe(`Api`, function() {
             JasmineDeplHelpers.checkResponse(res, 201);
             let json = res.data;
 
-            expect(json.ok).toBeTruthy();
-            expect(json.type).toBe("session");
             expect(json.data).toBeTruthy();
             expect(json.data.guid).toBeTruthy();
             expect(json.data.guid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
