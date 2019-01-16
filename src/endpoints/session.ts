@@ -81,7 +81,7 @@ class SessionEndpoint implements IEndpoint {
             } catch (err) {
                 console.log(`  FAIL | failed to get session: ${sessionGuid}`);
                 res.status(500);
-                res.end(JSON.stringify({ ok: false, message: "failed to get session", error: err }, null, 2));
+                res.end(JSON.stringify({ ok: false, message: "failed to get session", error: err.message }, null, 2));
                 return;
             }
 
@@ -96,14 +96,14 @@ class SessionEndpoint implements IEndpoint {
             console.log(`POST on ${req.path} with api_key: ${apiKey} with workspace: ${workspaceGuid}`);
 
             if (!apiKey) {
-                console.log(`REJECT | api_key empty`);
+                console.log(`REJECT | api_key is missing`);
                 res.status(400);
                 res.end(JSON.stringify({ ok: false, message: "api_key is missing", error: {} }, null, 2));
                 return;
             }
 
             if (!workspaceGuid) {
-                console.log(`REJECT | workspace_guid is empty`);
+                console.log(`REJECT | workspace_guid is missing`);
                 res.status(400);
                 res.end(JSON.stringify({ ok: false, message: "workspace_guid is missing", error: {} }, null, 2));
                 return;
@@ -119,7 +119,7 @@ class SessionEndpoint implements IEndpoint {
             } catch (err) {
                 console.log(`  FAIL | failed to create session, `, err);
                 res.status(500);
-                res.end(JSON.stringify({ ok: false, message: "failed to create session", error: err }, null, 2));
+                res.end(JSON.stringify({ ok: false, message: "failed to create session", error: err.message }, null, 2));
                 return;
             }
 
@@ -212,7 +212,7 @@ class SessionEndpoint implements IEndpoint {
             } catch (err) {
                 console.log(`  FAIL | failed to close session, `, err);
                 res.status(500);
-                res.end(JSON.stringify({ ok: false, message: "failed to close session", error: err }, null, 2));
+                res.end(JSON.stringify({ ok: false, message: "failed to close session", error: err.message }, null, 2));
                 return;
             }
 

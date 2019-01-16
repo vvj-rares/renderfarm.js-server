@@ -44,7 +44,7 @@ export class WorkerEndpoint implements IEndpoint {
             }
             catch (err) {
                 res.status(403);
-                res.end(JSON.stringify({ ok: false, message: "api_key rejected", error: err }, null, 2));
+                res.end(JSON.stringify({ ok: false, message: "api_key rejected", error: err.message }, null, 2));
                 return;
             }
 
@@ -53,7 +53,7 @@ export class WorkerEndpoint implements IEndpoint {
                 res.end(JSON.stringify({ ok: true, type: "worker", data: workers }, null, 2));
             } catch (err) {
                 res.status(500);
-                res.end(JSON.stringify({ ok: false, message: "failed to get workers", error: err }, null, 2));
+                res.end(JSON.stringify({ ok: false, message: "failed to get workers", error: err.message }, null, 2));
                 return;
             }
         }.bind(this));

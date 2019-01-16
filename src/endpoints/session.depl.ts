@@ -330,7 +330,8 @@ describe(`Api`, function() {
             try {
                 res = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
             } catch (err) {
-                console.log(err.message);
+                JasmineDeplHelpers.checkErrorResponse(err.response, 500);
+                console.log(err.response.data);
                 continue;
             }
 
