@@ -6,6 +6,7 @@ const net   = require('net');
 const fs    = require('fs');
 
 function fileAppendText(filename: string, text: string) {
+    console.log(` >> fileAppendText to ${filename}: ${text}`);
     let fd;
 
     try {
