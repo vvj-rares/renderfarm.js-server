@@ -123,7 +123,7 @@ class SessionEndpoint implements IEndpoint {
                 return;
             }
 
-            res.status(200);
+            res.status(201);
             res.end(JSON.stringify({ ok: true, type: "session", data: { guid: session.guid } }, null, 2));
 
                 //.then(async function(value) {
@@ -216,7 +216,7 @@ class SessionEndpoint implements IEndpoint {
                 return;
             }
 
-            res.status(200);
+            res.status(204);
             res.end(JSON.stringify({ 
                 ok: true, 
                 type: "session", 

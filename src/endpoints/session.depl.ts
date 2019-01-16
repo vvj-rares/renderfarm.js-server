@@ -49,7 +49,7 @@ describe(`Api`, function() {
             res = err.response;
         }
 
-        JasmineDeplHelpers.checkErrorResponse(res, 400, "api_key is missing", "[1]");
+        JasmineDeplHelpers.checkErrorResponse(res, 400, "api_key is missing", null);
         done();
     });
 
@@ -75,7 +75,7 @@ describe(`Api`, function() {
             res = err.response;
         }
 
-        JasmineDeplHelpers.checkErrorResponse(res, 403, "api_key rejected", "[2]");
+        JasmineDeplHelpers.checkErrorResponse(res, 403, "api_key rejected");
         done();
     });
 
@@ -100,7 +100,7 @@ describe(`Api`, function() {
             res = err.response;
         }
 
-        JasmineDeplHelpers.checkErrorResponse(res, 400, "workspace_guid is missing", "[2]");
+        JasmineDeplHelpers.checkErrorResponse(res, 400, "workspace_guid is missing", null);
         done();
     });
 
@@ -127,7 +127,7 @@ describe(`Api`, function() {
             res = err.response;
         }
 
-        JasmineDeplHelpers.checkErrorResponse(res, 403, "workspace_guid rejected", "[3]");
+        JasmineDeplHelpers.checkErrorResponse(res, 403, "workspace_guid rejected");
         done();
     });
 
@@ -153,7 +153,7 @@ describe(`Api`, function() {
             res = err.response;
         }
 
-        JasmineDeplHelpers.checkErrorResponse(res, 403, "workspace_guid does not belong to provided api_key", "[5]");
+        JasmineDeplHelpers.checkErrorResponse(res, 403, "workspace_guid does not belong to provided api_key", null);
         done();
     })
 
@@ -162,7 +162,7 @@ describe(`Api`, function() {
         let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
         console.log("Response on GET: ", res.data);
 
-        JasmineDeplHelpers.checkResponse(res);
+        JasmineDeplHelpers.checkResponse(res, 200);
         let json = res.data;
 
         expect(json.ok).toBeTruthy();
@@ -185,7 +185,7 @@ describe(`Api`, function() {
         let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
         console.log("Response on GET: ", res.data);
 
-        JasmineDeplHelpers.checkResponse(res);
+        JasmineDeplHelpers.checkResponse(res, 200);
         let json = res.data;
 
         expect(json.ok).toBeTruthy();
@@ -215,7 +215,7 @@ describe(`Api`, function() {
         let res: any = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
         console.log("Response on POST: ", res.data);
 
-        JasmineDeplHelpers.checkResponse(res, "session");
+        JasmineDeplHelpers.checkResponse(res, 201, "session");
         let json = res.data;
 
         expect(json.data).toBeTruthy();
@@ -242,7 +242,7 @@ describe(`Api`, function() {
             let res: any = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
             console.log("Response on POST: ", res.data);
 
-            JasmineDeplHelpers.checkResponse(res);
+            JasmineDeplHelpers.checkResponse(res, 201);
             let json = res.data;
 
             expect(json.ok).toBeTruthy();
@@ -258,7 +258,7 @@ describe(`Api`, function() {
             let res: any = await axios.delete(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
             console.log("Response on DELETE: ", res.data);
 
-            JasmineDeplHelpers.checkResponse(res, "session");
+            JasmineDeplHelpers.checkResponse(res, 204, "session");
             let json = res.data;
 
             expect(json.data).toBeTruthy();
@@ -282,7 +282,7 @@ describe(`Api`, function() {
                 api_key: JasmineDeplHelpers.existingApiKey
             };
             let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
-            JasmineDeplHelpers.checkResponse(res, "worker");
+            JasmineDeplHelpers.checkResponse(res, 200, "worker");
             let json = res.data;
 
             initialWorkerCount = json.data.length;
@@ -309,7 +309,7 @@ describe(`Api`, function() {
                 continue;
             }
 
-            JasmineDeplHelpers.checkResponse(res, "session");
+            JasmineDeplHelpers.checkResponse(res, 201, "session");
             let json = res.data;
             openSessions.push(json.data.guid);
         }
@@ -321,7 +321,7 @@ describe(`Api`, function() {
                 api_key: JasmineDeplHelpers.existingApiKey
             };
             let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
-            JasmineDeplHelpers.checkResponse(res, "worker");
+            JasmineDeplHelpers.checkResponse(res, 200, "worker");
             let json = res.data;
 
             workerCount = json.data.length;
@@ -334,7 +334,7 @@ describe(`Api`, function() {
                 let sessionGuid = openSessions[si];
                 let res: any = await axios.delete(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
 
-                JasmineDeplHelpers.checkResponse(res, "session");
+                JasmineDeplHelpers.checkResponse(res, 204, "session");
             }
         }
 
@@ -344,7 +344,7 @@ describe(`Api`, function() {
                 api_key: JasmineDeplHelpers.existingApiKey
             };
             let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
-            JasmineDeplHelpers.checkResponse(res, "worker");
+            JasmineDeplHelpers.checkResponse(res, 200, "worker");
             let json = res.data;
 
             workerCount = json.data.length;

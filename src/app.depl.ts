@@ -33,7 +33,7 @@ describe(`Api`, function() {
     //response: {"env":"dev","version":"1.0.0.57"}
     it("should return own version on GET / request", async function(done) {
         let res: any = await axios.get(settings.current.publicUrl);
-        JasmineDeplHelpers.checkResponse(res, "version");
+        JasmineDeplHelpers.checkResponse(res, 200, "version");
 
         let json = res.data;
 
@@ -71,7 +71,7 @@ describe(`Api`, function() {
             api_key: JasmineDeplHelpers.existingApiKey
         };
         let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
-        JasmineDeplHelpers.checkResponse(res);
+        JasmineDeplHelpers.checkResponse(res, 200);
         let json = res.data;
 
         expect(json.ok).toBeTruthy();
