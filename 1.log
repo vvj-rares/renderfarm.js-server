@@ -1,0 +1,118 @@
+
+> renderfarm.js-server@1.0.0 test-depl F:\Projects\renderfarm.js-server
+> tsc & jasmine --config=jasmine.depl.json
+
+Randomized with seed 22555
+Started
+Checking response:  { ok: true,
+  type: 'version',
+  data: { env: 'dev', version: '1.0.0.152' } }
+currentVersion: 1.0.0.152
+Configuring available fake workers with parameters:  version= "1.0.0.152", testName= "POST_session", testRun= "1548052438125"
+Checking response:  { ok: true,
+  type: 'worker',
+  data: 
+   [ { guid: 'd2a5f9b4-6a00-4f3e-9b3e-ce1768c8ce43',
+       mac: '00000000000000',
+       ip: '127.0.0.1',
+       port: 13901,
+       endpoint: '127.0.0.1:13901',
+       workgroup: 'default',
+       firstSeen: '2019-01-16T21:50:56.911Z',
+       lastSeen: '2019-01-21T06:33:51.668Z',
+       cpuUsage: 0.3146158982347298,
+       ramUsage: 0.10012512673763323,
+       totalRam: 32,
+       sessionGuid: null } ] }
+Available workers count: 1
+Connecting to fake worker dev1.renderfarmjs.com:13901 ...
+    Connected
+    Sending fake worker config:  { worker: 
+   { testRun: 0,
+     testName: 'POST_session',
+     logFile: '/home/rfarm-api/www/html/logs/1.0.0.152.renderfarm.js-server/out.worker-fake.name=POST_session.port=13901.1548052438125.log' } }
+    Fake worker configured successfully
+Checking response:  { ok: true,
+  type: 'session',
+  data: { guid: '818c1fae-a778-40aa-927b-d7b794511f2a' } }
+GET on https://dev1.renderfarmjs.com:8000/v1/session/818c1fae-a778-40aa-927b-d7b794511f2a
+session:  { ok: true,
+  type: 'session',
+  data: 
+   { apiKey: '75f5-4d53-b0f4',
+     guid: '818c1fae-a778-40aa-927b-d7b794511f2a',
+     workerGuid: 'd2a5f9b4-6a00-4f3e-9b3e-ce1768c8ce43',
+     firstSeen: '2019-01-21T06:33:53.034Z',
+     lastSeen: '2019-01-21T06:33:53.034Z',
+     workspaceGuid: 'cfc3754f-0bf1-4b15-86a5-66e1d077c850',
+     closed: null,
+     expired: null } }
+workerGuid:  d2a5f9b4-6a00-4f3e-9b3e-ce1768c8ce43
+GET on https://dev1.renderfarmjs.com:8000/v1/worker/d2a5f9b4-6a00-4f3e-9b3e-ce1768c8ce43
+worker:  { ok: true,
+  type: 'worker',
+  data: 
+   { guid: 'd2a5f9b4-6a00-4f3e-9b3e-ce1768c8ce43',
+     mac: '00000000000000',
+     ip: '127.0.0.1',
+     port: 13901,
+     endpoint: '127.0.0.1:13901',
+     workgroup: 'default',
+     firstSeen: '2019-01-16T21:50:56.911Z',
+     lastSeen: '2019-01-21T06:33:53.670Z',
+     cpuUsage: 0.015598664879387214,
+     ramUsage: 0.10280518265257603,
+     totalRam: 32,
+     sessionGuid: '818c1fae-a778-40aa-927b-d7b794511f2a' } }
+port:  13901
+Closing session 818c1fae-a778-40aa-927b-d7b794511f2a
+Checking response:  { ok: true,
+  type: 'session',
+  data: 
+   { guid: '818c1fae-a778-40aa-927b-d7b794511f2a',
+     firstSeen: '2019-01-21T06:33:53.034Z',
+     closedAt: '2019-01-21T06:33:53.996Z',
+     closed: true } }
+Configuring available fake workers with parameters:  version= "null", testName= "null", testRun= "null"
+Checking response:  { ok: true,
+  type: 'worker',
+  data: 
+   [ { guid: 'd2a5f9b4-6a00-4f3e-9b3e-ce1768c8ce43',
+       mac: '00000000000000',
+       ip: '127.0.0.1',
+       port: 13901,
+       endpoint: '127.0.0.1:13901',
+       workgroup: 'default',
+       firstSeen: '2019-01-16T21:50:56.911Z',
+       lastSeen: '2019-01-21T06:33:53.670Z',
+       cpuUsage: 0.015598664879387214,
+       ramUsage: 0.10280518265257603,
+       totalRam: 32,
+       sessionGuid: null } ] }
+Available workers count: 1
+Connecting to fake worker dev1.renderfarmjs.com:13901 ...
+    Connected
+    Sending fake worker config:  { worker: { logFile: null } }
+    Fake worker configured successfully
+Getting fake worker log file: http://dev1.renderfarmjs.com/logs/1.0.0.152.renderfarm.js-server/out.worker-fake.name=POST_session.port=13901.1548052438125.log
+fake worker logs:  2019-01-21T06:33:53.036Z	undefined	POST_session	[request]	SessionGuid = "818c1fae-a778-40aa-927b-d7b794511f2a"
+2019-01-21T06:33:53.136Z	undefined	POST_session	[response]	OK
+2019-01-21T06:33:53.137Z	undefined	POST_session	[request]	for i=1 to pathConfig.mapPaths.count()  do ( pathConfig.mapPaths.delete 1 ) ;  for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 ) ;  pathConfig.mapPaths.add "C:\\Tempapi-keys\\75f5-4d53-b0f4\\workspaces\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\maps" ;  pathConfig.xrefPaths.add "C:\\Tempapi-keys\\75f5-4d53-b0f4\\workspaces\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\xrefs" ; 
+2019-01-21T06:33:53.238Z	undefined	POST_session	[response]	OK
+2019-01-21T06:33:54.002Z	undefined	POST_session	[request]	SessionGuid = ""
+2019-01-21T06:33:54.103Z	undefined	POST_session	[response]	OK
+2019-01-21T06:33:54.104Z	undefined	POST_session	[request]	resetMaxFile #noPrompt
+2019-01-21T06:33:54.203Z	undefined	POST_session	[response]	OK
+
+maxscript requests:  [ 'SessionGuid = "818c1fae-a778-40aa-927b-d7b794511f2a"',
+  'for i=1 to pathConfig.mapPaths.count()  do ( pathConfig.mapPaths.delete 1 ) ;  for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 ) ;  pathConfig.mapPaths.add "C:\\\\Tempapi-keys\\\\75f5-4d53-b0f4\\\\workspaces\\\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\\\maps" ;  pathConfig.xrefPaths.add "C:\\\\Tempapi-keys\\\\75f5-4d53-b0f4\\\\workspaces\\\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\\\xrefs" ;',
+  'SessionGuid = ""',
+  'resetMaxFile #noPrompt' ]
+.
+
+
+Ran 1 of 13 specs
+1 spec, 0 failures
+Finished in 2.822 seconds
+Incomplete: fit() or fdescribe() was found
+Randomized with seed 22555 (jasmine --random=true --seed=22555)

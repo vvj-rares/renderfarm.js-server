@@ -520,7 +520,7 @@ describe(`Api`, function() {
         JasmineDeplHelpers.checkResponse(res, 200, "session");
     }
 
-    fit("should send correct maxscript commands to worker on POST /session", async function (done) {
+    it("should send correct maxscript commands to worker on POST /session", async function (done) {
         let currentVersion = await getEnvVersion(fail, done);
         let testName = "POST_session";
         let testRun = Date.now();
