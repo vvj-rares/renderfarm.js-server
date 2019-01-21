@@ -520,7 +520,7 @@ describe(`Api`, function() {
         JasmineDeplHelpers.checkResponse(res, 200, "session");
     }
 
-    it("should send correct maxscript commands to worker on POST /session", async function (done) {
+    fit("should send correct maxscript commands to worker on POST /session", async function (done) {
         let currentVersion = await getEnvVersion(fail, done);
         let testName = "POST_session";
         let testRun = Date.now();
@@ -571,12 +571,29 @@ describe(`Api`, function() {
             let logUrl = getWorkerLogDownloadUrl(currentVersion, testName, testRun, workerPort);
             console.log(`Getting fake worker log file: ${logUrl}`);
             let res4: any = await axios.get(logUrl, logGetConfig);
+            console.log("fake worker logs: ", res4.data);
 
-            console.log(res4.data);
+            let lines = res4.data.split("\n");
+
+            let requests: string[] = [];
+            for (let i in lines) {
+                let line = lines[i];
+                let parts = line.split("\t");
+                if (parts[3] === "[request]") {
+                    requests.push(parts[4].trim());
+                }
+            }
+            console.log("maxscript requests: ", requests);
+
+/*
+[ 'SessionGuid = "d9f35ee0-0088-4d15-9e8d-b349c3b462f0"',
+  'for i=1 to pathConfig.mapPaths.count()  do ( pathConfig.mapPaths.delete 1 ) ;  for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 ) ;  pathConfig.mapPaths.add "C:\\\\Tempapi-keys\\\\75f5-4d53-b0f4\\\\workspaces\\\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\\\maps" ;  pathConfig.xrefPaths.add "C:\\\\Tempapi-keys\\\\75f5-4d53-b0f4\\\\workspaces\\\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\\\xrefs" ;',
+  'SessionGuid = ""',
+  'resetMaxFile #noPrompt' ]
+*/
+            expect(requests[0]).toBe(`SessionGuid = "${sessionGuid}"`);
 
             done();
         }
-
-        //hey, not done() here, see how socket works
     });
 });

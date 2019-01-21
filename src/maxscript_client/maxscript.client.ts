@@ -145,10 +145,10 @@ class MaxscriptClient implements IMaxscriptClient {
     setWorkspace(workspaceInfo: any): Promise<boolean> {
         let w = workspaceInfo;
 
-        let maxscript = `for i=1 to pathConfig.mapPaths.count()  do ( pathConfig.mapPaths.delete 1 ) ; `
-                      + ` for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 ) ; `
-                      + ` pathConfig.mapPaths.add "${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\maps" ; `
-                      + ` pathConfig.xrefPaths.add "${w.homeDir}api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\xrefs" ; ` ;
+        let maxscript = `for i=1 to pathConfig.mapPaths.count() do ( pathConfig.mapPaths.delete 1 )\r\n`
+                      + `for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 )\r\n`
+                      + `pathConfig.mapPaths.add "${w.homeDir}\\\\api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\maps"\r\n`
+                      + `pathConfig.xrefPaths.add "${w.homeDir}\\\\api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\xrefs"` ;
 
         return this.execMaxscript(maxscript, "setWorkspace");
     }
