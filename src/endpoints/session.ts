@@ -9,6 +9,7 @@ import { MaxscriptClient } from "../maxscript_client/maxscript.client";
 class SessionEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
+    private _maxscript: { [sessionGuid: string] : IMaxscriptClient; } = {}; // keep maxscript connections alive for open sessions
     private _maxscriptClientFactory: IMaxscriptClientFactory;
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
@@ -24,6 +25,9 @@ class SessionEndpoint implements IEndpoint {
             setInterval(async function() {
                 this._database.expireSessions(this._settings.current.sessionTimeoutMinutes)
                     .then(function(guids){
+
+                        //todo: close maxscript connections for these sessions
+
                         if (guids.length === 0) {
                             return;
                         }
@@ -35,6 +39,11 @@ class SessionEndpoint implements IEndpoint {
 
             }.bind(this), 5000);
         }
+
+        //keep maxscript connections alive until session is not closed or expired
+        setInterval(async function() {
+            // todo: send keepalive message to maxscript client
+        }, 1000);
     }
 
     async validateApiKey(res: any, apiKey: string) {
@@ -132,6 +141,8 @@ class SessionEndpoint implements IEndpoint {
 
             // try connect to worker
             let maxscript: IMaxscriptClient = this._maxscriptClientFactory.create();
+            this._maxscript[session.guid] = maxscript;
+
             try {
                 await maxscript.connect(session.workerRef.ip, session.workerRef.port);
                 console.log(`    OK | SessionEndpoint connected to maxscript client`);
