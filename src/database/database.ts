@@ -304,6 +304,9 @@ export class Database implements IDatabase {
         };
         let setter = { $set: { closed: true, closedAt: new Date(), expired: true } };
         let expiredSessions = await this.findManyAndUpdate<Session>("sessions", filter, setter, obj => new Session(obj));
+        if (expiredSessions.length === 0) {
+            return [];
+        }
 
         let workerUpdateFilter = { $or: [] };
         for (let si in expiredSessions) {

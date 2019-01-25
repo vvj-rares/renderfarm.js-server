@@ -10,12 +10,18 @@ module.exports = function() { return {
         sslKey: "ssl/key.pem",
         sslCert: "ssl/cert.pem",
         renderOutputDir: "C:\\Temp",
-        renderOutputLocal: "C:\\Temp",
         apiKeyCheck: true,
         workspaceCheck: true,
         deleteDeadWorkers: true,
         expireSessions: true,
         sessionTimeoutMinutes: 30
+    },
+    test: {
+        connectionUrl: "mongodb://rfarmmgr:123456@192.168.0.151:27017/rfarmdb",
+        databaseName: "rfarm-test",
+        collectionPrefix: "_test",
+        expireSessions: false,
+        deleteDeadWorkers: false
     },
     dev: {
         connectionUrl: "mongodb://rfarmmgr:123456@192.168.0.151:27017/rfarmdb",
@@ -25,12 +31,13 @@ module.exports = function() { return {
         dropFolderUsername: "username",
         dropFolderPassword: "123456"
     },
-    test: {
+    acc: {
         connectionUrl: "mongodb://rfarmmgr:123456@192.168.0.151:27017/rfarmdb",
-        databaseName: "rfarm-test",
-        collectionPrefix: "_test",
-        expireSessions: false,
-        deleteDeadWorkers: false
+        databaseName: "rfarm-acc",
+        collectionPrefix: "_acc",
+        sessionTimeoutMinutes: 5,
+        dropFolderUsername: "username",
+        dropFolderPassword: "123456"
     },
     prod: {
         publicUrl: "https://localhost:8000",
