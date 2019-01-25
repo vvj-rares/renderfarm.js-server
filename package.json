@@ -21,8 +21,10 @@
     "@types/mongodb": "^3.1.14",
     "@types/node": "^10.12.2",
     "@types/uuid": "^3.4.4",
+    "form-data": "^2.3.3",
     "ftp": "^0.3.10",
-    "jasmine-reporters": "^2.3.2"
+    "jasmine-reporters": "^2.3.2",
+    "tmp": "0.0.33"
   },
   "scripts": {
     "build": "tsc",

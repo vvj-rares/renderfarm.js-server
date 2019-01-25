@@ -113,6 +113,38 @@ describe("Database Worker", function() {
             done();
         })
 
+        it("checks that worker was correctly upserted", async function(done) {
+            let newWorker = new Worker(null);
+            newWorker.guid = uuidv4();
+            newWorker.ip = helpers.rndIp();
+            newWorker.mac = helpers.rndMac();
+            newWorker.port = helpers.rndPort();
+            newWorker.firstSeen = new Date();
+            newWorker.lastSeen = newWorker.firstSeen;
+            newWorker.workgroup = "exotic";
+            newWorker.cpuUsage = 0.1;
+            newWorker.ramUsage = 0.2;
+            newWorker.totalRam = 32;
+
+            let workerAdded1 = await database.upsertWorker(newWorker);
+            expect(workerAdded1).toBeTruthy();
+
+            newWorker.cpuUsage = 0.5;
+            newWorker.ramUsage = 0.75;
+
+            let workerAdded2 = await database.upsertWorker(newWorker);
+            expect(workerAdded2).toBeTruthy();
+
+            let worker = await database.getOne<Worker>("workers", { guid: newWorker.guid }, obj => new Worker(obj));
+
+            expect(worker).toBeTruthy();
+            expect(worker.guid).toBe(newWorker.guid);
+            expect(worker.cpuUsage).toBe(0.5);
+            expect(worker.ramUsage).toBe(0.75);
+
+            done();
+        })
+
         async function createOnlineAndOfflineWorkers(): Promise<Worker[]> {
             let worker0 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
             let worker1 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
