@@ -607,8 +607,9 @@ export class Database implements IDatabase {
             }.bind(this);
 
             db.collection(this.envCollectionName(collection)).updateOne(
-                entity.toJSON(), 
-                opt,
+                entity.filter,
+                entity.toJSON(),
+                opt, 
                 callback);
 
         }.bind(this));

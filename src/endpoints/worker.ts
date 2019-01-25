@@ -109,7 +109,7 @@ export class WorkerEndpoint implements IEndpoint {
         }
     }
 
-private onSpawnerUpdate(spawner: VraySpawnerInfo) {
+    private onSpawnerUpdate(spawner: VraySpawnerInfo) {
         // this._database.storeVraySpawner(spawner);
     }
 
