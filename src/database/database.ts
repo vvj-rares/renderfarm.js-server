@@ -388,6 +388,10 @@ export class Database implements IDatabase {
         return this.insertOne<Worker>("workers", worker, obj => new Worker(obj));
     }
 
+    public upsertWorker(worker: Worker): Promise<boolean> {
+        return this.upsertOne("workers", worker);
+    }
+
     public updateWorker(worker: Worker, setter: any): Promise<Worker> {
         return this.findOneAndUpdate<Worker>("workers", worker.filter, setter, obj => new Worker(obj));
     }
@@ -571,6 +575,38 @@ export class Database implements IDatabase {
             }.bind(this);
 
             db.collection(this.envCollectionName(collection)).insertOne(
+                entity.toJSON(), 
+                opt,
+                callback);
+
+        }.bind(this));
+    }
+
+    public upsertOne(collection: string, entity: IDbEntity): Promise<boolean> {
+        return new Promise<boolean>(async function(resolve, reject) {
+            try {
+                await this.ensureClientConnection();
+            } catch (err) {
+                reject(err);
+                return;
+            }
+
+            let db = this._client.db(this._settings.current.databaseName);
+            assert.notEqual(db, null);
+
+            let opt: UpdateOneOptions = { w: "majority", j: true, upsert: true };
+            let callback: MongoCallback<UpdateWriteOpResult> = function (error: MongoError, res: UpdateWriteOpResult) {
+                if (res && res.result.ok === 1 && res.upsertedCount === 1 || res.modifiedCount === 1) {
+                    resolve(true);
+                } else if (error) {
+                    console.error(error);
+                    reject(Error(error.message));
+                } else {
+                    reject(Error(`nothing was upserted into ${collection}, ${JSON.stringify(entity)}`));
+                }
+            }.bind(this);
+
+            db.collection(this.envCollectionName(collection)).updateOne(
                 entity.toJSON(), 
                 opt,
                 callback);

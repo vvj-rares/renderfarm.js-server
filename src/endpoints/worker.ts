@@ -86,7 +86,7 @@ export class WorkerEndpoint implements IEndpoint {
 
     private async onWorkerAdded(worker: Worker) {
         try {
-            await this._database.insertWorker(worker);
+            await this._database.upsertWorker(worker);
         } catch (err) {
             console.error("failed to insert worker in database: ", err);
         }

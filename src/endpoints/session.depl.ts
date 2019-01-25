@@ -1,12 +1,8 @@
 import "reflect-metadata";
 import axios, { AxiosRequestConfig } from "axios";
 import { Settings } from "../settings";
-import { isArray, isNumber } from "util";
 import { JasmineDeplHelpers } from "../jasmine.helpers";
-import { Session } from "../database/model/session";
-import { setServers } from "dns";
 
-const uuidv4 = require('uuid/v4');
 const net = require('net');
 
 require("../jasmine.config")();

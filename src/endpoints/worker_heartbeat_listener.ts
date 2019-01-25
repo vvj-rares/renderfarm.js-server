@@ -68,13 +68,26 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
         let knownWorker = this._workers[workerId];
 
         if (knownWorker !== undefined) { // update existing record
-            knownWorker.lastSeen = new Date();
+            let prevLastSeen = knownWorker.lastSeen;
+            let newLastSeen = new Date();
+
+            knownWorker.lastSeen = newLastSeen;
             knownWorker.cpuUsage = rec.cpu_usage;
             knownWorker.ramUsage = rec.ram_usage;
             knownWorker.totalRam = rec.total_ram;
 
-            if (this._workerUpdatedCb) {
-                this._workerUpdatedCb(knownWorker);
+            if (newLastSeen.getTime() - prevLastSeen.getTime() < 15000) {
+                // worker had no offline time, it is updated
+                if (this._workerUpdatedCb) {
+                    this._workerUpdatedCb(knownWorker);
+                }
+            } else {
+                // well, this worker was offline for more than 15 seconds, it must be reported as new
+                if (this._workerAddedCb) {
+                    this._workerAddedCb(knownWorker);
+                }
+
+                console.log(`    OK | new worker, ${msg} from ${rinfo.address}:${rinfo.port}`);
             }
         }
         else {
