@@ -1,5 +1,6 @@
 "use strict";
 
+import * as http from "http";
 import * as https from "https";
 import * as fs from "fs";
 
@@ -20,15 +21,24 @@ async function main() {
     console.log("    OK | Database connected");
     console.log("Starting server...");
 
-    const httpsOptions = {
-        key: fs.readFileSync(settings.current.sslKey),
-        cert: fs.readFileSync(settings.current.sslCert)
-    };
-
     const app = myContainer.get<IApp>(TYPES.IApp);
-    https.createServer(httpsOptions, app.express).listen(settings.current.port, () => {
-        console.log("    OK | Express server listening on port " + settings.current.port);
-    });
+
+    if (settings.current.protocol === "https") {
+        const httpsOptions = {
+            key: fs.readFileSync(settings.current.sslKey),
+            cert: fs.readFileSync(settings.current.sslCert)
+        };
+
+        https.createServer(httpsOptions, app.express).listen(settings.current.port, () => {
+            console.log("    OK | Express HTTPS server listening on port " + settings.current.port);
+        });
+    } else if (settings.current.protocol === "http") {
+        http.createServer(app.express).listen(settings.current.port, () => {
+            console.log("    OK | Express HTTP server listening on port " + settings.current.port);
+        });
+    } else {
+        console.error("Unexpected protocol: " + settings.current.protocol)
+    }
 }
 
 main();
