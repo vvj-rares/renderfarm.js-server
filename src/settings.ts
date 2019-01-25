@@ -21,6 +21,24 @@ export class Settings implements ISettings {
             this._settings[p] = settings[env][p];
         }
 
+        //now evaluate command line parameters and override settings
+        for (let argi in process.argv) {
+            let arg = process.argv[argi];
+            let parts = arg.split("=");
+            if (parts && parts.length !== 2) {
+                continue;
+            }
+
+            let key: string = parts[0];
+            let value: string = parts[1];
+
+            if (key === "env") continue; // special case, env is processed before this was constructed
+            if (this._settings[key] !== undefined) {
+                this._settings[key] = value;
+                console.log(`    OK | settings override: ${key} = ${value}`);
+            }
+        }
+
         let parts = settings.version.split(".");
         this._version = settings.version;
         this._majorVersion = parts[0];
