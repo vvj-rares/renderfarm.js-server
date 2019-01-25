@@ -1,3 +1,7 @@
+<a href="https://teamcity.mbnsay.com/viewType.html?buildTypeId=RenderfarmJs_Build&guest=1">
+<img src="https://teamcity.mbnsay.com/app/rest/builds/buildType:(id:RenderfarmJs_Build)/statusIcon"/>
+</a>
+
 # renderfarm.js server
 
 Render three.js on server side with Vray.
@@ -85,8 +89,3 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 * Hat tip to anyone whose code was used
 * Inspiration
 * etc
-
-
-<a href="https://teamcity.mbnsay.com/viewType.html?buildTypeId=RenderfarmJs_Build&guest=1">
-<img src="https://teamcity.mbnsay.com/app/rest/builds/buildType:(id:RenderfarmJs_Build)/statusIcon"/>
-</a>
