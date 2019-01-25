@@ -596,7 +596,7 @@ export class Database implements IDatabase {
 
             let opt: UpdateOneOptions = { w: "majority", j: true, upsert: true };
             let callback: MongoCallback<UpdateWriteOpResult> = function (error: MongoError, res: UpdateWriteOpResult) {
-                if (res && res.result.ok === 1 && res.upsertedCount === 1 || res.modifiedCount === 1) {
+                if (res && res.result.ok === 1 && (res.upsertedCount === 1 || res.modifiedCount === 1)) {
                     resolve(true);
                 } else if (error) {
                     console.error(error);
@@ -608,7 +608,7 @@ export class Database implements IDatabase {
 
             db.collection(this.envCollectionName(collection)).updateOne(
                 entity.filter,
-                entity.toJSON(),
+                { $set: entity.toJSON() },
                 opt, 
                 callback);
 
