@@ -62,7 +62,7 @@ describe(`Api`, function() {
         try {
             axios.defaults.headers = form.getHeaders();
             res = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/renderoutput`, form, config);
-        } catch {
+        } finally {
             // don't harm other tests that will run after
             axios.defaults.headers = prevHeaders;
         }
