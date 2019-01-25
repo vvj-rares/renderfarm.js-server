@@ -57,9 +57,15 @@ describe(`Api`, function() {
             filename: filename
         });
 
-        axios.defaults.headers = form.getHeaders();
-
-        let res = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/renderoutput`, form, config);
+        let res;
+        let prevHeaders = axios.defaults.headers;
+        try {
+            axios.defaults.headers = form.getHeaders();
+            res = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/renderoutput`, form, config);
+        } catch {
+            // don't harm other tests that will run after
+            axios.defaults.headers = prevHeaders;
+        }
 
         JasmineDeplHelpers.checkResponse(res, 201);
         let json = res.data;
