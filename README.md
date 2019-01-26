@@ -89,7 +89,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 * Inspiration
 * etc
 
-[build-status]: https://teamcity.mbnsay.com/app/rest/builds/buildType:(id:RenderfarmJs_Build)/status
+[build-status]: https://teamcity.mbnsay.com/app/rest/builds/buildType:(id:RenderfarmJs_Build)/statusIcon
 [build-status-url]: https://teamcity.mbnsay.com/viewType.html?buildTypeId=RenderfarmJs_Build&guest=1
 
 [lgtm]: https://img.shields.io/lgtm/grade/javascript/g/nmalex/renderfarm.js-server.svg?label=code%20quality
