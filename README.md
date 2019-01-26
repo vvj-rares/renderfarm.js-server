@@ -1,7 +1,4 @@
-<a href="https://teamcity.mbnsay.com/viewType.html?buildTypeId=RenderfarmJs_Build&guest=1">
-<img src="https://teamcity.mbnsay.com/app/rest/builds/buildType:(id:RenderfarmJs_Build)/statusIcon"/>
-</a>
-
+[![Build Status][build-status]][build-status-url]
 [![Language Grade][lgtm]][lgtm-url]
 
 # renderfarm.js server
@@ -91,6 +88,9 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 * Hat tip to anyone whose code was used
 * Inspiration
 * etc
+
+[build-status]: https://teamcity.mbnsay.com/app/rest/builds/buildType:(id:RenderfarmJs_Build)/status
+[build-status-url]: https://teamcity.mbnsay.com/viewType.html?buildTypeId=RenderfarmJs_Build&guest=1
 
 [lgtm]: https://img.shields.io/lgtm/grade/javascript/g/nmalex/renderfarm.js-server.svg?label=code%20quality
 [lgtm-url]: https://lgtm.com/projects/g/nmalex/renderfarm.js-server/
