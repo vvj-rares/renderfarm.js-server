@@ -28,14 +28,18 @@
                 margin-left: 24px;
             }
             #output {
-                left: 0;
-                top: 0;
-                position: fixed;
             }
             #viewport {
+            }
+            #canvas-wrapper {
+                position: fixed;
                 left: 0;
                 top: 0;
-                position: fixed;
+                width: 640px;
+                top: 480px;
+            }
+            .toolbar {
+                padding: 2px;
             }
         </style>
 
@@ -173,7 +177,7 @@
                 cone.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/4));
                 cone.applyMatrix(new THREE.Matrix4().makeRotationY(-Math.PI/4));
                 cone.applyMatrix(new THREE.Matrix4().makeTranslation(12, 2.2, -12));
-                scene.add( cone );
+                cube3.add( cone );
 
                 var planeGeometry = new THREE.PlaneGeometry( 5, 5, 1 );
                     planeGeometry = new THREE.BufferGeometry().fromGeometry(planeGeometry);
@@ -254,16 +258,62 @@
                     });
                 };
 
+                document.postCamera = function() {
+                    let timing = [];
+                    timing.push({ t: Date.now(), dt: timing.length > 0 ? Date.now() - timing[timing.length-1].t : 0, desc: "base" });
+
+                    let sceneJson = cube3.toJSON();
+                    timing.push({ t: Date.now(), dt: timing.length > 0 ? Date.now() - timing[timing.length-1].t : 0, desc: "scene.toJSON()" });
+
+                    let sceneJsonStr = JSON.stringify(sceneJson);
+                    timing.push({ t: Date.now(), dt: timing.length > 0 ? Date.now() - timing[timing.length-1].t : 0, desc: "JSON.stringify(sceneJson)" });
+
+                    let compressedsceneJsonStr = LZString.compressToBase64(sceneJsonStr);
+                    timing.push({ t: Date.now(), dt: timing.length > 0 ? Date.now() - timing[timing.length-1].t : 0, desc: "LZString.compressToBase64(sceneJsonStr)" });
+
+                    console.log("timing: ", timing);
+                    console.log("sceneJson: ", sceneJson);
+                    console.log("sceneJsonStr.length: ", sceneJsonStr.length);
+                    console.log("compressedsceneJsonStr.length: ", compressedsceneJsonStr.length);
+
+                    let baseUrl = "https://localhost:8000";
+                    $.ajax({
+                        url: baseUrl  + "/v1/three",
+                        data: { session: "1234" },
+                        type: 'POST',
+                        success: function(result) {
+                            console.log(result);
+                        },
+                        error: function(err) {
+                            console.error(err);
+                        }
+                    });
+                };
+
                 animate();
             }
         </script>
     </head>
     <body>
-        <canvas id="viewport"></canvas>
-        <img id="output">
-        <button id="render" onclick="renderScene()" style="position: fixed; left: 0; top:0;">render</button>
-        <button id="cancel" onclick="cancelRender()" style="position: fixed; left: 70px; top:0;">cancel</button>
-        <button id="save" onclick="saveJson(document.spotLight.toJSON(), 'spotLight.json')" style="position: fixed; left: 560px; top:0;">save json</button>
+        <div class="canvas-wrapper">
+            <div class="toolbar">
+                <button id="render" onclick="renderScene()">render</button>
+                <button id="cancel" onclick="cancelRender()">cancel</button>
+
+                <button id="save" onclick="saveJson(document.spotLight.toJSON(), 'spotLight.json')">save spotlight</button>
+            </div>
+
+            <div class="toolbar">
+                <button id="get-camera" onclick="getCamera()">GET camera</button>
+                <button id="post-camera" onclick="postCamera()">POST camera</button>
+                <button id="put-camera" onclick="putCamera()">PUT camera</button>
+                <button id="delete-camera" onclick="deleteCamera()">DELETE camera</button>
+            </div>
+
+            <canvas id="viewport"></canvas>
+            <img id="output">
+        </div>
+
         <div id="elapsed"></div>
         <div id="progress"></div>
     </body>

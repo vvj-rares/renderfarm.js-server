@@ -1,7 +1,6 @@
 "use strict";
 
 import * as express from "express";
-import { WorkspaceInfo } from "./model/workspace_info";
 import { VraySpawnerInfo } from "./model/vray_spawner_info";
 import { ApiKey } from "./database/model/api_key";
 import { Workspace } from "./database/model/workspace";
@@ -70,8 +69,8 @@ export interface IMaxscriptClient {
     execMaxscript(maxscript: string, actionDesc: string): Promise<boolean>;
 
     resetScene(): Promise<boolean>;
-    createScene(sceneName): Promise<boolean>;
-    openScene(sceneName: string, maxSceneFilename: string, workspace: WorkspaceInfo);
+    createScene(sceneRootNodeName): Promise<boolean>;
+    openScene(sceneRootNodeName: string, maxSceneFilename: string, workspace: Workspace);
 
     setObjectWorldMatrix(nodeName, matrixWorldArray): Promise<boolean>;
     linkToParent(nodeName: string, parentName: string): Promise<boolean>;

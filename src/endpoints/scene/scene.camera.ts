@@ -1,7 +1,7 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings } from "../interfaces";
-import { TYPES } from "../types";
+import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings } from "../../interfaces";
+import { TYPES } from "../../types";
 
 @injectable()
 class SceneCameraEndpoint implements IEndpoint {

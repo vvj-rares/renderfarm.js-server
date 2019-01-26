@@ -4,35 +4,44 @@ import * as interfaces from "./interfaces";
 import { Database } from "./database/database";
 import { App } from "./app";
 import { SessionEndpoint } from "./endpoints/session";
-import { SceneEndpoint } from "./endpoints/scene";
-import { SceneCameraEndpoint } from "./endpoints/scene.camera";
-import { SceneLightEndpoint } from "./endpoints/scene.light";
-import { SceneMeshEndpoint } from "./endpoints/scene.mesh";
+import { SceneEndpoint } from "./endpoints/scene/scene";
+import { SceneCameraEndpoint } from "./endpoints/scene/scene.camera";
+import { SceneLightEndpoint } from "./endpoints/scene/scene.light";
+import { SceneMeshEndpoint } from "./endpoints/scene/scene.mesh";
 import { JobEndpoint } from "./endpoints/job";
 import { WorkerEndpoint } from "./endpoints/worker";
 import { MaxscriptClientFactory } from "./maxscript_client/maxscript.client.factory";
-import { SceneMaterialEndpoint } from "./endpoints/scene.material";
-import { SceneGeometryEndpoint } from "./endpoints/scene.geometry";
+import { SceneMaterialEndpoint } from "./endpoints/scene/scene.material";
+import { SceneGeometryEndpoint } from "./endpoints/scene/scene.geometry";
 import { WorkspaceFileEndpoint } from "./endpoints/workspace.file";
 import { RenderOutputEndpoint } from "./endpoints/renderoutput";
-import { WorkerHeartbeatListener } from "./endpoints/worker_heartbeat_listener";
+import { WorkerHeartbeatListener } from "./worker_heartbeat_listener";
 import { Settings } from "./settings";
+import { ThreeObjectEndpoint } from "./endpoints/three/three.object";
+import { ThreeGeometryEndpoint } from "./endpoints/three/three.geometry";
+import { ThreeMaterialEndpoint } from "./endpoints/three/three.material";
 
 const myContainer = new Container();
 
 myContainer.bind<interfaces.IDatabase>(TYPES.IDatabase).to(Database).inSingletonScope();
 myContainer.bind<interfaces.IApp>(TYPES.IApp).to(App);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SessionEndpoint);
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(JobEndpoint);
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(WorkerEndpoint);
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(WorkspaceFileEndpoint);
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(RenderOutputEndpoint);
+
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneCameraEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneLightEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneMaterialEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneGeometryEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneMeshEndpoint);
-myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(JobEndpoint);
-myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(WorkerEndpoint);
-myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(WorkspaceFileEndpoint);
-myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(RenderOutputEndpoint);
+
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeObjectEndpoint);
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeGeometryEndpoint);
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeMaterialEndpoint);
+
 myContainer.bind<interfaces.IWorkerHeartbeatListener>(TYPES.IWorkerHeartbeatListener).to(WorkerHeartbeatListener);
 myContainer.bind<interfaces.IMaxscriptClientFactory>(TYPES.IMaxscriptClientFactory).to(MaxscriptClientFactory);
 

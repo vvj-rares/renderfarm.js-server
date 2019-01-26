@@ -112,6 +112,8 @@ class SessionEndpoint implements IEndpoint {
         express.post(`/v${this._settings.majorVersion}/session`, async function (req, res) {
             let apiKey = req.body.api_key;
             let workspaceGuid = req.body.workspace_guid;
+            let sceneFilename = req.body.scene_filename;
+
             console.log(`POST on ${req.path} with api_key: ${apiKey} with workspace: ${workspaceGuid}`);
 
             if (!apiKey) {
@@ -162,6 +164,7 @@ class SessionEndpoint implements IEndpoint {
                 console.log(`    OK | SessionGuid on worker was updated`);
             } catch (err) {
                 console.log(`  FAIL | failed to update SessionGuid on worker, `, err);
+                maxscript.disconnect();
                 res.status(500);
                 res.end(JSON.stringify({ ok: false, type: "session", message: "failed to update SessionGuid on worker", error: err.message }, null, 2));
                 return;
@@ -173,88 +176,30 @@ class SessionEndpoint implements IEndpoint {
                 console.log(`    OK | workspace ${session.workspaceGuid} assigned to session ${session.guid}`);
             } catch (err) {
                 console.log(`  FAIL | failed to set workspace on worker, `, err);
+                maxscript.disconnect();
                 res.status(500);
                 res.end(JSON.stringify({ ok: false, type: "session", message: "failed to set workspace on worker", error: err.message }, null, 2));
                 return;
+            }
+
+            //try to open scene if defined
+            if (sceneFilename) {
+                try {
+                    await maxscript.openScene("root", sceneFilename, session.workspaceRef);
+                    console.log(`    OK | scene open: ${sceneFilename}`);
+                } catch (err) {
+                    console.log(`  FAIL | failed to open scene, `, err);
+                    maxscript.disconnect();
+                    res.status(500);
+                    res.end(JSON.stringify({ ok: false, type: "session", message: "failed to open scene on worker", error: err.message }, null, 2));
+                    return;
+                }
             }
 
             maxscript.disconnect();
 
             res.status(201);
             res.end(JSON.stringify({ ok: true, type: "session", data: { guid: session.guid } }, null, 2));
-
-                //.then(async function(value) {
-                //    throw Error("POST on /session is inconclusive");
-                //    let workerInfo: any = {};
-                //    // let workerInfo = WorkerInfo.fromJSON(value.worker);
-                //    console.log(`    OK | session ${value.session.guid} assigned to worker ${value.worker.mac}`);
-
-                //    this._database.getWorkspace(workspaceGuid)
-                //        .then(function(workspaceInfo){
-
-                //            console.log(`    OK | found workspace`);
-
-                //            this._database.assignSessionWorkspace(newSessionGuid, workspaceGuid)
-                //                .then(function(){
-                //                    
-
-                //                    let maxscriptClient = this._maxscriptClientFactory.create();
-                //                    maxscriptClient.connect(workerInfo.ip, workerInfo.port)
-                //                        .then(function(value) {
-                //                            console.log(`    OK | SessionEndpoint connected to maxscript client`);
-
-                //                            maxscriptClient.setSession(newSessionGuid)
-                //                                .then(function(value) {
-                //                                    
-
-                //                                    maxscriptClient.setWorkspace(workspaceInfo)
-                //                                        .then(function(value) {
-                //                                            maxscriptClient.disconnect();
-                //                                            console.log(`    OK | workspace ${workspaceGuid} set to worker: ${workerInfo.ip}:${workerInfo.port}`);
-                //                                            res.end(JSON.stringify({ guid: newSessionGuid, workspace: workspaceInfo.toJSON() }, null, 2));
-                //                                        }.bind(this))
-                //                                        .catch(function(err) {
-                //                                            maxscriptClient.disconnect();
-                //                                            console.error(`  FAIL | failed to set workspace\n`, err);
-                //                                            res.status(500);
-                //                                            res.end(JSON.stringify({ error: "failed to set workspace" }, null, 2));
-                //                                        }.bind(this)); // end of maxscriptClient.setWorkspace promise
-
-                //                                }.bind(this))
-                //                                .catch(function(err) {
-                //                                    maxscriptClient.disconnect();
-                //                                    console.error(`  FAIL | failed to assign session to worker\n`, err);
-                //                                    res.status(500);
-                //                                    
-                //                                }.bind(this)); // end of maxscriptClient.setSession promise
-
-                //                        }.bind(this))
-                //                        .catch(function(err) {
-                //                            console.error("SessionEndpoint failed to connect to maxscript client,\n", err);
-                //                            res.status(500);
-                //                            res.end(JSON.stringify({ error: "failed to connect to maxscript client" }, null, 2));
-                //                        }.bind(this)); // end of maxscriptClient.connect promise
-
-                //                }.bind(this))
-                //                .catch(function(err){
-                //                    console.error("SessionEndpoint failed to assign workspace to session,\n", err);
-                //                    res.status(500);
-                //                    res.end(JSON.stringify({ error: "failed to assign workspace to session" }, null, 2));
-                //                }.bind(this)); // end of assignSessionWorkspace promise
-
-                //        }.bind(this))
-                //        .catch(function(err){
-                //            console.error(`  FAIL | failed to get workspace: ${workspaceGuid}\n`, err);
-                //            res.status(500);
-                //            res.end(JSON.stringify({ error: "failed to get workspace" }, null, 2));
-                //        }.bind(this)); // end of getWorkspace promise
-        
-                //}.bind(this))
-                //.catch(function(err) {
-                //    console.error(`  FAIL | failed to create session: `, err);
-                //    res.status(500);
-                //    res.end(JSON.stringify({ error: "failed to create session, " + err }, null, 2));
-                //}.bind(this)); // end of this._database.startWorkerSession promise
 
         }.bind(this));
 

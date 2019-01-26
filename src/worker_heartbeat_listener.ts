@@ -1,8 +1,8 @@
 import { injectable, inject } from "inversify";
-import { VraySpawnerInfo } from "../model/vray_spawner_info";
-import { IWorkerHeartbeatListener, ISettings } from "../interfaces";
-import { TYPES } from "../types";
-import { Worker } from "../database/model/worker";
+import { VraySpawnerInfo } from "./model/vray_spawner_info";
+import { IWorkerHeartbeatListener, ISettings } from "./interfaces";
+import { TYPES } from "./types";
+import { Worker } from "./database/model/worker";
 
 const uuidv4 = require('uuid/v4');
 const dgram = require('dgram');
