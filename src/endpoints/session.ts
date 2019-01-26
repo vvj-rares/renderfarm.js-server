@@ -152,9 +152,15 @@ class SessionEndpoint implements IEndpoint {
                 await maxscript.connect(session.workerRef.ip, session.workerRef.port);
                 console.log(`    OK | SessionEndpoint connected to maxscript client`);
             } catch (err) {
+                try {
+                    session = await this._database.closeSession(session.guid);
+                } catch (sessionErr) {
+                    console.log(`  WARN | failed to close session, `, sessionErr);
+                }
+
                 console.log(`  FAIL | failed to connect to worker, `, err);
                 res.status(500);
-                res.end(JSON.stringify({ ok: false, message: "failed to connect to worker", error: err.message }, null, 2));
+                res.end(JSON.stringify({ ok: false, message: "failed to connect to worker", error: err.message, data: session }, null, 2));
                 return;
             }
 
@@ -163,10 +169,16 @@ class SessionEndpoint implements IEndpoint {
                 await maxscript.setSession(session.guid);
                 console.log(`    OK | SessionGuid on worker was updated`);
             } catch (err) {
+                try {
+                    session = await this._database.closeSession(session.guid);
+                } catch (sessionErr) {
+                    console.log(`  WARN | failed to close session, `, sessionErr);
+                }
+
                 console.log(`  FAIL | failed to update SessionGuid on worker, `, err);
                 maxscript.disconnect();
                 res.status(500);
-                res.end(JSON.stringify({ ok: false, type: "session", message: "failed to update SessionGuid on worker", error: err.message }, null, 2));
+                res.end(JSON.stringify({ ok: false, type: "session", message: "failed to update SessionGuid on worker", error: err.message, data: session }, null, 2));
                 return;
             }
 
@@ -175,10 +187,16 @@ class SessionEndpoint implements IEndpoint {
                 await maxscript.setWorkspace(session.workspaceRef);
                 console.log(`    OK | workspace ${session.workspaceGuid} assigned to session ${session.guid}`);
             } catch (err) {
+                try {
+                    session = await this._database.closeSession(session.guid);
+                } catch (sessionErr) {
+                    console.log(`  WARN | failed to close session, `, sessionErr);
+                }
+
                 console.log(`  FAIL | failed to set workspace on worker, `, err);
                 maxscript.disconnect();
                 res.status(500);
-                res.end(JSON.stringify({ ok: false, type: "session", message: "failed to set workspace on worker", error: err.message }, null, 2));
+                res.end(JSON.stringify({ ok: false, type: "session", message: "failed to set workspace on worker", error: err.message, data: session }, null, 2));
                 return;
             }
 
@@ -188,10 +206,16 @@ class SessionEndpoint implements IEndpoint {
                     await maxscript.openScene("root", sceneFilename, session.workspaceRef);
                     console.log(`    OK | scene open: ${sceneFilename}`);
                 } catch (err) {
+                    try {
+                        session = await this._database.closeSession(session.guid);
+                    } catch (sessionErr) {
+                        console.log(`  WARN | failed to close session, `, sessionErr);
+                    }
+    
                     console.log(`  FAIL | failed to open scene, `, err);
                     maxscript.disconnect();
                     res.status(500);
-                    res.end(JSON.stringify({ ok: false, type: "session", message: "failed to open scene on worker", error: err.message }, null, 2));
+                    res.end(JSON.stringify({ ok: false, type: "session", message: "failed to open scene on worker", error: err.message, data: session }, null, 2));
                     return;
                 }
             }
