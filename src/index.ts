@@ -37,7 +37,7 @@ async function main() {
             console.log("    OK | Express HTTP server listening on port " + settings.current.port);
         });
     } else {
-        console.error("Unexpected protocol: " + settings.current.protocol)
+        console.error("Unexpected protocol: " + settings.current.protocol);
     }
 }
 

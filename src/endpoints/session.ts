@@ -3,7 +3,6 @@ import * as express from "express";
 import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings, IMaxscriptClient } from "../interfaces";
 import { TYPES } from "../types";
 import { Session } from "../database/model/session";
-import { MaxscriptClient } from "../maxscript_client/maxscript.client";
 
 @injectable()
 class SessionEndpoint implements IEndpoint {

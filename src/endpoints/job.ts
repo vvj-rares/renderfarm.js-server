@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IMaxscriptClientFactory, IMaxscriptClient, ISettings } from "../interfaces";
+import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings } from "../interfaces";
 import { TYPES } from "../types";
 import { JobInfo } from "../model/job_info";
 
@@ -114,7 +114,6 @@ class JobEndpoint implements IEndpoint {
                                 .then(function(value) {
                                     console.log("JobEndpoint connected to maxscript client, ", value);
 
-                                    const sanityCheck = require('../utils/sanityCheck');
                                     let jobInfo = new JobInfo(jobGuid, sessionGuid, worker.endpoint, worker.mac);
                                     jobInfo.rendering();
 

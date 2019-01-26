@@ -88,8 +88,6 @@ for (let i=0; i<simulateWorkersCount; i++) {
                     fileAppendText(this.logFile, `${new Date().toISOString()}\t${testRun}\t${testName}\t[request]\t${request}\r\n`);
                 }
 
-                let t0 = new Date();
-                let t1: Date;
                 let responseDelayMs = (isNumber(this.responseDelay) && this.responseDelay >= 0 && this.responseDelay < 1 * 60 * 1000)
                     ? this.responseDelay
                     : 0;

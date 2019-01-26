@@ -5,7 +5,6 @@ import * as bodyParser from "body-parser";
 import { injectable, multiInject, inject } from "inversify";
 import { IApp, IEndpoint, ISettings } from "./interfaces";
 import { TYPES } from "./types";
-import { settings } from "cluster";
 
 @injectable()
 class App implements IApp {

@@ -2,7 +2,6 @@ import { Worker } from "./database/model/worker";
 import { Workspace } from "./database/model/workspace";
 import { Database } from "./database/database";
 import { Settings } from "./settings";
-import { Session } from "./database/model/session";
 
 const uuidv4 = require('uuid/v4');
 
@@ -117,7 +116,7 @@ export class JasmineDeplHelpers {
 
         //check returned payload
         console.log("Checking error response: ", res.data);
-        expect(res.data).toBeTruthy()
+        expect(res.data).toBeTruthy();
         expect(res.data.ok).toBe(false);
 
         if (expectedMessage !== undefined) {

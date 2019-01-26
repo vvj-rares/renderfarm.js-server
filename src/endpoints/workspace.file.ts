@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, ISettings } from "../interfaces";
+import { IEndpoint, ISettings } from "../interfaces";
 import { TYPES } from "../types";
 
 @injectable()
@@ -33,7 +33,7 @@ class WorkspaceFileEndpoint implements IEndpoint {
 
                     let rootDir = `${this._settings.current.homeDir}` + req.params[0];
 
-                    console.log(` >> Looking up file ${req.params.filename} in folder ${rootDir}`)
+                    console.log(` >> Looking up file ${req.params.filename} in folder ${rootDir}`);
 
                     let options = {
                         root: rootDir,
