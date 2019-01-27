@@ -398,7 +398,7 @@ describe(`REST API /session endpoint`, function() {
         return `${wwwBaseDir}/logs/${version}.renderfarm.js-server/out.worker-fake.name=${testName}.port=${workerPort}.${testRun}.log`;
     }
 
-    function _configureFakeWorker(workerPort: number, workerConfig: any) {
+    async function _configureFakeWorker(workerPort: number, workerConfig: any): Promise<any> {
         return new Promise<any>(function(resolve, reject) {
             // send commands directly to fake worker
             let client = new net.Socket();
@@ -434,7 +434,7 @@ describe(`REST API /session endpoint`, function() {
         });
     }
 
-    function _configureFakeWorkerLogs(version: string, testName: string, testRun: number, workerPort: number) {
+    async function _configureFakeWorkerLogs(version: string, testName: string, testRun: number, workerPort: number) {
 
         let workerConfig: any;
         if (testName) {
@@ -448,7 +448,7 @@ describe(`REST API /session endpoint`, function() {
             workerConfig = { logFile: null };
         }
 
-        return _configureFakeWorker(workerPort, workerConfig);
+        return await _configureFakeWorker(workerPort, workerConfig);
     }
 
     // this helper configures workers to write communication logs to some predictable place
