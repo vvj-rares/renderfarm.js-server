@@ -3,6 +3,7 @@ import axios, { AxiosRequestConfig } from "axios";
 import { Settings } from "../settings";
 import { JasmineDeplHelpers } from "../jasmine.helpers";
 import { Worker } from "../database/model/worker";
+import { isArray } from "util";
 
 const net = require('net');
 
@@ -397,7 +398,7 @@ describe(`REST API /session endpoint`, function() {
         return `${wwwBaseDir}/logs/${version}.renderfarm.js-server/out.worker-fake.name=${testName}.port=${workerPort}.${testRun}.log`;
     }
 
-    function _configureFakeWorker(version: string, testName: string, testRun: number, workerPort: number) {
+    function _configureFakeWorker(workerPort: number, workerConfig: any) {
         return new Promise<any>(function(resolve, reject) {
             // send commands directly to fake worker
             let client = new net.Socket();
@@ -406,18 +407,7 @@ describe(`REST API /session endpoint`, function() {
             client.connect(workerPort, host, function() {
                 console.log(`    Connected`);
 
-                let workerConfig: any;
-                if (testName) {
-                    workerConfig = { worker: { 
-                        testRun: testRun,
-                        testName: testName,
-                        logFile: getWorkerLogFullpath(version, testName, testRun, workerPort) } };
-                } else {
-                    // when test name is not defined, worker should stop writing to logfile
-                    workerConfig = { worker: { logFile: null } };
-                }
-
-                console.log(`    Sending fake worker config: `, workerConfig);
+                console.log(`    Sending fake worker config: `, { worker: workerConfig });
                 client.write(JSON.stringify(workerConfig));
             });
 
@@ -444,9 +434,26 @@ describe(`REST API /session endpoint`, function() {
         });
     }
 
+    function _configureFakeWorkerLogs(version: string, testName: string, testRun: number, workerPort: number) {
+
+        let workerConfig: any;
+        if (testName) {
+            workerConfig = {
+                testRun: testRun,
+                testName: testName,
+                logFile: getWorkerLogFullpath(version, testName, testRun, workerPort) 
+            };
+        } else {
+            // when test name is not defined, worker should stop writing to logfile
+            workerConfig = { logFile: null };
+        }
+
+        return _configureFakeWorker(workerPort, workerConfig);
+    }
+
     // this helper configures workers to write communication logs to some predictable place
     // where the logs can be found and downloaded
-    async function configureFakeWorker(version: string, testName: string, testRun: number, fail: Function, done: Function) {
+    async function configureFakeWorkerLogs(version: string, testName: string, testRun: number, fail: Function, done: Function) {
         console.log("Configuring available fake workers with parameters: ", `version= \"${version}\", testName= \"${testName}\", testRun= \"${testRun}\"`);
 
         { // first configure all available workers to write logfiles
@@ -473,7 +480,7 @@ describe(`REST API /session endpoint`, function() {
             let availableWorkers = json.data;
             for (let k in availableWorkers) {
                 try {
-                    await _configureFakeWorker(version, testName, testRun, availableWorkers[k].port);
+                    await _configureFakeWorkerLogs(version, testName, testRun, availableWorkers[k].port);
                 } catch (err) {
                     console.log("failed to set worker log file, ", err);
                     fail();
@@ -586,7 +593,7 @@ describe(`REST API /session endpoint`, function() {
         let testRun = Date.now();
 
         console.log("tell worker to start writing logs for us");
-        await configureFakeWorker(currentVersion, testName, testRun, fail, done);
+        await configureFakeWorkerLogs(currentVersion, testName, testRun, fail, done);
 
         console.log("open session");
 
@@ -605,7 +612,7 @@ describe(`REST API /session endpoint`, function() {
         await closeSession(sessionGuid);
 
         console.log("tell worker to stop writing logs");
-        await configureFakeWorker(null, null, null, fail, done);
+        await configureFakeWorkerLogs(null, null, null, fail, done);
 
         console.log("now analyze fake worker log file");
         {
@@ -631,7 +638,7 @@ describe(`REST API /session endpoint`, function() {
         let testRun = Date.now();
 
         console.log("tell worker to start writing logs for us");
-        await configureFakeWorker(currentVersion, testName, testRun, fail, done);
+        await configureFakeWorkerLogs(currentVersion, testName, testRun, fail, done);
 
         console.log("open session");
 
@@ -652,7 +659,7 @@ describe(`REST API /session endpoint`, function() {
         await closeSession(sessionGuid);
 
         console.log("tell worker to stop writing logs");
-        await configureFakeWorker(null, null, null, fail, done);
+        await configureFakeWorkerLogs(null, null, null, fail, done);
 
         console.log("now analyze fake worker log file");
         {
@@ -693,4 +700,73 @@ describe(`REST API /session endpoint`, function() {
 
         done();
     });
+
+    // todo: it must also close attached worker session, and fail running worker job
+    it("should delete dead worker", async function (done) {
+        // let currentVersion = await getEnvVersion(fail, done);
+        // let testName = "delete_dead_worker";
+        // let testRun = Date.now();
+
+        let config: AxiosRequestConfig = {};
+        config.params = {
+            api_key: JasmineDeplHelpers.existingApiKey
+        };
+        let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
+        JasmineDeplHelpers.checkResponse(res, 200);
+        let json = res.data;
+
+        expect(json.ok).toBeTruthy();
+        expect(json.type).toBe("worker");
+        expect(isArray(json.data)).toBeTruthy();
+        expect(json.data.length).toBeGreaterThan(0);
+
+        let worker = json.data[0];
+
+        console.log(" >> worker: ", worker);
+
+        _configureFakeWorker(worker.port, { heartbeat: false }) // tell worker to not send heartbeats
+
+        setTimeout(function() {
+            done();
+        }, 5000);
+
+        // console.log("tell worker to start writing logs for us");
+        // await configureFakeWorker(currentVersion, testName, testRun, fail, done);
+
+        // console.log("open session");
+
+        /* let sessionGuid = await openSession(
+            JasmineDeplHelpers.existingApiKey,
+            JasmineDeplHelpers.existingWorkspaceGuid,
+            null, // maxSceneFilename = null, i.e. just create empty scene
+            fail,
+            done);
+        
+        console.log("OK | opened session with sessionGuid: ", sessionGuid, "\r\n");
+
+        let sessionWorker = await getSessionWorker(sessionGuid);
+
+        console.log("we're done, can close session");
+        await closeSession(sessionGuid);
+
+        console.log("tell worker to stop writing logs");
+        await configureFakeWorker(null, null, null, fail, done);
+
+        console.log("now analyze fake worker log file");
+        {
+            let logUrl = getWorkerLogDownloadUrl(currentVersion, testName, testRun, sessionWorker.port);
+            let requests = await getMaxscriptFromFakeWorker(logUrl);
+
+            expect(requests.length).toBe(8);
+            expect(requests[0]).toBe(`SessionGuid = "${sessionGuid}"`);
+            expect(requests[1]).toBe(`for i=1 to pathConfig.mapPaths.count() do ( pathConfig.mapPaths.delete 1 )`);
+            expect(requests[2]).toBe(`for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 )`);
+            expect(requests[3]).toBe(`pathConfig.mapPaths.add "C:\\\\Temp\\\\api-keys\\\\${JasmineDeplHelpers.existingApiKey}\\\\workspaces\\\\${JasmineDeplHelpers.existingWorkspaceGuid}\\\\maps"`);
+            expect(requests[4]).toBe(`pathConfig.xrefPaths.add "C:\\\\Temp\\\\api-keys\\\\${JasmineDeplHelpers.existingApiKey}\\\\workspaces\\\\${JasmineDeplHelpers.existingWorkspaceGuid}\\\\xrefs"`);
+            expect(requests[5]).toBe(`SessionGuid = ""`);
+            expect(requests[6]).toBe(`resetMaxFile #noPrompt`);
+        } */
+    
+    });
+
 });
