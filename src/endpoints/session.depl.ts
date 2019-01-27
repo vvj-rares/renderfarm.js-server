@@ -723,13 +723,13 @@ describe(`REST API /session endpoint`, function() {
 
         let worker = json.data[0];
 
-        console.log(" >> worker: ", worker);
-
         _configureFakeWorker(worker.port, { heartbeat: false }) // tell worker to not send heartbeats
 
         setTimeout(function() {
+            _configureFakeWorker(worker.port, { heartbeat: true }) // tell worker to send heartbeats again
+
             done();
-        }, 5000);
+        }, 3000 + 1750);
 
         // console.log("tell worker to start writing logs for us");
         // await configureFakeWorker(currentVersion, testName, testRun, fail, done);
@@ -767,7 +767,5 @@ describe(`REST API /session endpoint`, function() {
             expect(requests[5]).toBe(`SessionGuid = ""`);
             expect(requests[6]).toBe(`resetMaxFile #noPrompt`);
         } */
-    
     });
-
 });
