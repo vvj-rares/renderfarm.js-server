@@ -1,3 +1,5 @@
+fn existFile fname = (getfiles fname).count != 0
+
 fn rayysFindMaterialByName findName = (
 	for matClass in material.classes do
 	(

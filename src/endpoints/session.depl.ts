@@ -2,6 +2,7 @@ import "reflect-metadata";
 import axios, { AxiosRequestConfig } from "axios";
 import { Settings } from "../settings";
 import { JasmineDeplHelpers } from "../jasmine.helpers";
+import { Worker } from "../database/model/worker";
 
 const net = require('net');
 
@@ -483,10 +484,11 @@ describe(`Api`, function() {
         }
     }
 
-    async function openSession(fail, done): Promise<string> {
+    async function openSession(apiKey, workspaceGuid, maxSceneFilename, fail, done): Promise<string> {
         let data: any = {
-            api_key: JasmineDeplHelpers.existingApiKey,
-            workspace_guid: JasmineDeplHelpers.existingWorkspaceGuid
+            api_key: apiKey,
+            workspace_guid: workspaceGuid,
+            scene_filename: maxSceneFilename
         };
         let config: AxiosRequestConfig = {};
         let res: any
@@ -523,13 +525,18 @@ describe(`Api`, function() {
 
         await setWorkersLogFile(currentVersion, testName, testRun, fail, done);
 
-        let sessionGuid = await openSession(fail, done);
+        let sessionGuid = await openSession(
+            JasmineDeplHelpers.existingApiKey,
+            JasmineDeplHelpers.existingWorkspaceGuid,
+            null, // maxSceneFilename = null, i.e. just create empty scene
+            fail,
+            done);
 
-        let workerGuid: string;
-        let workerPort: number;
-        { // retrieve worker that was assigned to the session
+        let sessionWorker: Worker;
+        { 
+            console.log("retrieve worker that was assigned to the session");
 
-            // 1. get session details to know worker guid
+            console.log("1. get session details to know worker guid");
             let getSessionUrl = `${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`;
             console.log(`GET on ${getSessionUrl}`);
             let getSessionResponse = await axios.get(getSessionUrl);
@@ -537,9 +544,9 @@ describe(`Api`, function() {
             console.log("session: ",    getSessionResponse.data);
             console.log("workerGuid: ", getSessionResponse.data.data.workerGuid);
 
-            workerGuid = getSessionResponse.data.data.workerGuid;
+            let workerGuid = getSessionResponse.data.data.workerGuid;
 
-            // 2. now get worker
+            console.log("2. now get worker");
             let getWorkerUrl = `${settings.current.publicUrl}/v${settings.majorVersion}/worker/${workerGuid}`;
             console.log(`GET on ${getWorkerUrl}`);
             let getWorkerResponse = await axios.get(getWorkerUrl);
@@ -547,16 +554,18 @@ describe(`Api`, function() {
             console.log("worker: ", getWorkerResponse.data);
             console.log("port: ",   getWorkerResponse.data.data.port);
 
-            workerPort = getWorkerResponse.data.data.port;
+            // let workerPort = .port;
+            sessionWorker = new Worker(getWorkerResponse.data.data);
         }
 
-        // we're done, can close session
+        console.log("we're done, can close session");
         await closeSession(sessionGuid);
 
-        // tell worker to stop writing logs
+        console.log("tell worker to stop writing logs");
         await setWorkersLogFile(null, null, null, fail, done);
 
-        { // Now analyze fake worker log file
+        { 
+            console.log("now analyze fake worker log file");
             let logGetConfig: AxiosRequestConfig = {
                 auth: {
                     username: settings.current.dropFolderUsername,
@@ -564,8 +573,9 @@ describe(`Api`, function() {
                 }
             };
 
-            let logUrl = getWorkerLogDownloadUrl(currentVersion, testName, testRun, workerPort);
-            console.log(`Getting fake worker log file: ${logUrl}`);
+            let logUrl = getWorkerLogDownloadUrl(currentVersion, testName, testRun, sessionWorker.port);
+
+            console.log(`getting fake worker log file: ${logUrl}`);
             let res4: any = await axios.get(logUrl, logGetConfig);
             console.log("fake worker logs: ", res4.data);
 

@@ -71,7 +71,11 @@ class MaxscriptClient implements IMaxscriptClient {
                         reject(Error(`Unexpected maxscript response: ${maxscriptResp}`));
                     }
                 } else {
-                    resolve();
+                    if (maxscriptResp.indexOf("FAIL") === -1) {
+                        resolve();
+                    } else {
+                        reject(Error(`Unexpected maxscript response: ${maxscriptResp}`));
+                    }
                 }
             };
 
@@ -109,14 +113,22 @@ class MaxscriptClient implements IMaxscriptClient {
     openScene(sceneName: string, maxSceneFilename: string, workspace: Workspace): Promise<boolean> {
         let w = workspace;
 
-        let maxscript = `resetMaxFile #noPrompt ; `
-                        + ` loadMaxFile "${w.homeDir}\\\\api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\scenes\\\\${maxSceneFilename}" `
-                        + ` useFileUnits:true quiet:true ; `
-                        + ` threejsSceneRoot = Dummy name:"${sceneName}" ; `
-                        + ` callbacks.removeScripts id:#flipYZ ; `
-                        + ` callbacks.removeScripts id:#unflipYZ ; `
-                        + ` callbacks.addScript #preRender    "rayysFlipYZ($${sceneName})" id:#flipYZ   persistent:false ; `
-                        + ` callbacks.addScript #postRender "rayysUnflipYZ($${sceneName})" id:#unflipYZ persistent:false ; `;
+        let maxscript = `resetMaxFile #noPrompt \r\n`
+                        + ` sceneFilename = "${w.homeDir}\\\\api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\scenes\\\\${maxSceneFilename}" \r\n`
+                        + ` if existFile sceneFilename then ( \r\n`
+                        + `     sceneLoaded = loadMaxFile useFileUnits:true quiet:true \r\n`
+                        + `     if sceneLoaded then ( \r\n`
+                        + `         threejsSceneRoot = Dummy name:"${sceneName}" \r\n`
+                        + `         callbacks.removeScripts id:#flipYZ \r\n`
+                        + `         callbacks.removeScripts id:#unflipYZ \r\n`
+                        + `         callbacks.addScript #preRender    "rayysFlipYZ($${sceneName})" id:#flipYZ   persistent:false \r\n`
+                        + `         callbacks.addScript #postRender "rayysUnflipYZ($${sceneName})" id:#unflipYZ persistent:false \r\n`;
+                        + `     ) else ( \r\n`;
+                        + `         print "FAIL | failed to load scene" \r\n`;
+                        + `     ) \r\n`;
+                        + ` ) else ( \r\n`
+                        + `     print "FAIL | scene file not found" \r\n`;
+                        + ` ) `;
 
         return this.execMaxscript(maxscript, "openScene");
     }
