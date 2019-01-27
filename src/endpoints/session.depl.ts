@@ -612,32 +612,22 @@ describe(`REST API /session endpoint`, function() {
             let logUrl = getWorkerLogDownloadUrl(currentVersion, testName, testRun, sessionWorker.port);
             let requests = await getMaxscriptFromFakeWorker(logUrl);
 
-/* we expect here to have:
-[ 'SessionGuid = "d9f35ee0-0088-4d15-9e8d-b349c3b462f0"',
-  'for i=1 to pathConfig.mapPaths.count()  do ( pathConfig.mapPaths.delete 1 ) ;  for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 ) ;  pathConfig.mapPaths.add "C:\\\\Tempapi-keys\\\\75f5-4d53-b0f4\\\\workspaces\\\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\\\maps" ;  pathConfig.xrefPaths.add "C:\\\\Tempapi-keys\\\\75f5-4d53-b0f4\\\\workspaces\\\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\\\xrefs" ;',
-  'SessionGuid = ""',
-  'resetMaxFile #noPrompt' ]
-*/
-
-            expect(requests.length).toBe(4);
+            expect(requests.length).toBe(8);
             expect(requests[0]).toBe(`SessionGuid = "${sessionGuid}"`);
-
-            expect(requests[1]).toContain(`for i=1 to pathConfig.mapPaths.count() do ( pathConfig.mapPaths.delete 1 )`);
-            expect(requests[1]).toContain(`for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 )`);
-
-            expect(requests[1]).toContain(`pathConfig.mapPaths.add "C:\\Temp\\api-keys\\75f5-4d53-b0f4\\workspaces\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\maps"`);
-            expect(requests[1]).toContain(`pathConfig.xrefPaths.add "C:\\Temp\\api-keys\\75f5-4d53-b0f4\\workspaces\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\xrefs"`);
-
-            expect(requests[2]).toBe(`SessionGuid = ""`);
-            expect(requests[3]).toBe(`resetMaxFile #noPrompt`);
-
-            setTimeout(done, 100);
+            expect(requests[1]).toBe(`for i=1 to pathConfig.mapPaths.count() do ( pathConfig.mapPaths.delete 1 )`);
+            expect(requests[2]).toBe(`for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 )`);
+            expect(requests[3]).toBe(`pathConfig.mapPaths.add "C:\\Temp\\api-keys\\${JasmineDeplHelpers.existingApiKey}\\workspaces\\${JasmineDeplHelpers.existingWorkspaceGuid}\\maps"`);
+            expect(requests[4]).toBe(`pathConfig.xrefPaths.add "C:\\Temp\\api-keys\\${JasmineDeplHelpers.existingApiKey}\\workspaces\\${JasmineDeplHelpers.existingWorkspaceGuid}\\xrefs"`);
+            expect(requests[5]).toBe(`SessionGuid = ""`);
+            expect(requests[6]).toBe(`resetMaxFile #noPrompt`);
         }
+
+        done();
     });
 
     it("should send correct maxscript commands to worker on POST /session with given 3dsmax scene filename", async function (done) {
         let currentVersion = await getEnvVersion(fail, done);
-        let testName = "POST_session";
+        let testName = "POST_session_with_filename";
         let testRun = Date.now();
 
         console.log("tell worker to start writing logs for us");
@@ -669,26 +659,38 @@ describe(`REST API /session endpoint`, function() {
             let logUrl = getWorkerLogDownloadUrl(currentVersion, testName, testRun, sessionWorker.port);
             let requests = await getMaxscriptFromFakeWorker(logUrl);
 
-/* we expect here to have:
-[ 'SessionGuid = "d9f35ee0-0088-4d15-9e8d-b349c3b462f0"',
-  'for i=1 to pathConfig.mapPaths.count()  do ( pathConfig.mapPaths.delete 1 ) ;  for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 ) ;  pathConfig.mapPaths.add "C:\\\\Tempapi-keys\\\\75f5-4d53-b0f4\\\\workspaces\\\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\\\maps" ;  pathConfig.xrefPaths.add "C:\\\\Tempapi-keys\\\\75f5-4d53-b0f4\\\\workspaces\\\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\\\xrefs" ;',
-  'SessionGuid = ""',
-  'resetMaxFile #noPrompt' ]
+            expect(requests.length).toBe(8);
+            expect(requests[0]).toBe(`SessionGuid = "${sessionGuid}"`);
+            expect(requests[0]).toBe(``);
+
+/*
+    SessionGuid = "2433c40d-e147-456c-8f7e-2becb0f6d37a"
+    for i=1 to pathConfig.mapPaths.count() do ( pathConfig.mapPaths.delete 1 )
+    for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 )
+    pathConfig.mapPaths.add "C:\\Temp\\api-keys\\75f5-4d53-b0f4\\workspaces\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\maps"
+    pathConfig.xrefPaths.add "C:\\Temp\\api-keys\\75f5-4d53-b0f4\\workspaces\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\xrefs"
+    resetMaxFile #noPrompt
+    sceneFilename = "C:\\Temp\\api-keys\\75f5-4d53-b0f4\\workspaces\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\scenes\\scene_200.max"
+    if existFile sceneFilename then (
+    sceneLoaded = loadMaxFile useFileUnits:true quiet:true
+    if sceneLoaded then (
+    threejsSceneRoot = Dummy name:"root"
+    callbacks.removeScripts id:#flipYZ
+    callbacks.removeScripts id:#unflipYZ
+    callbacks.addScript #preRender    "rayysFlipYZ($root)" id:#flipYZ   persistent:false
+    callbacks.addScript #postRender "rayysUnflipYZ($root)" id:#unflipYZ persistent:false
+    ) else (
+    print "FAIL | failed to load scene"
+    )
+    ) else (
+    print "FAIL | scene file not found"
+    )
+    SessionGuid = ""
+    resetMaxFile #noPrompt
+
 */
-
-            expect(requests.length).toBe(4);
-            // expect(requests[0]).toBe(`SessionGuid = "${sessionGuid}"`);
-
-            // expect(requests[1]).toContain(`for i=1 to pathConfig.mapPaths.count() do ( pathConfig.mapPaths.delete 1 )`);
-            // expect(requests[1]).toContain(`for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 )`);
-
-            // expect(requests[1]).toContain(`pathConfig.mapPaths.add "C:\\Temp\\api-keys\\75f5-4d53-b0f4\\workspaces\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\maps"`);
-            // expect(requests[1]).toContain(`pathConfig.xrefPaths.add "C:\\Temp\\api-keys\\75f5-4d53-b0f4\\workspaces\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\xrefs"`);
-
-            // expect(requests[2]).toBe(`SessionGuid = ""`);
-            // expect(requests[3]).toBe(`resetMaxFile #noPrompt`);
-
-            setTimeout(done, 100);
         }
+
+        done();
     });
 });
