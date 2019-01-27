@@ -407,8 +407,9 @@ describe(`REST API /session endpoint`, function() {
             client.connect(workerPort, host, function() {
                 console.log(`    Connected`);
 
-                console.log(`    Sending fake worker config: `, { worker: workerConfig });
-                client.write(JSON.stringify(workerConfig));
+                let fakeWorkerConfig = { worker: workerConfig };
+                console.log(`    Sending fake worker config: `, fakeWorkerConfig);
+                client.write(JSON.stringify(fakeWorkerConfig));
             });
 
             client.on('error', function(err) {
