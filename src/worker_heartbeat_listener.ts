@@ -17,10 +17,10 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener, IWorke
         [id: string]: VraySpawnerInfo;
     } = {};
 
-    private _workerAddedCb: ((worker: Worker) => void) []; // array of callbacks
-    private _workerUpdatedCb: ((worker: Worker) => void) [];
-    private _workerOfflineCb: ((worker: Worker) => void) [];
-    private _spawnerCb: ((worker: VraySpawnerInfo) => void) [];
+    private _workerAddedCb: ((worker: Worker) => void) []      = []; // array of callbacks
+    private _workerUpdatedCb: ((worker: Worker) => void) []    = [];
+    private _workerOfflineCb: ((worker: Worker) => void) []    = [];
+    private _spawnerCb: ((worker: VraySpawnerInfo) => void) [] = [];
 
     private _settings: ISettings;
 
