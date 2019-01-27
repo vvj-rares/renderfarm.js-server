@@ -227,5 +227,16 @@ describe("Database Worker", function() {
             done();
         })
 
+        it("rejects on attempty to delete not existing worker from database", async function(done) {
+            try {
+                await database.deleteWorker(new Worker({ guid: "123", mac: "777", ip: "localhost", port: 123 }));
+                fail();
+                return;
+            } catch (err) {
+                expect(err.message).toBe(`nothing was deleted from workers by {"guid":"123"}`);
+                done();
+            }
+        })
+
     }); // end of write tests
 });
