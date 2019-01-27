@@ -95,15 +95,7 @@ export class WorkerEndpoint implements IEndpoint {
     private async onWorkerUpdated(worker: Worker)
     {
         try {
-            await this._database.updateWorker(
-                worker,
-                {
-                    $set: {
-                        lastSeen: new Date(),
-                        cpuUsage: worker.cpuUsage,
-                        ramUsage: worker.ramUsage
-                    }
-                });
+            await this._database.upsertWorker(worker);
         } catch (err) {
             console.error("failed to update worker in database: ", err);
         }
