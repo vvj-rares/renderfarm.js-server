@@ -83,7 +83,7 @@ for (let i=0; i<simulateWorkersCount; i++) {
                 console.log(JSON.stringify({ maxscript: request }));
 
                 if (this.logFile) {
-                    let testRun  = (this.testRun && isString(this.testRun))   ? this.testRun  : "undefined";
+                    let testRun  = (this.testRun && isNumber(this.testRun))   ? this.testRun  : "undefined";
                     let testName = (this.testName && isString(this.testName)) ? this.testName : "undefined";
                     fileAppendText(this.logFile, `${new Date().toISOString()}\t${testRun}\t${testName}\t[request]\t${request}\r\n`);
                 }
@@ -102,7 +102,7 @@ for (let i=0; i<simulateWorkersCount; i++) {
                     socket.write(response1);
                     console.log(JSON.stringify({ response: response1 }));
                     if (this.logFile) {
-                        let testRun  = (this.testRun && isString(this.testRun))   ? this.testRun  : "undefined";
+                        let testRun  = (this.testRun && isNumber(this.testRun))   ? this.testRun  : "undefined";
                         let testName = (this.testName && isString(this.testName)) ? this.testName : "undefined";
                         fileAppendText(this.logFile, `${new Date().toISOString()}\t${testRun}\t${testName}\t[response]\t${response1}\r\n`);
                     }
