@@ -15,7 +15,7 @@ require("../jasmine.config")();
 // it("should return {what} on {HttpMethod} {path}")
 // it("should reject {HttpMethod} on {path} when {what is wrong}")
 
-describe(`Api`, function() {
+describe(`REST API /renderoutput endpoint`, function() {
     var settings: Settings;
 
     var host: string; // where's DEV is deployed?
@@ -40,7 +40,7 @@ describe(`Api`, function() {
 
     //request:  /POST https://dev1.renderfarmjs.com:8000/v1/renderoutput
     //response: StatusCode=201
-    it("should todo: define", async function(done) {
+    it("should return file URL on POST /renderoutput and let download file on this URL", async function(done) {
         let config: AxiosRequestConfig = {};
         let form = new formData();
 

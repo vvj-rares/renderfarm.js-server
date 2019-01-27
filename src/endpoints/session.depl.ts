@@ -12,7 +12,7 @@ require("../jasmine.config")();
 // it("should return {what} on {HttpMethod} {path}")
 // it("should reject {HttpMethod} on {path} when {what is wrong}")
 
-describe(`Api`, function() {
+describe(`REST API /session endpoint`, function() {
     var settings: Settings;
 
     var host: string; // where's DEV is deployed?
@@ -598,7 +598,11 @@ describe(`Api`, function() {
                     }
                 }
             }
-            console.log("maxscript requests: ", requests);
+
+            console.log("maxscript request code: ");
+            for (let ri in requests) {
+                console.log(`    ${requests[ri]}`);
+            }
 
 /*
 [ 'SessionGuid = "d9f35ee0-0088-4d15-9e8d-b349c3b462f0"',

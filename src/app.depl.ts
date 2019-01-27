@@ -10,7 +10,7 @@ require("./jasmine.config")();
 // it("should return {what} on {HttpMethod} {path}")
 // it("should reject {HttpMethod} {path} when {what is wrong}")
 
-describe(`Api`, function() {
+describe(`REST API system resources`, function() {
     var settings: Settings;
 
     beforeEach(function() {
