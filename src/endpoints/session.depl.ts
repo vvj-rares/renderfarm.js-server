@@ -721,13 +721,26 @@ describe(`REST API /session endpoint`, function() {
         expect(isArray(json.data)).toBeTruthy();
         expect(json.data.length).toBeGreaterThan(0);
 
+        let availableWorkersCount = json.data.length;
+        console.log("availableWorkersCount: ", availableWorkersCount);
+
         let worker = json.data[0];
 
         _configureFakeWorker(worker.port, { heartbeat: false }) // tell worker to not send heartbeats
 
-        setTimeout(function() {
-            _configureFakeWorker(worker.port, { heartbeat: true }) // tell worker to send heartbeats again
+        setTimeout(async function() {
+            let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
+            JasmineDeplHelpers.checkResponse(res, 200);
+            let json = res.data;
 
+            expect(json.ok).toBeTruthy();
+            expect(json.type).toBe("worker");
+            expect(isArray(json.data)).toBeTruthy();
+            expect(json.data.length).toBe(availableWorkersCount - 1); // hey, 1 less than before!
+            console.log("availableWorkersCount: ", json.data.length);
+
+            // restore worker initial state for other tests
+            _configureFakeWorker(worker.port, { heartbeat: true }) // tell worker to send heartbeats again
             done();
         }, 3000 + 1750);
 

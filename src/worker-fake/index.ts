@@ -75,6 +75,7 @@ for (let i=0; i<simulateWorkersCount; i++) {
                         if (j === "hbcount" || j === "pid" || j === "port" || j === "server") continue;
                         w[j] = controlJson.worker[j];
                     }
+                    console.log(`worker after configuration: `, w);
                 }
 
                 socket.write("{ \"result\": true }");
@@ -130,6 +131,7 @@ setInterval(function() {
     for (let k=0; k<workers.length; k++) {
         let w = workers[k];
         if (!w.heartbeat) {
+            console.log(`worker skipped heartbeat ${w.hbcount++}`);
             continue; // not send heartbeats for some workers
         }
 
