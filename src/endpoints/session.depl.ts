@@ -13,6 +13,8 @@ require("../jasmine.config")();
 // it("should reject {HttpMethod} on {path} when {what is wrong}")
 
 describe(`Api`, function() {
+    const doneDelay = 250; // 250ms until each test done
+
     var settings: Settings;
 
     var host: string; // where's DEV is deployed?
@@ -55,7 +57,7 @@ describe(`Api`, function() {
         }
 
         JasmineDeplHelpers.checkErrorResponse(res, 400, "api_key is missing", null);
-        done();
+        setTimeout(done, doneDelay);
     });
 
     //request:  /POST https://dev1.renderfarmjs.com:8000/v1/session
@@ -81,7 +83,7 @@ describe(`Api`, function() {
         }
 
         JasmineDeplHelpers.checkErrorResponse(res, 403, "api_key rejected");
-        done();
+        setTimeout(done, doneDelay);
     });
 
     //request:  /POST https://dev1.renderfarmjs.com:8000/v1/session
@@ -106,7 +108,7 @@ describe(`Api`, function() {
         }
 
         JasmineDeplHelpers.checkErrorResponse(res, 400, "workspace_guid is missing", null);
-        done();
+        setTimeout(done, doneDelay);
     });
 
     //todo: implement spec
@@ -133,7 +135,7 @@ describe(`Api`, function() {
         }
 
         JasmineDeplHelpers.checkErrorResponse(res, 403, "workspace_guid rejected");
-        done();
+        setTimeout(done, doneDelay);
     });
 
     //request:  /POST https://dev1.renderfarmjs.com:8000/v1/session
@@ -159,7 +161,7 @@ describe(`Api`, function() {
         }
 
         JasmineDeplHelpers.checkErrorResponse(res, 403, "workspace_guid does not belong to provided api_key", null);
-        done();
+        setTimeout(done, doneDelay);
     })
 
     async function getOpenSessionAndCheck(apiKey: string, workspaceGuid: string, sessionGuid: string) {
@@ -232,7 +234,7 @@ describe(`Api`, function() {
             JasmineDeplHelpers.existingWorkspaceGuid, 
             json.data.guid);
 
-        done();
+        setTimeout(done, doneDelay);
     })
 
     it("should return closed session on DELETE /session and be able to GET it", async function(done) {
@@ -274,7 +276,7 @@ describe(`Api`, function() {
                 json.data.guid);
         }
 
-        done();
+        setTimeout(done, doneDelay);
     })
 
     it("should reject POST on /session when there's no available workers", async function (done) {
@@ -358,7 +360,7 @@ describe(`Api`, function() {
             expect(workerCount).toBe(initialWorkerCount);
         }
 
-        done();
+        setTimeout(done, doneDelay);
     });
 
     // find out current DEV version
@@ -371,7 +373,7 @@ describe(`Api`, function() {
         } catch (err) {
             console.log(err);
             fail();
-            done();
+            setTimeout(done, doneDelay);
             return;
         }
 
@@ -466,7 +468,7 @@ describe(`Api`, function() {
 
             if (availableWorkerCount === 0) { // no reason to proceed with this test, as we need at least one worker
                 fail();
-                done();
+                setTimeout(done, doneDelay);
                 return;
             }
 
@@ -477,7 +479,7 @@ describe(`Api`, function() {
                 } catch (err) {
                     console.log("failed to set worker log file, ", err);
                     fail();
-                    done();
+                    setTimeout(done, doneDelay);
                     return;
                 }
             }
@@ -499,7 +501,7 @@ describe(`Api`, function() {
             JasmineDeplHelpers.checkErrorResponse(err.response, 500, "failed to create session", "all workers busy");
             console.log(err.message);
             fail();
-            done();
+            setTimeout(done, doneDelay);
             return;
         }
 
@@ -525,12 +527,16 @@ describe(`Api`, function() {
 
         await setWorkersLogFile(currentVersion, testName, testRun, fail, done);
 
+        console.log("open session");
+
         let sessionGuid = await openSession(
             JasmineDeplHelpers.existingApiKey,
             JasmineDeplHelpers.existingWorkspaceGuid,
             null, // maxSceneFilename = null, i.e. just create empty scene
             fail,
             done);
+        
+        console.log("OK | opened session with sessionGuid: ", sessionGuid, "\r\n");
 
         let sessionWorker: Worker;
         { 
@@ -541,8 +547,8 @@ describe(`Api`, function() {
             console.log(`GET on ${getSessionUrl}`);
             let getSessionResponse = await axios.get(getSessionUrl);
 
-            console.log("session: ",    getSessionResponse.data);
-            console.log("workerGuid: ", getSessionResponse.data.data.workerGuid);
+            console.log("session: ",    getSessionResponse.data, "\r\n");
+            console.log("workerGuid: ", getSessionResponse.data.data.workerGuid, "\r\n");
 
             let workerGuid = getSessionResponse.data.data.workerGuid;
 
@@ -599,7 +605,7 @@ describe(`Api`, function() {
 */
             expect(requests[0]).toBe(`SessionGuid = "${sessionGuid}"`);
 
-            done();
+            setTimeout(done, 100);
         }
     });
 });
