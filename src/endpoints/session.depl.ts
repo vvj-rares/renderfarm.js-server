@@ -563,11 +563,11 @@ describe(`REST API /session endpoint`, function() {
             let line = lines[i];
             if (line.indexOf("[request]") === -1 && line.indexOf("[response]") === -1) {
                 // requests may be multiline, we just include complete lines into collection
-                requests.push(line.trimEnd());
+                requests.push(line.trim());
             } else {
                 let parts = line.split("\t");
                 if (parts[3] !== "[response]") {
-                    requests.push(parts[4].trimEnd());
+                    requests.push(parts[4].trim());
                 }
             }
         }
