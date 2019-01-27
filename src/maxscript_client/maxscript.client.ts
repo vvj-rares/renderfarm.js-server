@@ -109,8 +109,10 @@ class MaxscriptClient implements IMaxscriptClient {
     openScene(sceneName: string, maxSceneFilename: string, workspace: Workspace): Promise<boolean> {
         let w = workspace;
 
+        let homeDir = w.homeDir.replace(/\\/g, "\\\\");
+
         let maxscript = `resetMaxFile #noPrompt ; `
-                        + ` loadMaxFile "${w.homeDir}\\\\api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\scenes\\\\${maxSceneFilename}" `
+                        + ` loadMaxFile "${homeDir}\\\\api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\scenes\\\\${maxSceneFilename}" `
                         + ` useFileUnits:true quiet:true ; `
                         + ` threejsSceneRoot = Dummy name:"${sceneName}" ; `
                         + ` callbacks.removeScripts id:#flipYZ ; `
