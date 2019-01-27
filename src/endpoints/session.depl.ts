@@ -409,7 +409,7 @@ describe(`REST API /session endpoint`, function() {
                 let workerConfig: any;
                 if (testName) {
                     workerConfig = { worker: { 
-                        testRun: 0,
+                        testRun: testRun,
                         testName: testName,
                         logFile: getWorkerLogFullpath(version, testName, testRun, workerPort) } };
                 } else {
@@ -581,7 +581,7 @@ describe(`REST API /session endpoint`, function() {
 
             console.log(`getting fake worker log file: ${logUrl}`);
             let res4: any = await axios.get(logUrl, logGetConfig);
-            console.log("fake worker logs: ", res4.data);
+            console.log("fake worker logs: \r\n", res4.data);
 
             let lines = res4.data.split("\n");
 
