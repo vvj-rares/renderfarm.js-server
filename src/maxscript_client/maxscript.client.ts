@@ -95,28 +95,28 @@ class MaxscriptClient implements IMaxscriptClient {
         return this.execMaxscript(maxscript, "resetScene");
     }
 
-    createScene(sceneRootNodeName): Promise<boolean> {
-        let maxscript = `resetMaxFile #noPrompt\r\n` 
-                       + `threejsSceneRoot = Dummy name:"${sceneRootNodeName}"\r\n`
-                       + `callbacks.removeScripts id:#flipYZ\r\n`
-                       + `callbacks.removeScripts id:#unflipYZ\r\n`
-                       + `callbacks.addScript #preRender    "rayysFlipYZ($${sceneRootNodeName})" id:#flipYZ   persistent:false\r\n`
-                       + `callbacks.addScript #postRender "rayysUnflipYZ($${sceneRootNodeName})" id:#unflipYZ persistent:false\r\n` ;
+    createScene(sceneName): Promise<boolean> {
+        let maxscript = `resetMaxFile #noPrompt ; ` 
+                        + ` threejsSceneRoot = Dummy name:"${sceneName}" ; `
+                        + ` callbacks.removeScripts id:#flipYZ ; `
+                        + ` callbacks.removeScripts id:#unflipYZ ; `
+                        + ` callbacks.addScript #preRender    "rayysFlipYZ($${sceneName})" id:#flipYZ   persistent:false ; `
+                        + ` callbacks.addScript #postRender "rayysUnflipYZ($${sceneName})" id:#unflipYZ persistent:false ; ` ;
 
         return this.execMaxscript(maxscript, "createScene");
     }
 
-    openScene(sceneRootNodeName: string, maxSceneFilename: string, workspace: Workspace): Promise<boolean> {
+    openScene(sceneName: string, maxSceneFilename: string, workspace: Workspace): Promise<boolean> {
         let w = workspace;
 
-        let maxscript = `resetMaxFile #noPrompt\r\n`
-                       + `loadMaxFile "${w.homeDir}\\\\api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\scenes\\\\${maxSceneFilename}"\r\n`
-                       + `useFileUnits:true quiet:true\r\n`
-                       + `threejsSceneRoot = Dummy name:"${sceneRootNodeName}"\r\n`
-                       + `callbacks.removeScripts id:#flipYZ\r\n`
-                       + `callbacks.removeScripts id:#unflipYZ\r\n`
-                       + `callbacks.addScript #preRender    "rayysFlipYZ($${sceneRootNodeName})" id:#flipYZ   persistent:false\r\n`
-                       + `callbacks.addScript #postRender "rayysUnflipYZ($${sceneRootNodeName})" id:#unflipYZ persistent:false\r\n`;
+        let maxscript = `resetMaxFile #noPrompt ; `
+                        + ` loadMaxFile "${w.homeDir}\\\\api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\scenes\\\\${maxSceneFilename}" `
+                        + ` useFileUnits:true quiet:true ; `
+                        + ` threejsSceneRoot = Dummy name:"${sceneName}" ; `
+                        + ` callbacks.removeScripts id:#flipYZ ; `
+                        + ` callbacks.removeScripts id:#unflipYZ ; `
+                        + ` callbacks.addScript #preRender    "rayysFlipYZ($${sceneName})" id:#flipYZ   persistent:false ; `
+                        + ` callbacks.addScript #postRender "rayysUnflipYZ($${sceneName})" id:#unflipYZ persistent:false ; `;
 
         return this.execMaxscript(maxscript, "openScene");
     }
@@ -146,9 +146,9 @@ class MaxscriptClient implements IMaxscriptClient {
         let w = workspaceInfo;
 
         let maxscript = `for i=1 to pathConfig.mapPaths.count() do ( pathConfig.mapPaths.delete 1 )\r\n`
-                     + `for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 )\r\n`
-                     + `pathConfig.mapPaths.add "${w.homeDir}\\\\api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\maps"\r\n`
-                     + `pathConfig.xrefPaths.add "${w.homeDir}\\\\api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\xrefs"` ;
+                      + `for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 )\r\n`
+                      + `pathConfig.mapPaths.add "${w.homeDir}\\\\api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\maps"\r\n`
+                      + `pathConfig.xrefPaths.add "${w.homeDir}\\\\api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\xrefs"` ;
 
         return this.execMaxscript(maxscript, "setWorkspace");
     }
@@ -157,10 +157,10 @@ class MaxscriptClient implements IMaxscriptClient {
         let m = cameraJson.matrix;
         // now run command
         let maxscript = `aFreeCamera = FreeCamera fov:${cameraJson.fov} nearclip:1 farclip:1000 nearrange:0 farrange:1000 ` 
-                       + `mpassEnabled:off mpassRenderPerPass:off ` 
-                       + `isSelected:on name:"${cameraJson.name}"\r\n` 
-                       + `aFreeCamera.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}])\r\n`
-                       + `aFreeCamera.parent = threejsSceneRoot; `;
+                        + ` mpassEnabled:off mpassRenderPerPass:off ` 
+                        + ` isSelected:on name:"${cameraJson.name}" ; ` 
+                        + ` aFreeCamera.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}]) ; `
+                        + ` aFreeCamera.parent = threejsSceneRoot; `;
 
         console.log(" >> CAMERA: ", maxscript);
 
@@ -171,13 +171,13 @@ class MaxscriptClient implements IMaxscriptClient {
 
         let maxscript = "";
         if (cameraJson.fov !== undefined)      
-            maxscript = maxscript+ `$${cameraJson.name}.fov = ${cameraJson.fov}; `;
+            maxscript = maxscript + ` $${cameraJson.name}.fov = ${cameraJson.fov}; `;
 
         if (cameraJson.position !== undefined) 
-            maxscript = maxscript+ `$${cameraJson.name}.pos = [${cameraJson.position[0]},${cameraJson.position[2]},${cameraJson.position[1]}]; `;
+            maxscript = maxscript + ` $${cameraJson.name}.pos = [${cameraJson.position[0]},${cameraJson.position[2]},${cameraJson.position[1]}]; `;
 
         if (cameraJson.target !== undefined)   
-            maxscript = maxscript+ `$${cameraJson.name}.target.pos = [${cameraJson.target[0]},${cameraJson.target[2]},${cameraJson.target[1]}]; `;
+            maxscript = maxscript + ` $${cameraJson.name}.target.pos = [${cameraJson.target[0]},${cameraJson.target[2]},${cameraJson.target[1]}]; `;
 
         return this.execMaxscript(maxscript, "updateTargetCamera");
     }
@@ -204,15 +204,15 @@ class MaxscriptClient implements IMaxscriptClient {
         let t = spotlightJson.target;
 
         let maxscript = `aTargetSpot = TargetSpot name: "${spotlightJson.name}" `
-                       + `transform: (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}]) `
-                       + `multiplier: ${spotlightJson.intensity} `
-                       + `rgb: (color ${r} ${g} ${b}) `
-                       + `hotspot: ${hotspot} `
-                       + `falloff: ${falloff} `
-                       + `target: (Targetobject transform: (matrix3 [${t[0]},${t[1]},${t[2]}] [${t[4]},${t[5]},${t[6]}] [${t[8]},${t[9]},${t[10]}] [${t[12]},${t[13]},${t[14]}])); `
-                       + `aTargetSpot.shadowGenerator = shadowMap(); aTargetSpot.baseObject.castShadows = true; `
-                       + `aTargetSpot.parent = threejsSceneRoot; `
-                       + `aTargetSpot.target.parent = threejsSceneRoot; `;
+                        + ` transform: (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}]) `
+                        + ` multiplier: ${spotlightJson.intensity} `
+                        + ` rgb: (color ${r} ${g} ${b}) `
+                        + ` hotspot: ${hotspot} `
+                        + ` falloff: ${falloff} `
+                        + ` target: (Targetobject transform: (matrix3 [${t[0]},${t[1]},${t[2]}] [${t[4]},${t[5]},${t[6]}] [${t[8]},${t[9]},${t[10]}] [${t[12]},${t[13]},${t[14]}])); `
+                        + ` aTargetSpot.shadowGenerator = shadowMap(); aTargetSpot.baseObject.castShadows = true; `
+                        + ` aTargetSpot.parent = threejsSceneRoot; `
+                        + ` aTargetSpot.target.parent = threejsSceneRoot; `;
 
         if (spotlightJson.shadow && spotlightJson.shadow.mapsize > 0) {
             maxscript += ` aTargetSpot.mapSize = ${spotlightJson.shadow.mapsize}; `;
@@ -241,13 +241,13 @@ class MaxscriptClient implements IMaxscriptClient {
         };
 
         let maxscript = `StandardMaterial name:"${materialJson.name}" ` 
-                       + `diffuse: (color ${diffuse.r}  ${diffuse.g}  ${diffuse.b}) `
-                       + `specular:(color ${specular.r} ${specular.g} ${specular.b}) `
-                       + `emissive:(color ${emissive.r} ${emissive.g} ${emissive.b}) `
-                       + `opacity: ${materialJson.opacity !== undefined ? 100 * materialJson.opacity : 100} `
-                       + `glossiness: ${materialJson.shininess !== undefined ? materialJson.shininess : 30} `
-                       + `specularLevel: 75 `
-                       + `shaderType: 5 `; // for Phong
+                        + ` diffuse: (color ${diffuse.r}  ${diffuse.g}  ${diffuse.b}) `
+                        + ` specular:(color ${specular.r} ${specular.g} ${specular.b}) `
+                        + ` emissive:(color ${emissive.r} ${emissive.g} ${emissive.b}) `
+                        + ` opacity: ${materialJson.opacity !== undefined ? 100 * materialJson.opacity : 100} `
+                        + ` glossiness: ${materialJson.shininess !== undefined ? materialJson.shininess : 30} `
+                        + ` specularLevel: 75 `
+                        + ` shaderType: 5 `; // for Phong
 
         return this.execMaxscript(maxscript, "createMaterial");
     }
@@ -270,28 +270,28 @@ class MaxscriptClient implements IMaxscriptClient {
 
     assignMaterial(nodeName: string, materialName: string): Promise<boolean> {
         let maxscript = `mat = rayysFindMaterialByName "${materialName}"; `
-                       + `if (mat != false) then (`
-                       + ` $${nodeName}.Material = mat`
-                       + `) `;
+                        + `if (mat != false) then (`
+                        + `  $${nodeName}.Material = mat`
+                        + `) `;
 
         return this.execMaxscript(maxscript, "assignMaterial");
     }
 
     renderScene(camera: string, size: number[], filename: string, vraySettings: any): Promise<boolean> {
 
-        let maxscript =   ` pngio.settype(#true24)\r\n`  // enums: {#paletted|#true24|#true48|#gray8|#gray16} 
-                       + `pngio.setAlpha false\r\n`
-                       + `vr = renderers.current\r\n`
-                        //+ `vr.progressive_max_render_time = ${vraySettings.progressiveMaxRenderTime}\r\n`
-                        //+ `vr.progressive_noise_threshold = ${vraySettings.progressiveNoiseThreshold}\r\n`
-                       + `viewport.setLayout #layout_1\r\n`
-                       + `viewport.setCamera $${camera}\r\n`
-                       + `renderWidth  = ${size[0]}\r\n`
-                       + `renderHeight = ${size[1]}\r\n`
-                       + `rendUseActiveView = true\r\n`
-                       + `rendSaveFile = true\r\n`
-                       + `rendOutputFilename = "${filename}"\r\n`
-                       + `max quick render `;
+        let maxscript =   ` pngio.settype(#true24) ; `  // enums: {#paletted|#true24|#true48|#gray8|#gray16} 
+                        + ` pngio.setAlpha false ; `
+                        + ` vr = renderers.current ; `
+                        //+ ` vr.progressive_max_render_time = ${vraySettings.progressiveMaxRenderTime} ; `
+                        //+ ` vr.progressive_noise_threshold = ${vraySettings.progressiveNoiseThreshold} ; `
+                        + ` viewport.setLayout #layout_1 ; `
+                        + ` viewport.setCamera $${camera} ; `
+                        + ` renderWidth  = ${size[0]} ; `
+                        + ` renderHeight = ${size[1]} ; `
+                        + ` rendUseActiveView = true ; `
+                        + ` rendSaveFile = true ; `
+                        + ` rendOutputFilename = "${filename}" ; `
+                        + ` max quick render `;
 
         // see here: http://help.autodesk.com/view/3DSMAX/2018/ENU/?guid=__files_GUID_9175301C_13E6_488B_ABA6_D27CD804B205_htm
         // can also use: JPEG.setQuality(5); JPEG.setSmoothing(1);
