@@ -105,7 +105,7 @@ class MaxscriptClient implements IMaxscriptClient {
                         + ` callbacks.removeScripts id:#flipYZ ; `
                         + ` callbacks.removeScripts id:#unflipYZ ; `
                         + ` callbacks.addScript #preRender    "rayysFlipYZ($${sceneName})" id:#flipYZ   persistent:false ; `
-                        + ` callbacks.addScript #postRender "rayysUnflipYZ($${sceneName})" id:#unflipYZ persistent:false ; ` ;
+                        + ` callbacks.addScript #postRender "rayysUnflipYZ($${sceneName})" id:#unflipYZ persistent:false ; `;
 
         return this.execMaxscript(maxscript, "createScene");
     }
@@ -122,12 +122,12 @@ class MaxscriptClient implements IMaxscriptClient {
                         + `         callbacks.removeScripts id:#flipYZ \r\n`
                         + `         callbacks.removeScripts id:#unflipYZ \r\n`
                         + `         callbacks.addScript #preRender    "rayysFlipYZ($${sceneName})" id:#flipYZ   persistent:false \r\n`
-                        + `         callbacks.addScript #postRender "rayysUnflipYZ($${sceneName})" id:#unflipYZ persistent:false \r\n`;
-                        + `     ) else ( \r\n`;
-                        + `         print "FAIL | failed to load scene" \r\n`;
-                        + `     ) \r\n`;
+                        + `         callbacks.addScript #postRender "rayysUnflipYZ($${sceneName})" id:#unflipYZ persistent:false \r\n`
+                        + `     ) else ( \r\n`
+                        + `         print "FAIL | failed to load scene" \r\n`
+                        + `     ) \r\n`
                         + ` ) else ( \r\n`
-                        + `     print "FAIL | scene file not found" \r\n`;
+                        + `     print "FAIL | scene file not found" \r\n`
                         + ` ) `;
 
         return this.execMaxscript(maxscript, "openScene");

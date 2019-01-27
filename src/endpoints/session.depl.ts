@@ -397,7 +397,7 @@ describe(`REST API /session endpoint`, function() {
         return `${wwwBaseDir}/logs/${version}.renderfarm.js-server/out.worker-fake.name=${testName}.port=${workerPort}.${testRun}.log`;
     }
 
-    function setWorkerLogFile(version: string, testName: string, testRun: number, workerPort: number) {
+    function _configureFakeWorker(version: string, testName: string, testRun: number, workerPort: number) {
         return new Promise<any>(function(resolve, reject) {
             // send commands directly to fake worker
             let client = new net.Socket();
@@ -446,7 +446,7 @@ describe(`REST API /session endpoint`, function() {
 
     // this helper configures workers to write communication logs to some predictable place
     // where the logs can be found and downloaded
-    async function setWorkersLogFile(version: string, testName: string, testRun: number, fail: Function, done: Function) {
+    async function configureFakeWorker(version: string, testName: string, testRun: number, fail: Function, done: Function) {
         console.log("Configuring available fake workers with parameters: ", `version= \"${version}\", testName= \"${testName}\", testRun= \"${testRun}\"`);
 
         { // first configure all available workers to write logfiles
@@ -473,7 +473,7 @@ describe(`REST API /session endpoint`, function() {
             let availableWorkers = json.data;
             for (let k in availableWorkers) {
                 try {
-                    await setWorkerLogFile(version, testName, testRun, availableWorkers[k].port);
+                    await _configureFakeWorker(version, testName, testRun, availableWorkers[k].port);
                 } catch (err) {
                     console.log("failed to set worker log file, ", err);
                     fail();
@@ -511,6 +511,31 @@ describe(`REST API /session endpoint`, function() {
         return sessionGuid;
     }
 
+    async function getSessionWorker(sessionGuid: string): Promise<Worker> {
+        console.log("retrieve worker that was assigned to the session");
+
+        console.log("1. get session details to know worker guid");
+        let getSessionUrl = `${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`;
+        console.log(`GET on ${getSessionUrl}`);
+        let getSessionResponse = await axios.get(getSessionUrl);
+
+        console.log("session: ",    getSessionResponse.data, "\r\n");
+        console.log("workerGuid: ", getSessionResponse.data.data.workerGuid, "\r\n");
+
+        let workerGuid = getSessionResponse.data.data.workerGuid;
+
+        console.log("2. now get worker");
+        let getWorkerUrl = `${settings.current.publicUrl}/v${settings.majorVersion}/worker/${workerGuid}`;
+        console.log(`GET on ${getWorkerUrl}`);
+        let getWorkerResponse = await axios.get(getWorkerUrl);
+
+        console.log("worker: ", getWorkerResponse.data);
+        console.log("port: ",   getWorkerResponse.data.data.port);
+
+        // let workerPort = .port;
+        return new Worker(getWorkerResponse.data.data);
+    }
+
     // helper to close sessions
     async function closeSession(guid) {
         console.log(`Closing session ${guid}`);
@@ -518,12 +543,50 @@ describe(`REST API /session endpoint`, function() {
         JasmineDeplHelpers.checkResponse(res, 200, "session");
     }
 
+    async function getMaxscriptFromFakeWorker(logUrl: string): Promise<string[]> {
+        let logGetConfig: AxiosRequestConfig = {
+            auth: {
+                username: settings.current.dropFolderUsername,
+                password: settings.current.dropFolderPassword
+            }
+        };
+
+        console.log(`getting fake worker log file: ${logUrl}`);
+        let res4: any = await axios.get(logUrl, logGetConfig);
+
+        console.log("fake worker logs: \r\n", res4.data);
+
+        let lines = res4.data.split("\n");
+
+        let requests: string[] = [];
+        for (let i in lines) {
+            let line = lines[i];
+            if (line.indexOf("[request]") === -1 && line.indexOf("[response]") === -1) {
+                // requests may be multiline, we just include complete lines into collection
+                requests.push(line.trimEnd());
+            } else {
+                let parts = line.split("\t");
+                if (parts[3] !== "[response]") {
+                    requests.push(parts[4].trimEnd());
+                }
+            }
+        }
+
+        console.log("maxscript request code: ");
+        for (let ri in requests) {
+            console.log(`    ${requests[ri]}`);
+        }
+
+        return requests;
+    }
+
     it("should send correct maxscript commands to worker on POST /session", async function (done) {
         let currentVersion = await getEnvVersion(fail, done);
         let testName = "POST_session";
         let testRun = Date.now();
 
-        await setWorkersLogFile(currentVersion, testName, testRun, fail, done);
+        console.log("tell worker to start writing logs for us");
+        await configureFakeWorker(currentVersion, testName, testRun, fail, done);
 
         console.log("open session");
 
@@ -536,81 +599,94 @@ describe(`REST API /session endpoint`, function() {
         
         console.log("OK | opened session with sessionGuid: ", sessionGuid, "\r\n");
 
-        let sessionWorker: Worker;
-        { 
-            console.log("retrieve worker that was assigned to the session");
-
-            console.log("1. get session details to know worker guid");
-            let getSessionUrl = `${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`;
-            console.log(`GET on ${getSessionUrl}`);
-            let getSessionResponse = await axios.get(getSessionUrl);
-
-            console.log("session: ",    getSessionResponse.data, "\r\n");
-            console.log("workerGuid: ", getSessionResponse.data.data.workerGuid, "\r\n");
-
-            let workerGuid = getSessionResponse.data.data.workerGuid;
-
-            console.log("2. now get worker");
-            let getWorkerUrl = `${settings.current.publicUrl}/v${settings.majorVersion}/worker/${workerGuid}`;
-            console.log(`GET on ${getWorkerUrl}`);
-            let getWorkerResponse = await axios.get(getWorkerUrl);
-
-            console.log("worker: ", getWorkerResponse.data);
-            console.log("port: ",   getWorkerResponse.data.data.port);
-
-            // let workerPort = .port;
-            sessionWorker = new Worker(getWorkerResponse.data.data);
-        }
+        let sessionWorker = await getSessionWorker(sessionGuid);
 
         console.log("we're done, can close session");
         await closeSession(sessionGuid);
 
         console.log("tell worker to stop writing logs");
-        await setWorkersLogFile(null, null, null, fail, done);
+        await configureFakeWorker(null, null, null, fail, done);
 
-        { 
-            console.log("now analyze fake worker log file");
-            let logGetConfig: AxiosRequestConfig = {
-                auth: {
-                    username: settings.current.dropFolderUsername,
-                    password: settings.current.dropFolderPassword
-                }
-            };
-
+        console.log("now analyze fake worker log file");
+        {
             let logUrl = getWorkerLogDownloadUrl(currentVersion, testName, testRun, sessionWorker.port);
+            let requests = await getMaxscriptFromFakeWorker(logUrl);
 
-            console.log(`getting fake worker log file: ${logUrl}`);
-            let res4: any = await axios.get(logUrl, logGetConfig);
-            console.log("fake worker logs: \r\n", res4.data);
-
-            let lines = res4.data.split("\n");
-
-            let requests: string[] = [];
-            for (let i in lines) {
-                let line = lines[i];
-                if (line.indexOf("[request]") === -1 && line.indexOf("[response]") === -1) {
-                    // requests may be multiline, we just include complete lines into collection
-                    requests.push(line.trim());
-                } else {
-                    let parts = line.split("\t");
-                    if (parts[3] !== "[response]") {
-                        requests.push(parts[4].trim());
-                    }
-                }
-            }
-
-            console.log("maxscript request code: ");
-            for (let ri in requests) {
-                console.log(`    ${requests[ri]}`);
-            }
-
-/*
+/* we expect here to have:
 [ 'SessionGuid = "d9f35ee0-0088-4d15-9e8d-b349c3b462f0"',
   'for i=1 to pathConfig.mapPaths.count()  do ( pathConfig.mapPaths.delete 1 ) ;  for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 ) ;  pathConfig.mapPaths.add "C:\\\\Tempapi-keys\\\\75f5-4d53-b0f4\\\\workspaces\\\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\\\maps" ;  pathConfig.xrefPaths.add "C:\\\\Tempapi-keys\\\\75f5-4d53-b0f4\\\\workspaces\\\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\\\xrefs" ;',
   'SessionGuid = ""',
   'resetMaxFile #noPrompt' ]
 */
+
+            expect(requests.length).toBe(4);
             expect(requests[0]).toBe(`SessionGuid = "${sessionGuid}"`);
+
+            expect(requests[1]).toContain(`for i=1 to pathConfig.mapPaths.count() do ( pathConfig.mapPaths.delete 1 )`);
+            expect(requests[1]).toContain(`for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 )`);
+
+            expect(requests[1]).toContain(`pathConfig.mapPaths.add "C:\\Temp\\api-keys\\75f5-4d53-b0f4\\workspaces\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\maps"`);
+            expect(requests[1]).toContain(`pathConfig.xrefPaths.add "C:\\Temp\\api-keys\\75f5-4d53-b0f4\\workspaces\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\xrefs"`);
+
+            expect(requests[2]).toBe(`SessionGuid = ""`);
+            expect(requests[3]).toBe(`resetMaxFile #noPrompt`);
+
+            setTimeout(done, 100);
+        }
+    });
+
+    it("should send correct maxscript commands to worker on POST /session with given 3dsmax scene filename", async function (done) {
+        let currentVersion = await getEnvVersion(fail, done);
+        let testName = "POST_session";
+        let testRun = Date.now();
+
+        console.log("tell worker to start writing logs for us");
+        await configureFakeWorker(currentVersion, testName, testRun, fail, done);
+
+        console.log("open session");
+
+        let sceneFilename = "scene_" + (9999 * Math.random()).toFixed(0) + ".max";
+
+        let sessionGuid = await openSession(
+            JasmineDeplHelpers.existingApiKey,
+            JasmineDeplHelpers.existingWorkspaceGuid,
+            sceneFilename,
+            fail,
+            done);
+        
+        console.log("OK | opened session with sessionGuid: ", sessionGuid, "\r\n");
+
+        let sessionWorker = await getSessionWorker(sessionGuid);
+
+        console.log("we're done, can close session");
+        await closeSession(sessionGuid);
+
+        console.log("tell worker to stop writing logs");
+        await configureFakeWorker(null, null, null, fail, done);
+
+        console.log("now analyze fake worker log file");
+        {
+            let logUrl = getWorkerLogDownloadUrl(currentVersion, testName, testRun, sessionWorker.port);
+            let requests = await getMaxscriptFromFakeWorker(logUrl);
+
+/* we expect here to have:
+[ 'SessionGuid = "d9f35ee0-0088-4d15-9e8d-b349c3b462f0"',
+  'for i=1 to pathConfig.mapPaths.count()  do ( pathConfig.mapPaths.delete 1 ) ;  for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 ) ;  pathConfig.mapPaths.add "C:\\\\Tempapi-keys\\\\75f5-4d53-b0f4\\\\workspaces\\\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\\\maps" ;  pathConfig.xrefPaths.add "C:\\\\Tempapi-keys\\\\75f5-4d53-b0f4\\\\workspaces\\\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\\\xrefs" ;',
+  'SessionGuid = ""',
+  'resetMaxFile #noPrompt' ]
+*/
+
+            expect(requests.length).toBe(4);
+            // expect(requests[0]).toBe(`SessionGuid = "${sessionGuid}"`);
+
+            // expect(requests[1]).toContain(`for i=1 to pathConfig.mapPaths.count() do ( pathConfig.mapPaths.delete 1 )`);
+            // expect(requests[1]).toContain(`for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 )`);
+
+            // expect(requests[1]).toContain(`pathConfig.mapPaths.add "C:\\Temp\\api-keys\\75f5-4d53-b0f4\\workspaces\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\maps"`);
+            // expect(requests[1]).toContain(`pathConfig.xrefPaths.add "C:\\Temp\\api-keys\\75f5-4d53-b0f4\\workspaces\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\xrefs"`);
+
+            // expect(requests[2]).toBe(`SessionGuid = ""`);
+            // expect(requests[3]).toBe(`resetMaxFile #noPrompt`);
 
             setTimeout(done, 100);
         }
