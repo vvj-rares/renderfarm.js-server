@@ -529,7 +529,7 @@ export class Database implements IDatabase {
             let db = this._client.db(this._settings.current.databaseName);
             assert.notEqual(db, null);
     
-            let opt: FindOneAndUpdateOption = { w: "majority", j: true, returnOriginal: false };
+            let opt: FindOneAndUpdateOption = { w: "majority", j: true, returnOriginal: false, upsert: false };
 
             let callback: MongoCallback<FindAndModifyWriteOpResultObject> = function (error: MongoError, res: FindAndModifyWriteOpResultObject) {
                 if (res && res.ok === 1 && res.value) {

@@ -24,7 +24,16 @@ export class WorkerEndpoint implements IEndpoint {
             setInterval(this.tryDeleteDeadWorkers.bind(this), 5*1000); // check once per 5 sec
         }
 
-        this._workerHeartbeatListener.Listen( this.onWorkerAdded.bind(this), this.onWorkerUpdated.bind(this), this.onSpawnerUpdate.bind(this) );
+        if (this._settings.current.heartbeatPort > 0) {
+            this._workerHeartbeatListener.Listen( 
+                this.onWorkerAdded.bind(this),
+                this.onWorkerUpdated.bind(this),
+                // todo: add worker delete handler, and close session of the worker
+                //       just in case if worker was assigned, but then stopped heartbeating
+                this.onSpawnerUpdate.bind(this));
+        } else {
+            console.log(`  WARN | this instance will not accept worker heartbeats`);
+        }
     }
 
     bind(express: express.Application) {
