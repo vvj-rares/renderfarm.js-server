@@ -563,11 +563,11 @@ describe(`REST API /session endpoint`, function() {
             let line = lines[i];
             if (line.indexOf("[request]") === -1 && line.indexOf("[response]") === -1) {
                 // requests may be multiline, we just include complete lines into collection
-                requests.push(line.trim());
+                requests.push(line.replace(/[\r\n]/g, ''));
             } else {
                 let parts = line.split("\t");
                 if (parts[3] !== "[response]") {
-                    requests.push(parts[4].trim());
+                    requests.push(parts[4].replace(/[\r\n]/g, ''));
                 }
             }
         }
@@ -659,7 +659,7 @@ describe(`REST API /session endpoint`, function() {
             let logUrl = getWorkerLogDownloadUrl(currentVersion, testName, testRun, sessionWorker.port);
             let requests = await getMaxscriptFromFakeWorker(logUrl);
 
-            expect(requests.length).toBe(8);
+            expect(requests.length).toBe(24);
             expect(requests[0]).toBe(`SessionGuid = "${sessionGuid}"`);
             // expect(requests[0]).toBe(``);
 
