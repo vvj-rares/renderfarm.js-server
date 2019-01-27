@@ -33,6 +33,7 @@ export interface IDatabase {
     insertWorker(worker: Worker): Promise<Worker>;
     upsertWorker(worker: Worker): Promise<boolean>;
     updateWorker(worker: Worker, setter: any): Promise<Worker>;
+    deleteWorker(worker: Worker): Promise<Worker>;
 
     //workers
     getWorker(workerGuid: string): Promise<Worker>;
@@ -100,7 +101,9 @@ export interface IMaxscriptClientFactory {
 }
 
 export interface IWorkerHeartbeatListener {
-    Listen(workerAddedCb: (worker: Worker) => void,
-        workerUpdatedCb: (worker: Worker) => void,
+    Listen(
+        workerAddedCb: (worker: Worker) => void,   // received first heartbeat, worker just started
+        workerUpdatedCb: (worker: Worker) => void, // received next heartbeat, worker was actualized
+        workerOfflineCb: (worker: Worker) => void, // called when worker stops sending heartbeats
         spawnerCb: (spawner: VraySpawnerInfo) => void): void;
 }

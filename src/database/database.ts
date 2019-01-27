@@ -396,6 +396,10 @@ export class Database implements IDatabase {
         return this.findOneAndUpdate<Worker>("workers", worker.filter, setter, obj => new Worker(obj));
     }
 
+    public deleteWorker(worker: Worker): Promise<Worker> {
+        return this.findOneAndDelete("workers", worker.filter, obj => new Worker(obj));
+    }
+
     public async deleteDeadWorkers(): Promise<number> {
         await this.ensureClientConnection();
 
@@ -721,6 +725,35 @@ export class Database implements IDatabase {
                 ops, 
                 callback);
     
+        }.bind(this));
+    }
+
+    public async findOneAndDelete<T extends IDbEntity>(collection: string, filter: any, ctor: (obj: any) => T): Promise<T> {
+        return new Promise<T>(async function(resolve, reject){
+            try {
+                await this.ensureClientConnection();
+            } catch (err) {
+                reject(err);
+                return;
+            }
+
+            let db = this._client.db(this._settings.current.databaseName);
+            assert.notEqual(db, null);
+    
+            let callback: MongoCallback<FindAndModifyWriteOpResultObject> = function (error: MongoError, res: FindAndModifyWriteOpResultObject) {
+                if (res && res.ok === 1 && res.value) {
+                    resolve(ctor(res.value));
+                } else if (error) { 
+                    reject(Error(error.message));
+                } else {
+                    reject(Error(`nothing was deleted from ${collection} by ${JSON.stringify(filter)}`));
+                }
+            }.bind(this);
+
+            db.collection(this.envCollectionName(collection)).findOneAndDelete(
+                filter,
+                callback);
+
         }.bind(this));
     }
 

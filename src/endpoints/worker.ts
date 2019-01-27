@@ -19,17 +19,25 @@ export class WorkerEndpoint implements IEndpoint {
         this._database = database;
         this._workerHeartbeatListener = workerHeartbeatListener;
 
-        //delete dead workers by timer
+        // we might have some remaining workers in database since last runtime
         if (this._settings.current.deleteDeadWorkers) {
-            setInterval(this.tryDeleteDeadWorkers.bind(this), 5*1000); // check once per 5 sec
+            // delete dead workers and rely on heartbeat sniffer for most recent worker state updates
+            this._database.deleteDeadWorkers()
+                .then(function(deletedCount: number){
+                    if (deletedCount > 0) {
+                        console.log(`    OK | deleted dead workers: ${deletedCount}`);
+                    }
+                }.bind(this))
+                .catch(function(err){
+                    console.error(`  FAIL | failed to delete dead workers: `, err);
+                }.bind(this));
         }
 
         if (this._settings.current.heartbeatPort > 0) {
             this._workerHeartbeatListener.Listen( 
                 this.onWorkerAdded.bind(this),
                 this.onWorkerUpdated.bind(this),
-                // todo: add worker delete handler, and close session of the worker
-                //       just in case if worker was assigned, but then stopped heartbeating
+                 this.onWorkerOffline.bind(this),
                 this.onSpawnerUpdate.bind(this));
         } else {
             console.log(`  WARN | this instance will not accept worker heartbeats`);
@@ -104,6 +112,7 @@ export class WorkerEndpoint implements IEndpoint {
     private async onWorkerUpdated(worker: Worker)
     {
         try {
+            //note, don't upsert here, because
             await this._database.updateWorker(
                 worker,
                 {
@@ -118,19 +127,16 @@ export class WorkerEndpoint implements IEndpoint {
         }
     }
 
-    private onSpawnerUpdate(spawner: VraySpawnerInfo) {
-        // this._database.storeVraySpawner(spawner);
+    private async onWorkerOffline(worker: Worker) {
+        try {
+            let deletedWorker = await this._database.deleteWorker(worker);
+            console.log(" >> deletedWorker: ", deletedWorker);
+        } catch (err) {
+            console.error("failed to delete dead worker from database: ", err);
+        }
     }
 
-    private async tryDeleteDeadWorkers() {
-        this._database.deleteDeadWorkers()
-            .then(function(deletedCount: number){
-                if (deletedCount > 0) {
-                    console.log(`    OK | deleted dead workers: ${deletedCount}`);
-                }
-            }.bind(this))
-            .catch(function(err){
-                console.error(`  FAIL | failed to delete dead workers: `, err);
-            }.bind(this));
+    private onSpawnerUpdate(spawner: VraySpawnerInfo) {
+        // this._database.storeVraySpawner(spawner);
     }
 }

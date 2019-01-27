@@ -19,6 +19,7 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
 
     private _workerAddedCb: (worker: Worker) => void;
     private _workerUpdatedCb: (worker: Worker) => void;
+    private _workerOfflineCb: (worker: Worker) => void;
     private _spawnerCb: (worker: VraySpawnerInfo) => void;
 
     private _settings: ISettings;
@@ -31,11 +32,34 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
     public Listen(
         workerAddedCb: (worker: Worker) => void,
         workerUpdatedCb: (worker: Worker) => void,
+        workerOfflineCb: (worker: Worker) => void,
         spawnerCb: (spawner: VraySpawnerInfo) => void)
     {
         this._workerAddedCb = workerAddedCb;
         this._workerUpdatedCb = workerUpdatedCb;
+        this._workerOfflineCb = workerOfflineCb;
+
         this._spawnerCb = spawnerCb;
+
+        setInterval(function() {
+            let activeWorkers: {
+                [id: string]: Worker;
+            } = {};
+
+            for (let i in this._workers) {
+                let w = this._workers[i];
+                if (Date.now() - w.lastSeen.getTime() > 3000) { // no heartbeat for more than 3 sec? dead!
+                    if (this._workerOfflineCb) {
+                        this._workerOfflineCb(w);
+                    }
+                    // and exclude this worker from activeWorkers
+                } else {
+                    activeWorkers[i] = w;
+                }
+            }
+
+            this._workers = activeWorkers;
+        }.bind(this), 1000);
 
         const server = dgram.createSocket('udp4');
 
@@ -68,7 +92,6 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
         let knownWorker = this._workers[workerId];
 
         if (knownWorker !== undefined) { // update existing record
-            let prevLastSeen = knownWorker.lastSeen;
             let newLastSeen = new Date();
 
             knownWorker.lastSeen = newLastSeen;
@@ -76,18 +99,8 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
             knownWorker.ramUsage = rec.ram_usage;
             knownWorker.totalRam = rec.total_ram;
 
-            if (newLastSeen.getTime() - prevLastSeen.getTime() < 15000) {
-                // worker had no offline time, it is updated
-                if (this._workerUpdatedCb) {
-                    this._workerUpdatedCb(knownWorker);
-                }
-            } else {
-                // well, this worker was offline for more than 15 seconds, it must be reported as new
-                if (this._workerAddedCb) {
-                    this._workerAddedCb(knownWorker);
-                }
-
-                console.log(`    OK | new worker, ${msg} from ${rinfo.address}:${rinfo.port}`);
+            if (this._workerUpdatedCb) {
+                this._workerUpdatedCb(knownWorker);
             }
         }
         else {

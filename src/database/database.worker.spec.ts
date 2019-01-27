@@ -200,5 +200,32 @@ describe("Database Worker", function() {
             done();
         })
 
+        it("checks that worker is removed from the database and returned", async function(done) {
+            let worker0 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
+
+            let recentWorkersBefore = await database.getRecentWorkers();
+            expect(recentWorkersBefore.length).toBe(1);
+
+            let deletedWorker = await database.deleteWorker(worker0);
+
+            expect(worker0).toBeTruthy();
+            expect(worker0.guid).toBe(deletedWorker.guid);
+            expect(worker0.ip).toBe(deletedWorker.ip);
+            expect(worker0.mac).toBe(deletedWorker.mac);
+            expect(worker0.port).toBe(deletedWorker.port);
+            expect(worker0.firstSeen).toEqual(deletedWorker.firstSeen);
+            expect(worker0.lastSeen).toEqual(deletedWorker.lastSeen);
+            expect(worker0.workgroup).toBe(deletedWorker.workgroup);
+            expect(worker0.cpuUsage).toBe(deletedWorker.cpuUsage);
+            expect(worker0.ramUsage).toBe(deletedWorker.ramUsage);
+            expect(worker0.totalRam).toBe(deletedWorker.totalRam);
+
+            let recentWorkersAfter = await database.getRecentWorkers();
+
+            expect(recentWorkersAfter.length).toBe(0);
+
+            done();
+        })
+
     }); // end of write tests
 });
