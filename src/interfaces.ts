@@ -101,9 +101,13 @@ export interface IMaxscriptClientFactory {
 }
 
 export interface IWorkerHeartbeatListener {
-    Listen(
-        workerAddedCb: (worker: Worker) => void,   // received first heartbeat, worker just started
-        workerUpdatedCb: (worker: Worker) => void, // received next heartbeat, worker was actualized
-        workerOfflineCb: (worker: Worker) => void, // called when worker stops sending heartbeats
-        spawnerCb: (spawner: VraySpawnerInfo) => void): void;
+    Listen(): void;
+}
+
+export interface IWorkerObserver {
+    Subscribe(
+        workerAddedCb:   (worker: Worker) => void,   // received first heartbeat, worker just started
+        workerUpdatedCb: (worker: Worker) => void,   // received next heartbeat, worker was actualized
+        workerOfflineCb: (worker: Worker) => void,   // called when worker stops sending heartbeats
+        spawnerCb:      (spawner: VraySpawnerInfo) => void): void;
 }

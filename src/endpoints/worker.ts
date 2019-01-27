@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IWorkerHeartbeatListener, ISettings } from "../interfaces";
+import { IEndpoint, IDatabase, IWorkerHeartbeatListener, ISettings, IWorkerObserver } from "../interfaces";
 import { TYPES } from "../types";
 import { VraySpawnerInfo } from "../model/vray_spawner_info";
 import { Worker } from "../database/model/worker";
@@ -10,13 +10,16 @@ export class WorkerEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
     private _workerHeartbeatListener: IWorkerHeartbeatListener;
+    // private _workerObserver: IWorkerObserver;
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
+                @inject(TYPES.IWorkerObserver) private _workerObserver: IWorkerObserver,
                 @inject(TYPES.IWorkerHeartbeatListener) workerHeartbeatListener: IWorkerHeartbeatListener ) 
     {
         this._settings = settings;
         this._database = database;
+        // this._workerObserver = workerObserver;
         this._workerHeartbeatListener = workerHeartbeatListener;
 
         // we might have some remaining workers in database since last runtime
@@ -34,11 +37,13 @@ export class WorkerEndpoint implements IEndpoint {
         }
 
         if (this._settings.current.heartbeatPort > 0) {
-            this._workerHeartbeatListener.Listen( 
+            this._workerObserver.Subscribe(
                 this.onWorkerAdded.bind(this),
                 this.onWorkerUpdated.bind(this),
-                 this.onWorkerOffline.bind(this),
+                this.onWorkerOffline.bind(this),
                 this.onSpawnerUpdate.bind(this));
+
+            this._workerHeartbeatListener.Listen();
         } else {
             console.log(`  WARN | this instance will not accept worker heartbeats`);
         }

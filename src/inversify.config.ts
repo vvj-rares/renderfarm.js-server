@@ -42,7 +42,8 @@ myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeObjectEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeGeometryEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeMaterialEndpoint);
 
-myContainer.bind<interfaces.IWorkerHeartbeatListener>(TYPES.IWorkerHeartbeatListener).to(WorkerHeartbeatListener);
+myContainer.bind<interfaces.IWorkerHeartbeatListener>(TYPES.IWorkerHeartbeatListener).to(WorkerHeartbeatListener).inSingletonScope();
+myContainer.bind<interfaces.IWorkerObserver>(TYPES.IWorkerObserver).to(WorkerHeartbeatListener).inSingletonScope();
 myContainer.bind<interfaces.IMaxscriptClientFactory>(TYPES.IMaxscriptClientFactory).to(MaxscriptClientFactory);
 
 // now bind settings

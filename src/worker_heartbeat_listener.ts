@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import { VraySpawnerInfo } from "./model/vray_spawner_info";
-import { IWorkerHeartbeatListener, ISettings } from "./interfaces";
+import { IWorkerHeartbeatListener, ISettings, IWorkerObserver } from "./interfaces";
 import { TYPES } from "./types";
 import { Worker } from "./database/model/worker";
 
@@ -8,7 +8,7 @@ const uuidv4 = require('uuid/v4');
 const dgram = require('dgram');
 
 @injectable()
-export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
+export class WorkerHeartbeatListener implements IWorkerHeartbeatListener, IWorkerObserver {
     private _workers: {
         [id: string]: Worker;
     } = {};
@@ -17,30 +17,25 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
         [id: string]: VraySpawnerInfo;
     } = {};
 
-    private _workerAddedCb: (worker: Worker) => void;
-    private _workerUpdatedCb: (worker: Worker) => void;
-    private _workerOfflineCb: (worker: Worker) => void;
-    private _spawnerCb: (worker: VraySpawnerInfo) => void;
+    private _workerAddedCb: ((worker: Worker) => void) []; // array of callbacks
+    private _workerUpdatedCb: ((worker: Worker) => void) [];
+    private _workerOfflineCb: ((worker: Worker) => void) [];
+    private _spawnerCb: ((worker: VraySpawnerInfo) => void) [];
 
     private _settings: ISettings;
 
     constructor(@inject(TYPES.ISettings) settings: ISettings) 
     {
         this._settings = settings;
+
+        this.id = Math.random();
+        console.log(" >> WorkerHeartbeatListener: ", this.id);
     }
 
-    public Listen(
-        workerAddedCb: (worker: Worker) => void,
-        workerUpdatedCb: (worker: Worker) => void,
-        workerOfflineCb: (worker: Worker) => void,
-        spawnerCb: (spawner: VraySpawnerInfo) => void)
-    {
-        this._workerAddedCb = workerAddedCb;
-        this._workerUpdatedCb = workerUpdatedCb;
-        this._workerOfflineCb = workerOfflineCb;
+    public id: number;
 
-        this._spawnerCb = spawnerCb;
-
+    public Listen() {
+        // add timer to check known workers if they're still alive
         setInterval(function() {
             let activeWorkers: {
                 [id: string]: Worker;
@@ -49,8 +44,8 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
             for (let i in this._workers) {
                 let w = this._workers[i];
                 if (Date.now() - w.lastSeen.getTime() > 3000) { // no heartbeat for more than 3 sec? dead!
-                    if (this._workerOfflineCb) {
-                        this._workerOfflineCb(w);
+                    for (let c in this._workerOfflineCb) {
+                        this._workerOfflineCb[c](w);
                     }
                     // and exclude this worker from activeWorkers
                 } else {
@@ -87,6 +82,18 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
         server.bind(this._settings.current.heartbeatPort);
     }
 
+    public Subscribe(
+        workerAddedCb: (worker: Worker) => void,
+        workerUpdatedCb: (worker: Worker) => void,
+        workerOfflineCb: (worker: Worker) => void,
+        spawnerCb: (spawner: VraySpawnerInfo) => void)
+    {
+        this._workerAddedCb.push(workerAddedCb);
+        this._workerUpdatedCb.push(workerUpdatedCb);
+        this._workerOfflineCb.push(workerOfflineCb);
+        this._spawnerCb.push(spawnerCb);
+    }
+
     private handleHeartbeatFromRemoteMaxscript(msg, rinfo, rec) {
         var workerId = rec.mac + rec.port;
         let knownWorker = this._workers[workerId];
@@ -99,8 +106,8 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
             knownWorker.ramUsage = rec.ram_usage;
             knownWorker.totalRam = rec.total_ram;
 
-            if (this._workerUpdatedCb) {
-                this._workerUpdatedCb(knownWorker);
+            for (let c in this._workerUpdatedCb) {
+                this._workerUpdatedCb[c](knownWorker);
             }
         }
         else {
@@ -119,8 +126,8 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
 
             this._workers[workerId] = newWorker;
 
-            if (this._workerAddedCb) {
-                this._workerAddedCb(newWorker);
+            for (let c in this._workerAddedCb) {
+                this._workerAddedCb[c](newWorker);
             }
 
             console.log(`    OK | new worker, ${msg} from ${rinfo.address}:${rinfo.port}`);
@@ -139,8 +146,8 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
             knownVraySpawner.totalRam = rec.total_ram;
             knownVraySpawner.touch();
 
-            if (this._spawnerCb) {
-                this._spawnerCb(knownVraySpawner);
+            for (let c in this._spawnerCb) {
+                this._spawnerCb[c](knownVraySpawner);
             }
         }
         else {
@@ -151,8 +158,8 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener {
             newVraySpawner.totalRam = rec.total_ram;
             this._vraySpawners[vraySpawnerId] = newVraySpawner;
 
-            if (this._spawnerCb) {
-                this._spawnerCb(newVraySpawner);
+            for (let c in this._spawnerCb) {
+                this._spawnerCb[c](newVraySpawner);
             }
 
             console.log(`new vray spawner: ${msg} from ${rinfo.address}`);
