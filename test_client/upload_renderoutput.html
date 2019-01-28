@@ -10,7 +10,12 @@
     <body>
         <form action="https://localhost:8000/v1/renderoutput" method="post" enctype="multipart/form-data">
             <input type="file" name="file" />
-            <button type="submit">Upload</button>
+            <button type="submit">Upload one</button>
+        </form>
+        <br>
+        <form action="https://localhost:8000/v1/renderoutput/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="files" multiple/>
+            <button type="submit">Upload many</button>
         </form>
     </body>
 </html>

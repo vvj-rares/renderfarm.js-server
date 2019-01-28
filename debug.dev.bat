@@ -1,0 +1,1 @@
+START cmd.exe /C "tsc & node dist\index.js env=dev & pause"

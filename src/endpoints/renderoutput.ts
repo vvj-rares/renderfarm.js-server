@@ -48,9 +48,15 @@ class RenderOutputEndpoint implements IEndpoint {
         }.bind(this));
 
         express.post(`/v${this._settings.majorVersion}/renderoutput`, this._upload.single('file'), async function (req, res, next) {
-            // console.log(req.file);
+            console.log(`POST on /renderoutput with: `, req.file ? req.file : "undefined");
 
-            /* { fieldname: 'file',
+            if (!req.file) {
+                res.status(400);
+                res.end(JSON.stringify({ ok: false, message: "missing file", error: null }, null, 2));
+                return;
+            }
+
+            /* for example: { fieldname: 'file',
             originalname: 'GUID-0B096929-58A7-4DE1-A0FD-776BEE5E3CB5.png',
             encoding: '7bit',
             mimetype: 'image/png',
@@ -62,23 +68,36 @@ class RenderOutputEndpoint implements IEndpoint {
             let oldFilename = `${this._settings.current.renderOutputDir}/${req.file.filename}`;
             let newFilename = `${this._settings.current.renderOutputDir}/${req.file.originalname}`;
 
-            fs.rename(oldFilename, newFilename, function(err) {
-                if (err) {
-                    res.status(500);
-                    res.end(JSON.stringify({ ok: false, message: "failed to rename file", error: err.message }, null, 2));
-                }
+            fs.renameSync(oldFilename, newFilename);
 
-                let fileUrl = `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/renderoutput/${req.file.originalname}`;
+            let fileUrl = `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/renderoutput/${req.file.originalname}`;
 
-                res.status(201);
-                res.end(JSON.stringify({ ok: true, type: "renderoutput", data: { url: fileUrl } }));
-            }.bind(this));
+            res.status(201);
+            res.end(JSON.stringify({ ok: true, type: "renderoutput", data: { url: fileUrl } }));
         }.bind(this))
 
-        express.post(`/v${this._settings.majorVersion}/renderoutput/upload`, this._upload.array('files', 32), function (req, res, next) {
-            console.log(req.files);
+        express.post(`/v${this._settings.majorVersion}/renderoutput/upload`, this._upload.array('files', 32), async function (req, res, next) {
+            console.log(`POST on /renderoutput/upload with: `, req.files ? req.files : "undefined");
+
+            if (!req.files || req.files.length === 0) {
+                res.status(400);
+                res.end(JSON.stringify({ ok: false, message: "missing files", error: null }, null, 2));
+                return;
+            }
+
+            let urls: string[] = [];
+            for (let i in req.files) {
+                let oldFilename = `${this._settings.current.renderOutputDir}/${req.files[i].filename}`;
+                let newFilename = `${this._settings.current.renderOutputDir}/${req.files[i].originalname}`;
+
+                fs.renameSync(oldFilename, newFilename);
+    
+                let fileUrl = `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/renderoutput/${req.files[i].originalname}`;
+                urls.push(fileUrl);
+            }
+
             res.status(201);
-            res.end();
+            res.end(JSON.stringify({ ok: true, type: "renderoutput", data: { urls: urls } }));
         }.bind(this))
     }
 }
