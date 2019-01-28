@@ -183,12 +183,6 @@ describe(`REST API /renderoutput endpoint`, function() {
             tmpUpload1.removeCallback();
             tmpDownload1.removeCallback();
 
-            //cleaning up
-            console.log("removing temp files: ", tmpDownload0.name, tmpDownload1.name);
-
-            fs.unlinkSync(tmpDownload0.name);
-            fs.unlinkSync(tmpDownload1.name);
-
             done();
         }, 100);
 
