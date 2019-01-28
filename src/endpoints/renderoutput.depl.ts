@@ -93,7 +93,7 @@ describe(`REST API /renderoutput endpoint`, function() {
 
     //request:  /POST https://dev1.renderfarmjs.com:8000/v1/renderoutput
     //response: StatusCode=201
-    fit("should return array of file URLs on POST /renderoutput with multiple files, and let download file on this URL", async function(done) {
+    it("should return array of file URLs on POST /renderoutput with multiple files, and let download file on this URL", async function(done) {
         let config: AxiosRequestConfig = {};
         let form = new formData();
 
