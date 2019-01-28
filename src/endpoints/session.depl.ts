@@ -34,6 +34,8 @@ describe(`REST API /session endpoint`, function() {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
         axios.defaults.baseURL = baseUrl;
         axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
+
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
     });
 
     //request:  /POST https://dev1.renderfarmjs.com:8000/v1/session
@@ -741,7 +743,22 @@ describe(`REST API /session endpoint`, function() {
 
             // restore worker initial state for other tests
             _configureFakeWorker(worker.port, { heartbeat: true }) // tell worker to send heartbeats again
-            done();
+
+            //wait and see if worker appears again
+            setTimeout(async function() {
+                let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
+                JasmineDeplHelpers.checkResponse(res, 200);
+                let json = res.data;
+    
+                expect(json.ok).toBeTruthy();
+                expect(json.type).toBe("worker");
+                expect(isArray(json.data)).toBeTruthy();
+                expect(json.data.length).toBe(availableWorkersCount); // same count as initially
+                console.log("availableWorkersCount: ", json.data.length);
+
+                done();
+            }, 1500);
+
         }, 3000 + 1750);
 
         // console.log("tell worker to start writing logs for us");
