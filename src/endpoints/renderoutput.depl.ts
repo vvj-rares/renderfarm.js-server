@@ -173,9 +173,9 @@ describe(`REST API /renderoutput endpoint`, function() {
             tmpDownload0.removeCallback();
 
             //what's downloaded for file 1
-            let downloadedFileContents1 = fs.readFileSync(tmpDownload0.name, 'utf8');
+            let downloadedFileContents1 = fs.readFileSync(tmpDownload1.name, 'utf8');
 
-            console.log("tmpDownload1: ", tmpDownload0.name);
+            console.log("tmpDownload1: ", tmpDownload1.name);
             console.log("downloadedFileContents1: ", downloadedFileContents1);
 
             expect(downloadedFileContents1).toBe(uploadedFileContents1);
