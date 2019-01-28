@@ -150,12 +150,12 @@ describe(`REST API /renderoutput endpoint`, function() {
         let file0 = fs.createWriteStream(tmpDownload0.name);
         let file1 = fs.createWriteStream(tmpDownload1.name);
 
-        let request0 = https.get(json.data.url, function(response) {
+        let request0 = https.get(json.data.urls[0], function(response) {
             response.pipe(file0);
         });
         expect(request0).toBeTruthy();
 
-        let request1 = https.get(json.data.url, function(response) {
+        let request1 = https.get(json.data.urls[1], function(response) {
             response.pipe(file1);
         });
         expect(request1).toBeTruthy();
