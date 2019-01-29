@@ -25,7 +25,8 @@ export interface IDatabase {
     getSession(sessionGuid: string, options?: any): Promise<Session>;
     createSession(apiKey: string, workspace: string): Promise<Session>;
     expireSessions(olderThanMinutes: number): Promise<Session[]>;
-    closeSession(sessionGuid: string, reason?: string | undefined): Promise<Session>;
+    closeSession(sessionGuid: string): Promise<Session>;
+    failSession(sessionGuid: string, reason?: string | undefined): Promise<Session>;
 
     //workspaces
     getWorkspace(workspaceGuid: string): Promise<Workspace>;

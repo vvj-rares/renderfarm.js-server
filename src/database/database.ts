@@ -260,7 +260,7 @@ export class Database implements IDatabase {
         }
     }
 
-    public async closeSession(sessionGuid: string, reason?: string | undefined): Promise<Session> {
+    public async closeSession(sessionGuid: string): Promise<Session> {
         let closedAt = new Date();
         let closedSession = await this.safe(this.findOneAndUpdate<Session>(
                 "sessions",
@@ -271,6 +271,43 @@ export class Database implements IDatabase {
                 {
                     $set: {
                         closed: true, 
+                        closedAt: closedAt,
+                        lastSeen: closedAt
+                    }
+                },
+                obj => new Session(obj)));
+
+        if (!closedSession) {
+            throw Error("session not found");
+        }
+
+        closedSession.workerRef = await this.findOneAndUpdate<Worker>(
+            "workers", 
+            {
+                guid: closedSession.workerGuid
+            },
+            {
+                $set: {
+                    sessionGuid: null
+                }
+            }, 
+            obj => new Worker(obj));
+
+        return closedSession;
+    }
+
+    public async failSession(sessionGuid: string, reason?: string | undefined): Promise<Session> {
+        let closedAt = new Date();
+        let closedSession = await this.safe(this.findOneAndUpdate<Session>(
+                "sessions",
+                {
+                    guid: sessionGuid,
+                    closedAt: null
+                },
+                {
+                    $set: {
+                        closed: true,
+                        failed: true,
                         closedAt: closedAt,
                         lastSeen: closedAt,
                         reason: reason

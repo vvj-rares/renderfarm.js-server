@@ -90,7 +90,7 @@ class SessionEndpoint implements IEndpoint {
     async onWorkerOffline(worker: Worker) {
         if (worker.sessionGuid) {
             try {
-                await this._database.closeSession(worker.sessionGuid, "worker failed");
+                await this._database.failSession(worker.sessionGuid, "worker failed");
                 console.log(`    OK | closed session ${worker.sessionGuid} for dead worker: ${worker.guid}`);
             } catch (err) {
                 console.log(`  FAIL | failed to close session ${worker.sessionGuid} for dead worker: ${worker.guid}: `, err);

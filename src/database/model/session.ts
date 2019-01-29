@@ -12,6 +12,8 @@ export class Session extends IDbEntity {
     public closed?: boolean;
     public expired?: boolean;
     public closedAt?: Date;
+    public failed?: boolean;
+    public failReason?: string;
 
     public workerRef?: Worker;
     public workspaceRef?: Workspace;
@@ -31,6 +33,8 @@ export class Session extends IDbEntity {
         this.closed         = obj.closed;
         this.expired        = obj.expired;
         this.closedAt       = obj.closedAt ? new Date(obj.closedAt) : undefined;
+        this.failed         = obj.failed;
+        this.failReason     = obj.failReason;
     }
 
     public toJSON(): any {
@@ -43,7 +47,8 @@ export class Session extends IDbEntity {
             workspaceGuid:  this.workspaceGuid,
             closed:         this.closed,
             expired:        this.expired,
-            closedAt:       this.closedAt
+            closedAt:       this.closedAt,
+            failReason:     this.failReason
         };
 
         return result;

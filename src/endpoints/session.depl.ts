@@ -4,6 +4,7 @@ import { Settings } from "../settings";
 import { JasmineDeplHelpers } from "../jasmine.helpers";
 import { Worker } from "../database/model/worker";
 import { isArray } from "util";
+import { Session } from "../database/model/session";
 
 const net = require('net');
 
@@ -181,6 +182,8 @@ describe(`REST API /session endpoint`, function() {
 
         expect(json.data.closed).toBeNull();
         expect(json.data.expired).toBeNull();
+
+        return new Session(json.data);
     }
 
     async function getClosedSessionAndCheck(apiKey: string, workspaceGuid: string, sessionGuid: string) {
@@ -206,6 +209,8 @@ describe(`REST API /session endpoint`, function() {
 
         expect(json.data.closed).toBeTruthy();
         expect(json.data.expired).toBeNull();
+
+        return new Session(json.data);
     }
 
     it("should return session guid on POST /session and be able to GET it back", async function(done) {
@@ -732,7 +737,7 @@ describe(`REST API /session endpoint`, function() {
             console.log("availableWorkersCount: ", workers.length);
 
             // restore worker initial state for other tests
-            _configureFakeWorker(worker.port, { heartbeat: true }) // tell worker to send heartbeats again
+            _configureFakeWorker(worker.port, { heartbeat: true }); // tell worker to send heartbeats again
 
             // wait heartbeat interval of more than 1 sec, and see if worker appears again
             setTimeout(async function() {
@@ -740,6 +745,49 @@ describe(`REST API /session endpoint`, function() {
                 expect(workers.length).toBe(availableWorkersCount); // same count as initially
                 console.log("availableWorkersCount: ", workers.length);
 
+                done();
+            }, 1500);
+
+        }, 3000 + 1500); // +1 sec here we need to ensure, that missing worker will be noticed by 1sec watchdog timer
+
+        // not done, follow timers
+    });
+
+    fit("should close session with reason defined, if worker that was assigned to session is reported dead", async function (done) {
+        console.log("open session");
+
+        let sessionGuid = await openSession(
+            JasmineDeplHelpers.existingApiKey,
+            JasmineDeplHelpers.existingWorkspaceGuid,
+            null, // maxSceneFilename = null, i.e. just create empty scene
+            fail,
+            done);
+        
+        console.log("OK | opened session with sessionGuid: ", sessionGuid, "\r\n");
+
+        let worker = await getSessionWorker(sessionGuid);
+
+        console.log("sessionWorker: ", worker);
+
+        _configureFakeWorker(worker.port, { heartbeat: false }); // tell worker to not send heartbeats
+
+        //wait for default worker timeout, and check if not hearbeating worker was actually removed
+        setTimeout(async function() {
+            // restore worker initial state for other tests
+            _configureFakeWorker(worker.port, { heartbeat: true }); // tell worker to send heartbeats again
+
+            let closedSession = await getClosedSessionAndCheck(
+                JasmineDeplHelpers.existingApiKey, 
+                JasmineDeplHelpers.existingWorkspaceGuid, 
+                sessionGuid);
+            
+            console.log("closedSession: ", closedSession);
+            
+            expect(closedSession.failed).toBeTruthy();
+            expect(closedSession.failReason).toBe("worker failed");
+
+            // wait heartbeat interval of more than 1 sec until worker gets back online (need it for other tests)
+            setTimeout(async function() {
                 done();
             }, 1500);
 
