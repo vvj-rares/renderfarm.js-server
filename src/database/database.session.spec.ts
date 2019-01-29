@@ -267,6 +267,42 @@ describe("Database Session", function() {
             done();
         })
 
+        it("fails session and releases worker", async function(done) {
+            let newWorker: Worker;
+            let workspace: Workspace;
+            let session: Session;
+            let failedSession: Session;
+            let failReason = "fail reason: " + Math.random();
+
+            try {
+                newWorker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
+                workspace = await helpers.createSomeWorkspace();
+                session = await database.createSession(helpers.existingApiKey, workspace.guid);
+                failedSession = await database.failSession(session.guid, failReason);
+            } catch (err) {
+                console.log(err.message);
+                fail();
+                done();
+                return;
+            }
+        
+            expect(failedSession).toBeTruthy();
+            expect(failedSession.guid).toBe(session.guid);
+            expect(failedSession.closed).toBeTruthy();
+            expect(failedSession.failed).toBeTruthy();
+            expect(failedSession.failReason).toBe(failReason);
+            expect(failedSession.expired).toBeNull();
+            expect(failedSession.closedAt).toBeTruthy();
+            expect(new Date().getTime() - failedSession.closedAt.getTime()).toBeLessThan(3000); // db time minus now is less than 3 seconds
+
+            //now check that we actually released worker
+            expect(failedSession.workerGuid).toBe(newWorker.guid);
+            expect(failedSession.workerRef).toBeTruthy();
+            expect(failedSession.workerRef.sessionGuid).toBeNull();
+
+            done();
+        })
+
         it("checks that workers with less CPU load are grabbed first", async function(done) {
             try {
                 let worker0 = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.9);
