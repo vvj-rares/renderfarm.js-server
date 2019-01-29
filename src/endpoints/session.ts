@@ -88,7 +88,14 @@ class SessionEndpoint implements IEndpoint {
     }
 
     async onWorkerOffline(worker: Worker) {
-        console.log(" >> session handles worker offline event");
+        if (worker.sessionGuid) {
+            try {
+                await this._database.closeSession(worker.sessionGuid, "worker failed");
+                console.log(`    OK | closed session ${worker.sessionGuid} for dead worker: ${worker.guid}`);
+            } catch (err) {
+                console.log(`  FAIL | failed to close session ${worker.sessionGuid} for dead worker: ${worker.guid}: `, err);
+            }
+        }
     }
 
     bind(express: express.Application) {

@@ -260,7 +260,7 @@ export class Database implements IDatabase {
         }
     }
 
-    public async closeSession(sessionGuid: string): Promise<Session> {
+    public async closeSession(sessionGuid: string, reason?: string | undefined): Promise<Session> {
         let closedAt = new Date();
         let closedSession = await this.safe(this.findOneAndUpdate<Session>(
                 "sessions",
@@ -272,7 +272,8 @@ export class Database implements IDatabase {
                     $set: {
                         closed: true, 
                         closedAt: closedAt,
-                        lastSeen: closedAt
+                        lastSeen: closedAt,
+                        reason: reason
                     }
                 },
                 obj => new Session(obj)));

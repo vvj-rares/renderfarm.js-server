@@ -698,11 +698,7 @@ describe(`REST API /session endpoint`, function() {
         done();
     });
 
-    it("should not return worker as available, if it did not heartbeat since 3 sec. on GET /worker", async function (done) {
-        // let currentVersion = await getEnvVersion(fail, done);
-        // let testName = "delete_dead_worker";
-        // let testRun = Date.now();
-
+    async function getAvailableWorkers() {
         let config: AxiosRequestConfig = {};
         config.params = {
             api_key: JasmineDeplHelpers.existingApiKey
@@ -714,41 +710,35 @@ describe(`REST API /session endpoint`, function() {
         expect(json.ok).toBeTruthy();
         expect(json.type).toBe("worker");
         expect(isArray(json.data)).toBeTruthy();
-        expect(json.data.length).toBeGreaterThan(0);
 
-        let availableWorkersCount = json.data.length;
+        return json.data;
+    }
+
+    it("should not return worker as available, if it did not heartbeat since 3 sec. on GET /worker", async function (done) {
+        let workers = await getAvailableWorkers();
+        expect(workers.length).toBeGreaterThan(0);
+
+        let availableWorkersCount = workers.length;
         console.log("availableWorkersCount: ", availableWorkersCount);
 
-        let worker = json.data[0];
+        let worker = workers[0];
 
         _configureFakeWorker(worker.port, { heartbeat: false }) // tell worker to not send heartbeats
 
         //wait for default worker timeout, and check if not hearbeating worker was actually removed
         setTimeout(async function() {
-            let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
-            JasmineDeplHelpers.checkResponse(res, 200);
-            let json = res.data;
-
-            expect(json.ok).toBeTruthy();
-            expect(json.type).toBe("worker");
-            expect(isArray(json.data)).toBeTruthy();
-            expect(json.data.length).toBe(availableWorkersCount - 1); // hey, 1 less than before!
-            console.log("availableWorkersCount: ", json.data.length);
+            let workers = await getAvailableWorkers();
+            expect(workers.length).toBe(availableWorkersCount - 1); // hey, 1 less than before!
+            console.log("availableWorkersCount: ", workers.length);
 
             // restore worker initial state for other tests
             _configureFakeWorker(worker.port, { heartbeat: true }) // tell worker to send heartbeats again
 
             // wait heartbeat interval of more than 1 sec, and see if worker appears again
             setTimeout(async function() {
-                let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
-                JasmineDeplHelpers.checkResponse(res, 200);
-                let json = res.data;
-    
-                expect(json.ok).toBeTruthy();
-                expect(json.type).toBe("worker");
-                expect(isArray(json.data)).toBeTruthy();
-                expect(json.data.length).toBe(availableWorkersCount); // same count as initially
-                console.log("availableWorkersCount: ", json.data.length);
+                let workers = await getAvailableWorkers();
+                expect(workers.length).toBe(availableWorkersCount); // same count as initially
+                console.log("availableWorkersCount: ", workers.length);
 
                 done();
             }, 1500);
