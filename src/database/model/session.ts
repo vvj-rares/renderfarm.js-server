@@ -48,6 +48,7 @@ export class Session extends IDbEntity {
             closed:         this.closed,
             expired:        this.expired,
             closedAt:       this.closedAt,
+            failed:         this.failed,
             failReason:     this.failReason
         };
 

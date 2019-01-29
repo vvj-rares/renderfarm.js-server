@@ -296,7 +296,7 @@ export class Database implements IDatabase {
         return closedSession;
     }
 
-    public async failSession(sessionGuid: string, reason?: string | undefined): Promise<Session> {
+    public async failSession(sessionGuid: string, failReason?: string | undefined): Promise<Session> {
         let closedAt = new Date();
         let closedSession = await this.safe(this.findOneAndUpdate<Session>(
                 "sessions",
@@ -307,10 +307,10 @@ export class Database implements IDatabase {
                 {
                     $set: {
                         closed: true,
-                        failed: true,
                         closedAt: closedAt,
                         lastSeen: closedAt,
-                        reason: reason
+                        failed: true,
+                        failReason: failReason
                     }
                 },
                 obj => new Session(obj)));
