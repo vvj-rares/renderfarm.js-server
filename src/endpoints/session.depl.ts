@@ -753,7 +753,7 @@ describe(`REST API /session endpoint`, function() {
         // not done, follow timers
     });
 
-    fit("should close session with reason defined, if worker that was assigned to session is reported dead", async function (done) {
+    it("should close session with reason defined, if worker that was assigned to session is reported dead", async function (done) {
         console.log("open session");
 
         let sessionGuid = await openSession(
