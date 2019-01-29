@@ -16,27 +16,22 @@ require("../jasmine.config")();
 describe(`REST API /session endpoint`, function() {
     var settings: Settings;
 
-    var host: string; // where's DEV is deployed?
-    var port: number;
     var baseUrl: string;
 
     beforeEach(function() {
-        host = "dev1.renderfarmjs.com";
-        port = 8000;
-        baseUrl = `https://${host}:${port}`;
-
         settings = new Settings("dev");
-
-        settings.current.host = host;
-        settings.current.port = port;
-        settings.current.publicUrl = baseUrl;
+        baseUrl = `https://${settings.current.host}:${settings.current.port}`;
 
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
         axios.defaults.baseURL = baseUrl;
         axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     });
+
+    afterEach(function() {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000;
+    })
 
     //request:  /POST https://dev1.renderfarmjs.com:8000/v1/session
     //response: StatusCode=400
@@ -393,7 +388,7 @@ describe(`REST API /session endpoint`, function() {
 
     const wwwBaseDir = "/home/rfarm-api/www/html";
     function getWorkerLogDownloadUrl(version: string, testName: string, testRun: number, workerPort: number): string {
-        return `http://${host}/logs/${version}.renderfarm.js-server/out.worker-fake.name=${testName}.port=${workerPort}.${testRun}.log`;
+        return `http://${settings.current.host}/logs/${version}.renderfarm.js-server/out.worker-fake.name=${testName}.port=${workerPort}.${testRun}.log`;
     }
 
     function getWorkerLogFullpath(version: string, testName: string, testRun: number, workerPort: number): string {
@@ -405,8 +400,8 @@ describe(`REST API /session endpoint`, function() {
             // send commands directly to fake worker
             let client = new net.Socket();
 
-            console.log(`Connecting to fake worker ${host}:${workerPort} ...`);
-            client.connect(workerPort, host, function() {
+            console.log(`Connecting to fake worker ${settings.current.host}:${workerPort} ...`);
+            client.connect(workerPort, settings.current.host, function() {
                 console.log(`    Connected`);
 
                 let fakeWorkerConfig = { worker: workerConfig };
@@ -584,7 +579,7 @@ describe(`REST API /session endpoint`, function() {
 
         console.log("maxscript request code: ");
         for (let ri in requests) {
-            console.log(`    ${requests[ri]}`);
+            console.log(`    ${ri}: ${requests[ri]}`);
         }
 
         return requests;
@@ -671,7 +666,6 @@ describe(`REST API /session endpoint`, function() {
 
             expect(requests.length).toBe(24);
             expect(requests[0]).toBe(`SessionGuid = "${sessionGuid}"`);
-            // expect(requests[0]).toBe(``);
 
 /*
     SessionGuid = "2433c40d-e147-456c-8f7e-2becb0f6d37a"
@@ -704,8 +698,7 @@ describe(`REST API /session endpoint`, function() {
         done();
     });
 
-    // todo: it must also close attached worker session, and fail running worker job
-    it("should delete dead worker", async function (done) {
+    it("should not return worker as available, if it did not heartbeat since 3 sec. on GET /worker", async function (done) {
         // let currentVersion = await getEnvVersion(fail, done);
         // let testName = "delete_dead_worker";
         // let testRun = Date.now();
@@ -730,6 +723,7 @@ describe(`REST API /session endpoint`, function() {
 
         _configureFakeWorker(worker.port, { heartbeat: false }) // tell worker to not send heartbeats
 
+        //wait for default worker timeout, and check if not hearbeating worker was actually removed
         setTimeout(async function() {
             let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
             JasmineDeplHelpers.checkResponse(res, 200);
@@ -744,7 +738,7 @@ describe(`REST API /session endpoint`, function() {
             // restore worker initial state for other tests
             _configureFakeWorker(worker.port, { heartbeat: true }) // tell worker to send heartbeats again
 
-            //wait and see if worker appears again
+            // wait heartbeat interval of more than 1 sec, and see if worker appears again
             setTimeout(async function() {
                 let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
                 JasmineDeplHelpers.checkResponse(res, 200);
@@ -759,43 +753,8 @@ describe(`REST API /session endpoint`, function() {
                 done();
             }, 1500);
 
-        }, 3000 + 1750);
+        }, 3000 + 1500); // +1 sec here we need to ensure, that missing worker will be noticed by 1sec watchdog timer
 
-        // console.log("tell worker to start writing logs for us");
-        // await configureFakeWorker(currentVersion, testName, testRun, fail, done);
-
-        // console.log("open session");
-
-        /* let sessionGuid = await openSession(
-            JasmineDeplHelpers.existingApiKey,
-            JasmineDeplHelpers.existingWorkspaceGuid,
-            null, // maxSceneFilename = null, i.e. just create empty scene
-            fail,
-            done);
-        
-        console.log("OK | opened session with sessionGuid: ", sessionGuid, "\r\n");
-
-        let sessionWorker = await getSessionWorker(sessionGuid);
-
-        console.log("we're done, can close session");
-        await closeSession(sessionGuid);
-
-        console.log("tell worker to stop writing logs");
-        await configureFakeWorker(null, null, null, fail, done);
-
-        console.log("now analyze fake worker log file");
-        {
-            let logUrl = getWorkerLogDownloadUrl(currentVersion, testName, testRun, sessionWorker.port);
-            let requests = await getMaxscriptFromFakeWorker(logUrl);
-
-            expect(requests.length).toBe(8);
-            expect(requests[0]).toBe(`SessionGuid = "${sessionGuid}"`);
-            expect(requests[1]).toBe(`for i=1 to pathConfig.mapPaths.count() do ( pathConfig.mapPaths.delete 1 )`);
-            expect(requests[2]).toBe(`for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 )`);
-            expect(requests[3]).toBe(`pathConfig.mapPaths.add "C:\\\\Temp\\\\api-keys\\\\${JasmineDeplHelpers.existingApiKey}\\\\workspaces\\\\${JasmineDeplHelpers.existingWorkspaceGuid}\\\\maps"`);
-            expect(requests[4]).toBe(`pathConfig.xrefPaths.add "C:\\\\Temp\\\\api-keys\\\\${JasmineDeplHelpers.existingApiKey}\\\\workspaces\\\\${JasmineDeplHelpers.existingWorkspaceGuid}\\\\xrefs"`);
-            expect(requests[5]).toBe(`SessionGuid = ""`);
-            expect(requests[6]).toBe(`resetMaxFile #noPrompt`);
-        } */
+        // not done, follow timers
     });
 });

@@ -3,6 +3,7 @@ import * as express from "express";
 import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings, IMaxscriptClient, IWorkerObserver } from "../interfaces";
 import { TYPES } from "../types";
 import { Session } from "../database/model/session";
+import { Worker } from "../database/model/worker";
 
 @injectable()
 class SessionEndpoint implements IEndpoint {
@@ -48,6 +49,8 @@ class SessionEndpoint implements IEndpoint {
         setInterval(async function() {
             // todo: send keepalive message to maxscript client
         }, 1000);
+
+        this._workerObserver.Subscribe(null, null, this.onWorkerOffline.bind(this), null);
     }
 
     async validateApiKey(res: any, apiKey: string) {
@@ -82,6 +85,10 @@ class SessionEndpoint implements IEndpoint {
             res.end(JSON.stringify({ ok: false, message: "workspace_guid rejected", error: err.message }, null, 2));
             return false;
         }
+    }
+
+    async onWorkerOffline(worker: Worker) {
+        console.log(" >> session handles worker offline event");
     }
 
     bind(express: express.Application) {

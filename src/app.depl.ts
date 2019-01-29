@@ -12,17 +12,11 @@ require("./jasmine.config")();
 
 describe(`REST API system resources`, function() {
     var settings: Settings;
+    var baseUrl: string;
 
     beforeEach(function() {
-        const host = "dev1.renderfarmjs.com";
-        const port = 8000;
-        const baseUrl = `https://${host}:${port}`;
-
         settings = new Settings("dev");
-
-        settings.current.host = host;
-        settings.current.port = port;
-        settings.current.publicUrl = baseUrl;
+        baseUrl = `https://${settings.current.host}:${settings.current.port}`;
 
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
         axios.defaults.baseURL = baseUrl;

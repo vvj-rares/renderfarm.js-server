@@ -17,10 +17,10 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener, IWorke
         [id: string]: VraySpawnerInfo;
     } = {};
 
-    private _workerAddedCb: ((worker: Worker) => void) []      = []; // array of callbacks
-    private _workerUpdatedCb: ((worker: Worker) => void) []    = [];
-    private _workerOfflineCb: ((worker: Worker) => void) []    = [];
-    private _spawnerCb: ((worker: VraySpawnerInfo) => void) [] = [];
+    private _workerAddedCb: ((worker: Worker) => Promise<any>) []      = []; // array of callbacks
+    private _workerUpdatedCb: ((worker: Worker) => Promise<any>) []    = [];
+    private _workerOfflineCb: ((worker: Worker) => Promise<any>) []    = [];
+    private _spawnerCb: ((worker: VraySpawnerInfo) => Promise<any>) [] = [];
 
     private _settings: ISettings;
 
@@ -83,15 +83,23 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener, IWorke
     }
 
     public Subscribe(
-        workerAddedCb: (worker: Worker) => void,
-        workerUpdatedCb: (worker: Worker) => void,
-        workerOfflineCb: (worker: Worker) => void,
-        spawnerCb: (spawner: VraySpawnerInfo) => void)
+        workerAddedCb: (worker: Worker) => Promise<any>,
+        workerUpdatedCb: (worker: Worker) => Promise<any>,
+        workerOfflineCb: (worker: Worker) => Promise<any>,
+        spawnerCb: (spawner: VraySpawnerInfo) => Promise<any>)
     {
-        this._workerAddedCb.push(workerAddedCb);
-        this._workerUpdatedCb.push(workerUpdatedCb);
-        this._workerOfflineCb.push(workerOfflineCb);
-        this._spawnerCb.push(spawnerCb);
+        if (workerAddedCb) {
+            this._workerAddedCb.push(workerAddedCb);
+        }
+        if (workerUpdatedCb) {
+            this._workerUpdatedCb.push(workerUpdatedCb);
+        }
+        if (workerOfflineCb) {
+            this._workerOfflineCb.push(workerOfflineCb);
+        }
+        if (spawnerCb) {
+            this._spawnerCb.push(spawnerCb);
+        }
     }
 
     private handleHeartbeatFromRemoteMaxscript(msg, rinfo, rec) {

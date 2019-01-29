@@ -75,10 +75,10 @@ for (let i=0; i<simulateWorkersCount; i++) {
                         if (j === "hbcount" || j === "pid" || j === "port" || j === "server") continue;
                         w[j] = controlJson.worker[j];
                     }
-                    console.log(`worker after configuration: `, w);
+                    console.log(`configured worker:\r\n`, w);
                 }
 
-                socket.write("{ \"result\": true }");
+                socket.write(JSON.stringify({result: true, worker: w}));
 
             } else {
                 console.log(JSON.stringify({ maxscript: request }));
@@ -118,7 +118,7 @@ for (let i=0; i<simulateWorkersCount; i++) {
     }.bind(worker));
 
     server.listen(worker.port, '0.0.0.0');
-    worker.server = server;
+    // worker.server = server;
 
     console.log(JSON.stringify({ status: `Worker [${i}] is listening on port: ${worker.port}`}));
 

@@ -106,8 +106,8 @@ export interface IWorkerHeartbeatListener {
 
 export interface IWorkerObserver {
     Subscribe(
-        workerAddedCb:   (worker: Worker) => void,   // received first heartbeat, worker just started
-        workerUpdatedCb: (worker: Worker) => void,   // received next heartbeat, worker was actualized
-        workerOfflineCb: (worker: Worker) => void,   // called when worker stops sending heartbeats
-        spawnerCb:      (spawner: VraySpawnerInfo) => void): void;
+        workerAddedCb:   (worker: Worker) => Promise<any>,   // received first heartbeat, worker just started
+        workerUpdatedCb: (worker: Worker) => Promise<any>,   // received next heartbeat, worker was actualized
+        workerOfflineCb: (worker: Worker) => Promise<any>,   // called when worker stops sending heartbeats
+        spawnerCb:      (spawner: VraySpawnerInfo) => Promise<any>): void;
 }
