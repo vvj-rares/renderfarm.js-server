@@ -134,10 +134,10 @@ export class WorkerEndpoint implements IEndpoint {
 
     private async onWorkerOffline(worker: Worker) {
         try {
-            let deletedWorker = await this._database.deleteWorker(worker);
-            console.log(" >> deletedWorker: ", deletedWorker);
+            // let deletedWorker = await this._database.deleteWorker(worker);
+            // console.log(" >> deletedWorker: ", deletedWorker);
         } catch (err) {
-            console.error("failed to delete dead worker from database: ", err);
+            // console.error("failed to delete dead worker from database: ", err);
         }
     }
 
