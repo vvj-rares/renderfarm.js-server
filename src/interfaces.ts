@@ -6,6 +6,7 @@ import { ApiKey } from "./database/model/api_key";
 import { Workspace } from "./database/model/workspace";
 import { Session } from "./database/model/session";
 import { Worker } from "./database/model/worker";
+import { Job } from "./database/model/job";
 
 export interface IGetSessionOptions {
     allowClosed: boolean;
@@ -22,6 +23,7 @@ export interface IDatabase {
     //api keys
     getApiKey(apiKey: string): Promise<ApiKey>;
 
+    //sessions
     getSession(sessionGuid: string, options?: any): Promise<Session>;
     createSession(apiKey: string, workspace: string): Promise<Session>;
     expireSessions(olderThanMinutes: number): Promise<Session[]>;
@@ -31,22 +33,24 @@ export interface IDatabase {
     //workspaces
     getWorkspace(workspaceGuid: string): Promise<Workspace>;
 
+    //workers
+    getWorker(workerGuid: string): Promise<Worker>;
     insertWorker(worker: Worker): Promise<Worker>;
     upsertWorker(worker: Worker): Promise<boolean>;
     updateWorker(worker: Worker, setter: any): Promise<Worker>;
-    deleteWorker(worker: Worker): Promise<Worker>;
-
-    //workers
-    getWorker(workerGuid: string): Promise<Worker>;
     getRecentWorkers(): Promise<Worker[]>;
     getAvailableWorkers(): Promise<Worker[]>;
-    deleteDeadWorkers(): Promise<number>;
 
     //storeVraySpawner(vraySpawnerInfo: VraySpawnerInfo): Promise<VraySpawnerInfo>;
 
-    //storeJob(jobInfo: JobInfo): Promise<JobInfo>;
-    //getJob(jobGuid: string): Promise<JobInfo>;
-    //getSessionActiveJobs(sessionGuid: string): Promise<JobInfo[]>;
+    //jobs
+    getJob(jobGuid: string): Promise<Job>;
+    getActiveJobs(workgroup: string): Promise<Job[]>;
+    insertJob(job: Job): Promise<Job>;
+    updateJob(job: Job, setter: any): Promise<Job>;
+    completeJob(job: Job, setter: any): Promise<Job>;
+    cancelJob(job: Job, setter: any): Promise<Job>;
+    failJob(job: Job, setter: any): Promise<Job>;
 }
 
 export interface ISettings {

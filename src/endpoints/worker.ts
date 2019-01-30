@@ -19,22 +19,7 @@ export class WorkerEndpoint implements IEndpoint {
     {
         this._settings = settings;
         this._database = database;
-        // this._workerObserver = workerObserver;
         this._workerHeartbeatListener = workerHeartbeatListener;
-
-        // we might have some remaining workers in database since last runtime
-        if (this._settings.current.deleteDeadWorkers) {
-            // delete dead workers and rely on heartbeat sniffer for most recent worker state updates
-            this._database.deleteDeadWorkers()
-                .then(function(deletedCount: number){
-                    if (deletedCount > 0) {
-                        console.log(`    OK | deleted dead workers: ${deletedCount}`);
-                    }
-                }.bind(this))
-                .catch(function(err){
-                    console.error(`  FAIL | failed to delete dead workers: `, err);
-                }.bind(this));
-        }
 
         if (this._settings.current.heartbeatPort > 0) {
             this._workerObserver.Subscribe(

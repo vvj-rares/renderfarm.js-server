@@ -3,12 +3,12 @@ import "reflect-metadata";
 import { Settings } from "../settings";
 import { Database } from "./database";
 import { JasmineSpecHelpers } from "../jasmine.helpers";
-import { Worker } from "./model/worker";
+import { Job } from "./model/job";
 
 require("../jasmine.config")();
 const uuidv4 = require('uuid/v4');
 
-describe("Database Worker", function() {
+describe("Database Job", function() {
     var originalTimeout;
 
     var settings: Settings;
@@ -35,20 +35,29 @@ describe("Database Worker", function() {
             }
         })
 
-        it("checks that recent workers belongs to current workgroup only", async function(done) {
-            let defaultWorkers = await database.getRecentWorkers();
-            expect(defaultWorkers.length).toBe(4);
+        fit("checks existing job", async function(done) {
+            let job: Job = await database.getJob(helpers.existingJobGuid);
+    
+            expect(job).toBeTruthy();
+            expect(job.guid).toBe(helpers.existingJobGuid);
+            expect(job.apiKey).toBe(helpers.existingApiKey);
 
-            settings.current.workgroup = "other";
+            // expect(job.workerGuid).toBe(helpers.existingWorkerGuid);
+            // expect(job.firstSeen).toEqual(new Date("2019-01-08T12:25:07.029Z"));
+            // expect(new Date().getTime() - job.lastSeen.getTime()).toBeLessThan(3000); // db time minus now is less than 3 seconds
+            // expect(job.guid).toBe(helpers.existingSessionGuid);
+            // expect(job.workspaceGuid).toBe(helpers.existingWorkspaceGuid);
+            // expect(job.closed).toBeUndefined();
+            // expect(job.closedAt).toBeUndefined();
 
-            let otherWorkers = await database.getRecentWorkers();
-            expect(otherWorkers.length).toBe(2);
+            // expect(job.workerRef).toBeTruthy();
+            // expect(job.workerRef.guid).toBe(job.workerGuid);
 
             done();
         });
     }); // end of read-only tests
 
-    describe("write test", function() {
+    /* describe("write test", function() {
         var collectionPrefix: string;
 
         beforeEach(async function() {
@@ -188,5 +197,5 @@ describe("Database Worker", function() {
 
             done();
         })
-    }); // end of write tests
+    }); // end of write tests */
 });

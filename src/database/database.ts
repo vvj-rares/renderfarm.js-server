@@ -13,6 +13,8 @@ import { Workspace } from "./model/workspace";
 import { Session } from "./model/session";
 import { Worker } from "./model/worker";
 import { TYPES } from "../types";
+import { Job } from "./model/job";
+import { isArray } from "util";
 
 const uuidv4 = require('uuid/v4');
 
@@ -192,16 +194,13 @@ export class Database implements IDatabase {
                 (obj) => new Session(obj));
         }
 
-        try {
-            session.workerRef = await this.getOne<Worker>(
-                "workers", 
-                { 
-                    guid: session.workerGuid 
-                }, 
-                obj => new Worker(obj));
-        } catch (err) {
-            // well, workers are not guaranteed to exist
-        }
+        session.workerRef = await this.safe<Worker>(this.getOne<Worker>(
+            "workers", 
+            { 
+                guid: session.workerGuid 
+            }, 
+            obj => new Worker(obj)
+        ));
 
         return session;
     }
@@ -262,7 +261,7 @@ export class Database implements IDatabase {
 
     public async closeSession(sessionGuid: string): Promise<Session> {
         let closedAt = new Date();
-        let closedSession = await this.safe(this.findOneAndUpdate<Session>(
+        let closedSession = await this.safe<Session>(this.findOneAndUpdate<Session>(
                 "sessions",
                 {
                     guid: sessionGuid,
@@ -298,7 +297,7 @@ export class Database implements IDatabase {
 
     public async failSession(sessionGuid: string, failReason?: string | undefined): Promise<Session> {
         let closedAt = new Date();
-        let closedSession = await this.safe(this.findOneAndUpdate<Session>(
+        let closedSession = await this.safe<Session>(this.findOneAndUpdate<Session>(
                 "sessions",
                 {
                     guid: sessionGuid,
@@ -379,10 +378,21 @@ export class Database implements IDatabase {
 
     //#region Workers
     public async getWorker(workerGuid: string): Promise<Worker> {
-        return await this.getOne<Worker>(
+        let worker = await this.getOne<Worker>(
                 "workers", 
                 { guid: workerGuid },
                 (obj) => new Worker(obj));
+
+        worker.jobRef = await this.safe<Job>(this.getOne<Job>(
+            "jobs",
+            { 
+                workerGuid: workerGuid,
+                closed: null
+            },
+            (obj) => new Job(obj)
+        ));
+
+        return worker;
     }
 
     public async getRecentWorkers(): Promise<Worker[]> {
@@ -396,10 +406,10 @@ export class Database implements IDatabase {
         };
 
         let result = await db.collection(this.envCollectionName("workers"))
-        .find(filter)
-        .sort({
-            cpuUsage: 1 //sort by cpu load, less loaded first
-        }).toArray();
+            .find(filter)
+            .sort({
+                cpuUsage: 1 //sort by cpu load, less loaded first
+            }).toArray();
 
         return result.map(e => new Worker(e));
     }
@@ -412,12 +422,12 @@ export class Database implements IDatabase {
 
         let recentOnlineDate = new Date(Date.now() - 2 * 1000);
         let result = await db.collection(this.envCollectionName("workers")).find({ 
-            workgroup: this._settings.current.workgroup,
-            lastSeen : { $gte: recentOnlineDate },
-            sessionGuid: null
-        }).sort({
-            cpuUsage: 1 //sort by cpu load, less loaded first
-        }).toArray();
+             workgroup: this._settings.current.workgroup,
+                lastSeen : { $gte: recentOnlineDate },
+                sessionGuid: null
+            }).sort({
+                cpuUsage: 1 //sort by cpu load, less loaded first
+            }).toArray();
 
         return result.map(e => new Worker(e));
     }
@@ -432,25 +442,6 @@ export class Database implements IDatabase {
 
     public updateWorker(worker: Worker, setter: any): Promise<Worker> {
         return this.findOneAndUpdate<Worker>("workers", worker.filter, setter, obj => new Worker(obj));
-    }
-
-    public deleteWorker(worker: Worker): Promise<Worker> {
-        return this.findOneAndDelete("workers", worker.filter, obj => new Worker(obj));
-    }
-
-    public async deleteDeadWorkers(): Promise<number> {
-        await this.ensureClientConnection();
-
-        let db = this._client.db(this._settings.current.databaseName);
-        assert.notEqual(db, null);
-
-        let expirationDate = new Date(Date.now() - 30*1000); // delete workers that are more than 30 seconds offline
-        let result = await db.collection(this.envCollectionName("workers")).deleteMany(
-            { 
-                lastSeen : { $lte: expirationDate }
-            });
-
-        return result.deletedCount;
     }
     //#endregion
 
@@ -473,64 +464,94 @@ export class Database implements IDatabase {
     //#endregion
 
     //#region Jobs
-    //public async storeJob(jobInfo: JobInfo): Promise<JobInfo> {
-        // throw Error("storeJob not implemented");
-        // let db = this._client.db(this._settings.current.databaseName);
-        // assert.notEqual(db, null);
+    public async getJob(jobGuid: string): Promise<Job> {
+        let job = await this.getOne<Job>(
+            "jobs", 
+            { guid: jobGuid },
+            (obj) => new Job(obj));
 
-        // let jobJson = jobInfo.toDatabase();
+        job.workerRef = await this.getOne<Worker>(
+            "jobs",
+            { 
+                workerGuid: job.workerGuid
+            },
+            (obj) => new Worker(obj)
+        );
 
-        // db.collection(this.envCollectionName("jobs")).findOneAndUpdate(
-        //     { guid: jobInfo.guid },
-        //     { $set: jobJson },
-        //     { returnOriginal: false, upsert: true })
-        //     .then(function(obj) {
-        //         if (obj.value) {
-        //             // resolve(WorkerInfo.fromJSON(obj.value));
-        //         } else {
-        //             // reject(`unable to find job with guid ${jobInfo.guid}`);
-        //         }
-        //     }.bind(this))
-        //     .catch(function(err) {
-        //         // reject(err);
-        //     }.bind(this));
-    //}
+        return job;
+    }
 
-    //public getJob(jobGuid: string): Promise<JobInfo> {
-        //todo: get rid off Promise here
-        // return new Promise<JobInfo>(function (resolve, reject) {
-        //     let db = this._client.db(this._settings.current.databaseName);
-        //     assert.notEqual(db, null);
+    public async getActiveJobs(): Promise<Job[]> {
+        let jobs = await this.find<Job>(
+            "jobs",
+            {
+                closed: null
+            },
+            (obj) => new Job(obj));
+        
+        return jobs;
+    }
 
-        //     db.collection(this.envCollectionName("jobs")).findOne(
-        //         { 
-        //             guid: jobGuid
-        //         })
-        //         .then(function(obj) {
-        //             if (obj) {
-        //                 let jobInfo = JobInfo.fromJSON(obj);
-        //                 resolve(jobInfo);
-        //             } else {
-        //                 reject(`unable to find job with guid ${jobGuid}`);
-        //             }
-        //         }.bind(this))
-        //         .catch(function(err) {
-        //             console.error(err);
-        //             reject(`failed to query available workers`);
-        //             return
-        //         }.bind(this)); // end of db.collection(this.envCollectionName("jobs").findOne promise
-        // }.bind(this));
-    //}
+    public async insertJob(job: Job): Promise<Job> {
+        return this.insertOne<Job>("jobs", job, obj => new Job(obj));
+    }
 
-    //public getSessionActiveJobs(sessionGuid: string): Promise<JobInfo[]> {
-        //todo: get rid off Promise here
-        // return new Promise<JobInfo[]>(function (resolve, reject) {
-        //     let db = this._client.db(this._settings.current.databaseName);
-        //     assert.notEqual(db, null);
+    public async updateJob(job: Job, setter: any): Promise<Job> {
+        return this.findOneAndUpdate<Job>("jobs", job.filter, setter, obj => new Job(obj));
+    }
 
-        //     //todo: implement it
-        // }.bind(this));
-    //}
+    public async completeJob(job: Job, urls: string[]): Promise<Job> {
+        return this.findOneAndUpdate<Job>(
+            "jobs", 
+            {
+                guid: job.guid,
+                closed: null
+            }, 
+            {
+                $set: {
+                    closedAt: new Date(),
+                    closed: true,
+                    urls: isArray(urls) ? urls : []
+                }
+            }, 
+            obj => new Job(obj));
+    }
+
+    public async cancelJob(job: Job): Promise<Job> {
+        return this.findOneAndUpdate<Job>(
+            "jobs", 
+            {
+                guid: job.guid,
+                closed: null
+            },
+            {
+                $set: {
+                    closedAt: new Date(),
+                    closed: true,
+                    canceled: true,
+                    urls: []
+                }
+            }, 
+            obj => new Job(obj));
+    }
+
+    public async failJob(job: Job): Promise<Job> {
+        return this.findOneAndUpdate<Job>(
+            "jobs", 
+            {
+                guid: job.guid,
+                closed: null
+            },
+            {
+                $set: {
+                    closedAt: new Date(),
+                    closed: true,
+                    failed: true,
+                    urls: []
+                }
+            }, 
+            obj => new Job(obj));
+    }
     //#endregion
 
     //#region internal methods, i.e. does not belong to IDatabase
@@ -808,7 +829,6 @@ export class Database implements IDatabase {
     public envCollectionName(name: string) {
         return `${this._settings.current.collectionPrefix}-${name}`;
     }
-    //#endregion
 
     private async safe<T>(promise: Promise<T>): Promise<T> {
         try {
@@ -818,4 +838,5 @@ export class Database implements IDatabase {
             return undefined;
         }
     }
+    //#endregion
 }

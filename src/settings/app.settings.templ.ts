@@ -13,7 +13,6 @@ module.exports = function() { return {
         renderOutputDir: "C:\\Temp",
         apiKeyCheck: true,
         workspaceCheck: true,
-        deleteDeadWorkers: true,
         expireSessions: true,
         sessionTimeoutMinutes: 30
     },
@@ -21,8 +20,7 @@ module.exports = function() { return {
         connectionUrl: "mongodb://rfarmmgr:123456@192.168.0.151:27017/rfarmdb",
         databaseName: "rfarm-test",
         collectionPrefix: "_test",
-        expireSessions: false,
-        deleteDeadWorkers: false
+        expireSessions: false
     },
     dev: {
         connectionUrl: "mongodb://rfarmmgr:123456@192.168.0.151:27017/rfarmdb",

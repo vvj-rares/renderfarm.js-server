@@ -12,6 +12,7 @@ export class JasmineSpecHelpers {
     public notExistingSessionGuid: string = "ffffffff-ffff-ffff-ffff-ffffffffffff";
     public existingWorkspaceGuid: string = "00000000-0000-0000-1111-000000000001";
     public existingWorkerGuid: string = "00000000-cccc-0000-0000-000000000001";
+    public existingJobGuid: string = "00000000-396c-434d-b876-000000000001";
 
     constructor(private database: Database, private settings: Settings) {
     }

@@ -91,7 +91,7 @@ class JobEndpoint implements IEndpoint {
         express.post('/job', async function (req, res) {
             console.log(`POST on /job with session: ${req.body.session}`);
 
-            let sessionGuid = req.body.session;
+            /* let sessionGuid = req.body.session;
 
             const uuidv4 = require('uuid/v4');
             let jobGuid = uuidv4();
@@ -191,6 +191,7 @@ class JobEndpoint implements IEndpoint {
                     res.status(403);
                     res.end(JSON.stringify({ error: "session is expired" }, null, 2));
                 }.bind(this)); // end of this._database.getSessionWorkspace promise
+            */
     
         }.bind(this));
 

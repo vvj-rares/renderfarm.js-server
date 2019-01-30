@@ -1,5 +1,6 @@
 import { IDbEntity } from "./base/IDbEntity";
 import { Session } from "./session";
+import { Job } from "./job";
 
 export class Worker extends IDbEntity {
     public guid: string;
@@ -16,6 +17,7 @@ export class Worker extends IDbEntity {
     public sessionGuid: string;
 
     public sessionRef: Session;
+    public jobRef: Job;
 
     constructor(obj: any) {
         super();
