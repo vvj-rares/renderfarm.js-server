@@ -47,8 +47,8 @@ describe("Database Session", function() {
             expect(new Date().getTime() - session.lastSeen.getTime()).toBeLessThan(3000); // db time minus now is less than 3 seconds
             expect(session.guid).toBe(helpers.existingSessionGuid);
             expect(session.workspaceGuid).toBe(helpers.existingWorkspaceGuid);
-            expect(session.closed).toBeUndefined();
-            expect(session.closedAt).toBeUndefined();
+            expect(session.closed).toBeNull();
+            expect(session.closedAt).toBeNull();
 
             expect(session.workerRef).toBeTruthy();
             expect(session.workerRef.guid).toBe(session.workerGuid);
@@ -141,8 +141,8 @@ describe("Database Session", function() {
             expect(session.guid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
             expect(session.workerGuid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
             expect(session.workspaceGuid).toBe(workspace.guid);
-            expect(session.closed).toBeUndefined();
-            expect(session.closedAt).toBeUndefined();
+            expect(session.closed).toBeNull();
+            expect(session.closedAt).toBeNull();
             // and check that ref on assigned worker was correctly resolved
             expect(session.workerRef).toBeTruthy();
             expect(session.workerRef.guid).toBe(session.workerGuid);

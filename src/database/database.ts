@@ -392,6 +392,14 @@ export class Database implements IDatabase {
             (obj) => new Job(obj)
         ));
 
+        worker.sessionRef = await this.safe<Session>(this.getOne<Session>(
+            "sessions",
+            {
+                guid: worker.sessionGuid
+            },
+            (obj) => new Session(obj)
+        ));
+
         return worker;
     }
 
@@ -471,9 +479,9 @@ export class Database implements IDatabase {
             (obj) => new Job(obj));
 
         job.workerRef = await this.getOne<Worker>(
-            "jobs",
+            "workers",
             { 
-                workerGuid: job.workerGuid
+                guid: job.workerGuid
             },
             (obj) => new Worker(obj)
         );

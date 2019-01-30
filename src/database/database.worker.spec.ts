@@ -4,6 +4,7 @@ import { Settings } from "../settings";
 import { Database } from "./database";
 import { JasmineSpecHelpers } from "../jasmine.helpers";
 import { Worker } from "./model/worker";
+import { isArray } from "util";
 
 require("../jasmine.config")();
 const uuidv4 = require('uuid/v4');
@@ -34,6 +35,60 @@ describe("Database Worker", function() {
                 console.log(`afterEach failed with error: ${err.message}`);
             }
         })
+
+        it("checks existing worker", async function(done) {
+            let worker: Worker = await database.getWorker(helpers.existingWorkerGuid);
+
+            console.log("worker: ", worker);
+
+            // test worker data loaded from database
+            expect(worker).toBeTruthy();
+            expect(worker.guid).toBe(helpers.existingWorkerGuid);
+            expect(worker.mac).toBe("001122334455");
+            expect(worker.ip).toBe("192.168.88.100");
+            expect(worker.port).toBe(34092);
+            expect(worker.endpoint).toBe("192.168.88.100:34092");
+            expect(worker.workgroup).toBe("default");
+            expect(worker.firstSeen).toEqual(new Date("1999-12-31T23:00:00.000Z"));
+            expect(worker.lastSeen).toEqual(new Date("1999-12-31T23:00:00.000Z"));
+            expect(worker.cpuUsage).toBe(0.19);
+            expect(worker.ramUsage).toBe(0.51);
+            expect(worker.totalRam).toBe(15.9);
+            expect(worker.sessionGuid).toBe(helpers.existingSessionGuid);
+
+            // test job assigned to this worker
+            expect(worker.jobRef).toBeTruthy();
+            expect(worker.jobRef.guid).toBe(helpers.existingJobGuid);
+            expect(worker.jobRef.apiKey).toBe(helpers.existingApiKey);
+            expect(worker.jobRef.createdAt).toEqual(new Date("1999-12-31T23:00:00.000Z"));
+            expect(worker.jobRef.updatedAt).toEqual(new Date("1999-12-31T23:00:00.000Z"));
+            expect(worker.jobRef.closedAt).toBeNull();
+            expect(worker.jobRef.workerGuid).toBe(worker.guid);
+            expect(worker.jobRef.state).toBe("pending");
+            expect(worker.jobRef.closed).toBeNull();
+            expect(worker.jobRef.canceled).toBeNull();
+            expect(worker.jobRef.failed).toBeNull();
+            expect(isArray(worker.jobRef.urls)).toBeTruthy();
+            expect(worker.jobRef.urls.length).toBe(2);
+
+            expect(worker.jobRef.urls[0]).toBe("https://dev1.renderfarmjs.com/v1/renderoutput/123456-color.png");
+            expect(worker.jobRef.urls[1]).toBe("https://dev1.renderfarmjs.com/v1/renderoutput/123456-alpha.png");
+
+            // test session where this worker was assigned
+            expect(worker.sessionRef).toBeTruthy();
+            expect(worker.sessionRef.guid).toBe(helpers.existingSessionGuid);
+            expect(worker.sessionRef.workerGuid).toBe(worker.guid);
+            expect(worker.sessionRef.firstSeen).toEqual(new Date("2019-01-08T12:25:07.029Z"));
+            expect(worker.sessionRef.lastSeen).toEqual(new Date("2019-01-30T17:54:36.257Z"));
+            expect(worker.sessionRef.workspaceGuid).toBe(helpers.existingWorkspaceGuid);
+            expect(worker.sessionRef.closed).toBeNull();
+            expect(worker.sessionRef.expired).toBeNull();
+            expect(worker.sessionRef.closedAt).toBeNull();
+            expect(worker.sessionRef.failed).toBeNull();
+            expect(worker.sessionRef.failReason).toBeNull();
+
+            done();
+        });
 
         it("checks that recent workers belongs to current workgroup only", async function(done) {
             let defaultWorkers = await database.getRecentWorkers();

@@ -18,6 +18,7 @@ export class Job extends IDbEntity {
     public workerRef: Worker;
 
     constructor(obj: any) {
+        console.log(" >> job from db: ", obj);
         super();
         if (obj) {
             this.parse(obj);
@@ -29,9 +30,9 @@ export class Job extends IDbEntity {
     public parse(obj: any) {
         this.guid       = obj.guid;
         this.apiKey     = obj.apiKey;
-        this.createdAt  = obj.createdAt ? new Date(obj.createdAt) : undefined;
-        this.updatedAt  = obj.updatedAt ? new Date(obj.updatedAt) : undefined;
-        this.closedAt   = obj.closedAt ? new Date(obj.closedAt) : undefined;
+        this.createdAt  = obj.createdAt ? new Date(obj.createdAt) : null;
+        this.updatedAt  = obj.updatedAt ? new Date(obj.updatedAt) : null;
+        this.closedAt   = obj.closedAt ? new Date(obj.closedAt) : null;
         this.workerGuid = obj.workerGuid;
         this.state      = obj.state;
         this.closed     = obj.closed;

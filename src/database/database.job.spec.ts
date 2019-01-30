@@ -4,6 +4,7 @@ import { Settings } from "../settings";
 import { Database } from "./database";
 import { JasmineSpecHelpers } from "../jasmine.helpers";
 import { Job } from "./model/job";
+import { isArray } from "util";
 
 require("../jasmine.config")();
 const uuidv4 = require('uuid/v4');
@@ -35,20 +36,68 @@ describe("Database Job", function() {
             }
         })
 
-        fit("checks existing job", async function(done) {
+        it("checks existing job", async function(done) {
             let job: Job = await database.getJob(helpers.existingJobGuid);
-    
+
+            console.log("job: ", job);
+
             expect(job).toBeTruthy();
             expect(job.guid).toBe(helpers.existingJobGuid);
             expect(job.apiKey).toBe(helpers.existingApiKey);
+
+            expect(job.createdAt).toEqual(new Date("2000-01-01 00:00:00.000"));
+            expect(job.updatedAt).toEqual(new Date("2000-01-01 00:00:00.000"));
+            expect(job.closedAt).toBeNull();
+            expect(job.workerGuid).toBe(helpers.existingWorkerGuid);
+            expect(job.state).toBe("pending");
+            expect(job.closed).toBeNull();
+            expect(job.canceled).toBeNull();
+            expect(job.failed).toBeNull();
+            expect(isArray(job.urls)).toBeTruthy()
+
+            expect(job.workerRef).toBeTruthy();
+            expect(job.workerRef.guid).toBe(helpers.existingWorkerGuid);
+            expect(job.workerRef.sessionGuid).toBeTruthy();
+
+/*
+  guid: '00000000-396c-434d-b876-000000000001',
+  apiKey: '0000-0001',
+  createdAt: 1999-12-31T23:00:00.000Z,
+  updatedAt: 1999-12-31T23:00:00.000Z,
+  closedAt: 1999-12-31T23:00:00.000Z,
+  workerGuid: '00000000-cccc-0000-0000-000000000001',
+  state: 'pending',
+  closed: null,
+  canceled: null,
+  failed: null,
+  urls: 
+   [ 'https://dev1.renderfarmjs.com/v1/renderoutput/123456-color.png',
+     'https://dev1.renderfarmjs.com/v1/renderoutput/123456-alpha.png' ],
+  workerRef: 
+   Worker {
+     guid: '00000000-cccc-0000-0000-000000000001',
+     mac: '001122334455',
+     ip: '192.168.88.100',
+     port: 34092,
+     endpoint: '192.168.88.100:34092',
+     workgroup: 'default',
+     firstSeen: 1999-12-31T23:00:00.000Z,
+     lastSeen: 1999-12-31T23:00:00.000Z,
+     cpuUsage: 0.19,
+     ramUsage: 0.51,
+     totalRam: 15.9,
+     sessionGuid: '00000000-1111-0000-0000-000000000001' } }
+
+*/
+
 
             // expect(job.workerGuid).toBe(helpers.existingWorkerGuid);
             // expect(job.firstSeen).toEqual(new Date("2019-01-08T12:25:07.029Z"));
             // expect(new Date().getTime() - job.lastSeen.getTime()).toBeLessThan(3000); // db time minus now is less than 3 seconds
             // expect(job.guid).toBe(helpers.existingSessionGuid);
             // expect(job.workspaceGuid).toBe(helpers.existingWorkspaceGuid);
-            // expect(job.closed).toBeUndefined();
-            // expect(job.closedAt).toBeUndefined();
+            // expect(job.closed).toBeNull();
+            // expect(job.closedAt).toBeNull();
 
             // expect(job.workerRef).toBeTruthy();
             // expect(job.workerRef.guid).toBe(job.workerGuid);

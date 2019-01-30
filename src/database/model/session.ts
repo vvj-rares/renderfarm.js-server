@@ -24,15 +24,17 @@ export class Session extends IDbEntity {
     }
 
     public parse(obj: any) {
+        console.log(" >> ", obj);
+
         this.apiKey         = obj.apiKey;
         this.guid           = obj.guid;
         this.workerGuid     = obj.workerGuid;
-        this.firstSeen      = obj.firstSeen ? new Date(obj.firstSeen) : undefined;
-        this.lastSeen       = obj.lastSeen ? new Date(obj.lastSeen) : undefined;
+        this.firstSeen      = obj.firstSeen ? new Date(obj.firstSeen) : null;
+        this.lastSeen       = obj.lastSeen ? new Date(obj.lastSeen) : null;
         this.workspaceGuid  = obj.workspaceGuid;
         this.closed         = obj.closed;
         this.expired        = obj.expired;
-        this.closedAt       = obj.closedAt ? new Date(obj.closedAt) : undefined;
+        this.closedAt       = obj.closedAt ? new Date(obj.closedAt) : null;
         this.failed         = obj.failed;
         this.failReason     = obj.failReason;
     }

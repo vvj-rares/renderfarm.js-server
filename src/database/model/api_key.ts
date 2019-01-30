@@ -13,7 +13,7 @@ export class ApiKey extends IDbEntity {
     public parse(obj: any) {
         this.apiKey   = obj.apiKey;
         this.userGuid = obj.userGuid;
-        this.lastSeen = obj.lastSeen ? new Date(obj.lastSeen) : undefined;
+        this.lastSeen = obj.lastSeen ? new Date(obj.lastSeen) : null;
     }
 
     public toJSON() {

@@ -21,7 +21,7 @@ export class Workspace extends IDbEntity {
         this.workgroup = obj.workgroup;
         this.homeDir   = obj.homeDir;
         this.name      = obj.name;
-        this.lastSeen  = new Date(obj.lastSeen);
+        this.lastSeen  = obj.lastSeen ? new Date(obj.lastSeen) : null;
     }
 
     public toJSON() {
