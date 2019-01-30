@@ -23,6 +23,8 @@ export class Worker extends IDbEntity {
         super();
         if (obj) {
             this.parse(obj);
+        } else {
+            this.sessionGuid = null;
         }
     }
 

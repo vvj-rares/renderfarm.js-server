@@ -79,7 +79,7 @@ describe("Database Worker", function() {
             expect(worker.sessionRef.guid).toBe(helpers.existingSessionGuid);
             expect(worker.sessionRef.workerGuid).toBe(worker.guid);
             expect(worker.sessionRef.firstSeen).toEqual(new Date("2019-01-08T12:25:07.029Z"));
-            expect(worker.sessionRef.lastSeen).toEqual(new Date("2019-01-30T17:54:36.257Z"));
+            expect(worker.sessionRef.lastSeen.getTime()).toBeGreaterThanOrEqual(worker.sessionRef.firstSeen.getTime());
             expect(worker.sessionRef.workspaceGuid).toBe(helpers.existingWorkspaceGuid);
             expect(worker.sessionRef.closed).toBeNull();
             expect(worker.sessionRef.expired).toBeNull();

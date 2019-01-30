@@ -20,11 +20,19 @@ export class Session extends IDbEntity {
 
     constructor(obj: any) {
         super();
-        if (obj) this.parse(obj);
+        if (obj) {
+            this.parse(obj);
+        } else {
+            this.closed = null;
+            this.expired = null;
+            this.closedAt = null;
+            this.failed = null;
+            this.failReason = null;
+        }
     }
 
     public parse(obj: any) {
-        console.log(" >> ", obj);
+        console.log(" >> session from db: ", obj);
 
         this.apiKey         = obj.apiKey;
         this.guid           = obj.guid;

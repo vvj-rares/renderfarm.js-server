@@ -23,6 +23,10 @@ export class Job extends IDbEntity {
         if (obj) {
             this.parse(obj);
         } else {
+            this.closed = null;
+            this.canceled = null;
+            this.failed = null;
+            this.closedAt = null;
             this.urls = [];
         }
     }
