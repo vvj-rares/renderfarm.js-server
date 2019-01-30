@@ -197,7 +197,7 @@ describe("Database Session", function() {
                 done();
                 return;
             }
-        
+
             expect(closedSession).toBeTruthy();
             expect(closedSession.guid).toBe(session.guid);
             expect(closedSession.closed).toBeTruthy();

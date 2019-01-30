@@ -39,7 +39,7 @@ describe("Database Worker", function() {
         it("checks existing worker", async function(done) {
             let worker: Worker = await database.getWorker(helpers.existingWorkerGuid);
 
-            console.log("worker: ", worker);
+            console.log("checking worker: ", worker);
 
             // test worker data loaded from database
             expect(worker).toBeTruthy();

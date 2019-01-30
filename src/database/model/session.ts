@@ -32,8 +32,6 @@ export class Session extends IDbEntity {
     }
 
     public parse(obj: any) {
-        console.log(" >> session from db: ", obj);
-
         this.apiKey         = obj.apiKey;
         this.guid           = obj.guid;
         this.workerGuid     = obj.workerGuid;

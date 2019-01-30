@@ -18,7 +18,6 @@ export class Job extends IDbEntity {
     public workerRef: Worker;
 
     constructor(obj: any) {
-        console.log(" >> job from db: ", obj);
         super();
         if (obj) {
             this.parse(obj);
