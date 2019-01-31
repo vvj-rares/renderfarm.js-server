@@ -73,7 +73,7 @@ describe("Database Job", function() {
         });
     }); // end of read-only tests
 
-    /* describe("write test", function() {
+    describe("write test", function() {
         var collectionPrefix: string;
 
         beforeEach(async function() {
@@ -105,49 +105,109 @@ describe("Database Job", function() {
             }
         })
 
+        async function insertSomeJob() {
+            let newJob = new Job(null);
+            newJob.guid = uuidv4();
+            newJob.createdAt = new Date();
+            newJob.updatedAt = new Date();
+            newJob.workerGuid = helpers.existingWorkerGuid;
+            newJob.state = "pending";
+            newJob.apiKey = helpers.existingApiKey;
+
+            let jobAdded = await database.insertJob(newJob);
+            expect(jobAdded).toBeTruthy();
+
+            return jobAdded;
+        }
+
         it("checks that job was correctly inserted", async function(done) {
-            let newWorker = new Worker(null);
-            newWorker.guid = uuidv4();
-            newWorker.ip = helpers.rndIp();
-            newWorker.mac = helpers.rndMac();
-            newWorker.port = helpers.rndPort();
-            newWorker.firstSeen = new Date();
-            newWorker.lastSeen = newWorker.firstSeen;
-            newWorker.workgroup = "exotic";
-            newWorker.cpuUsage = 0.1;
-            newWorker.ramUsage = 0.2;
-            newWorker.totalRam = 32;
+            let newJob = await insertSomeJob();
 
-            let workerAdded = await database.insertWorker(newWorker);
-            expect(workerAdded).toBeTruthy();
+            let job = await database.getOne<Job>("jobs", { guid: newJob.guid }, obj => new Job(obj));
 
-            let worker = await database.getOne<Worker>("workers", { guid: newWorker.guid }, obj => new Worker(obj));
-
-            expect(worker).toBeTruthy();
-            expect(worker.guid).toBe(newWorker.guid);
-            expect(worker.ip).toBe(newWorker.ip);
-            expect(worker.mac).toBe(newWorker.mac);
-            expect(worker.port).toBe(newWorker.port);
-            expect(worker.firstSeen).toEqual(newWorker.firstSeen);
-            expect(worker.lastSeen).toEqual(newWorker.lastSeen);
-            expect(worker.workgroup).toBe(newWorker.workgroup);
-            expect(worker.cpuUsage).toBe(newWorker.cpuUsage);
-            expect(worker.ramUsage).toBe(newWorker.ramUsage);
-            expect(worker.totalRam).toBe(newWorker.totalRam);
+            expect(job).toBeTruthy();
+            expect(job.guid).toBe(newJob.guid);
+            expect(job.apiKey).toBe(helpers.existingApiKey);
+            expect(job.workerGuid).toBe(helpers.existingWorkerGuid);
+            expect(job.state).toBe("pending");
+            expect(Date.now() - job.createdAt.getTime()).toBeLessThan(3000);
+            expect(job.updatedAt.getTime()).toBeGreaterThanOrEqual(newJob.createdAt.getTime());
 
             done();
         })
 
         it("checks that job was correctly updated", async function(done) {
+            let newJob = await insertSomeJob();
+
+            let updatedJob = await database.updateJob(newJob, { $set: { state: "running" , updatedAt: new Date() } });
+
+            expect(updatedJob).toBeTruthy();
+            expect(updatedJob.state).toBe("running");
+            expect(updatedJob.updatedAt.getTime()).toBeGreaterThan(newJob.createdAt.getTime());
+
+            done();
         })
 
         it("checks that job was correctly closed", async function(done) {
+            let newJob = await insertSomeJob();
+
+            let closedJob = await database.completeJob(newJob, [ "https://example.com/1", "https://example.com/2" ]);
+
+            expect(closedJob).toBeTruthy();
+            expect(closedJob.state).toBeNull();
+            expect(closedJob.closed).toBeTruthy();
+            expect(closedJob.canceled).toBeNull();
+            expect(closedJob.failed).toBeNull();
+
+            expect(closedJob.createdAt).toEqual(newJob.updatedAt);
+            expect(closedJob.createdAt.getTime()).toBeLessThanOrEqual(newJob.closedAt.getTime());
+
+            expect(isArray(closedJob.urls)).toBeTruthy();
+            expect(closedJob.urls.length).toBe(2);
+            expect(closedJob.urls[0]).toBe("https://example.com/1");
+            expect(closedJob.urls[1]).toBe("https://example.com/2");
+
+            done();
         })
 
         it("checks that job was correctly canceled", async function(done) {
+            let newJob = await insertSomeJob();
+
+            let canceledJob = await database.cancelJob(newJob);
+
+            expect(canceledJob).toBeTruthy();
+            expect(canceledJob.state).toBeNull();
+            expect(canceledJob.closed).toBeTruthy();
+            expect(canceledJob.canceled).toBeTruthy();
+            expect(canceledJob.failed).toBeNull();
+
+            expect(canceledJob.createdAt).toEqual(newJob.updatedAt);
+            expect(canceledJob.createdAt.getTime()).toBeLessThanOrEqual(newJob.closedAt.getTime());
+
+            expect(isArray(canceledJob.urls)).toBeTruthy();
+            expect(canceledJob.urls.length).toBe(0);
+
+            done();
         })
 
         it("checks that job was correctly failed", async function(done) {
+            let newJob = await insertSomeJob();
+
+            let failedJob = await database.failJob(newJob);
+
+            expect(failedJob).toBeTruthy();
+            expect(failedJob.state).toBeNull();
+            expect(failedJob.closed).toBeTruthy();
+            expect(failedJob.canceled).toBeNull();
+            expect(failedJob.failed).toBeTruthy();
+
+            expect(failedJob.createdAt).toEqual(newJob.updatedAt);
+            expect(failedJob.createdAt.getTime()).toBeLessThanOrEqual(newJob.closedAt.getTime());
+
+            expect(isArray(failedJob.urls)).toBeTruthy();
+            expect(failedJob.urls.length).toBe(0);
+
+            done();
         })
 
         it("checks that all active jobs are correctly returned", async function(done) {

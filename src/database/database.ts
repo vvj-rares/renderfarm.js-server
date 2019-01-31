@@ -519,6 +519,7 @@ export class Database implements IDatabase {
                 $set: {
                     closedAt: new Date(),
                     closed: true,
+                    state: null,
                     urls: isArray(urls) ? urls : []
                 }
             }, 
@@ -537,6 +538,7 @@ export class Database implements IDatabase {
                     closedAt: new Date(),
                     closed: true,
                     canceled: true,
+                    state: null,
                     urls: []
                 }
             }, 
@@ -555,6 +557,7 @@ export class Database implements IDatabase {
                     closedAt: new Date(),
                     closed: true,
                     failed: true,
+                    state: null,
                     urls: []
                 }
             }, 
