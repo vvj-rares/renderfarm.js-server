@@ -211,6 +211,7 @@ describe("Database Job", function() {
         })
 
         it("checks that all active jobs are correctly returned", async function(done) {
+            done();
         })
 
     }); // end of write tests */
