@@ -1,0 +1,73 @@
+import { injectable, inject } from "inversify";
+import { TYPES } from "../types";
+import { IJobHandler, ISettings, IDatabase, IMaxscriptClient, IMaxscriptClientFactory } from "../interfaces";
+import { Job } from "../database/model/job";
+import { Session } from "../database/model/session";
+
+@injectable()
+export class JobHandler implements IJobHandler {
+
+    private _clients: {
+        [jobGuid: string]: IMaxscriptClient;
+    } = {};
+
+    private _jobs: Job[] = [];
+
+    constructor(
+        @inject(TYPES.ISettings) private _settings: ISettings,
+        @inject(TYPES.IDatabase) private _database: IDatabase,
+        @inject(TYPES.IMaxscriptClientFactory) private _maxscriptClientFactory: IMaxscriptClientFactory,
+    ) {
+        this.id = Math.random();
+        console.log(" >> JobHandler: ", this.id);
+    }
+
+    public id: number;
+
+    public Notify(job: Job, session: Session): void {
+        this._jobs.push(job);
+
+        this.StartJob(job).catch(function(err) {
+            console.log(" >> job failed: ", err);
+            let jobIdx = this._jobs.find(el => el === job);
+            this._jobs.splice(jobIdx, 1);
+        }.bind(this));
+    }
+
+    private async StartJob(job: Job) {
+        console.log(" >> StartJob: ", job);
+
+        let client = this._maxscriptClientFactory.create();
+        this._clients[job.guid] = client;
+
+        console.log(" >> connecting to: " + `${job.workerRef.ip}:${job.workerRef.port}`);
+        let connected = await client.connect(job.workerRef.ip, job.workerRef.port);
+        console.log(" >> connected: ", connected);
+
+        if (connected) {
+            await this._database.updateJob(job, { $set: { state: "connected" } } );
+        } else {
+            let errorMessage = "failed to connect worker maxscript";
+            await this._database.failJob(job, errorMessage);
+            delete this._clients[job.guid];
+            throw Error(errorMessage);
+        }
+
+        setTimeout(function() { // start rendering with some delay
+            console.log(" >> client.renderScene");
+            client.renderScene("Camera001", [640, 480], "C:\\Temp\\1.png", {})
+                .then(async function(result) {
+                    console.log(" >> completeJob");
+                    await this._database.completeJob(job, ["1.png"]);
+                }.bind(this))
+                .catch(async function(err) {
+                    console.log(" >> failJob");
+                    await this._database.failJob(job, err.message);                
+                }.bind(this));
+
+        }.bind(this), 330);
+
+        console.log(" >> rendering job...");
+        this._database.updateJob(job, { $set: { state: "rendering" } });
+    }
+}

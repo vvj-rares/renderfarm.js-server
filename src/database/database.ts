@@ -500,8 +500,20 @@ export class Database implements IDatabase {
         return jobs;
     }
 
-    public async insertJob(job: Job): Promise<Job> {
-        return this.insertOne<Job>("jobs", job, obj => new Job(obj));
+    public async createJob(apiKey: string, workerGuid: string): Promise<Job> {
+        let job = new Job(null);
+
+        job.apiKey = apiKey;
+        job.guid = uuidv4();
+        job.createdAt = new Date();
+        job.updatedAt = new Date();
+        job.workerGuid = workerGuid;
+        job.state = "pending";
+
+        let result = await this.insertOne<Job>("jobs", job, obj => new Job(obj));
+        result.workerRef = await this.getOne<Worker>("workers", { guid: result.workerGuid }, obj => new Worker(obj));
+
+        return result;
     }
 
     public async updateJob(job: Job, setter: any): Promise<Job> {
@@ -545,7 +557,7 @@ export class Database implements IDatabase {
             obj => new Job(obj));
     }
 
-    public async failJob(job: Job): Promise<Job> {
+    public async failJob(job: Job, error: string): Promise<Job> {
         return this.findOneAndUpdate<Job>(
             "jobs", 
             {
@@ -558,7 +570,8 @@ export class Database implements IDatabase {
                     closed: true,
                     failed: true,
                     state: null,
-                    urls: []
+                    urls: [],
+                    error: error
                 }
             }, 
             obj => new Job(obj));

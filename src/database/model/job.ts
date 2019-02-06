@@ -13,6 +13,7 @@ export class Job extends IDbEntity {
     public closed: boolean;
     public canceled: boolean;
     public failed: boolean;
+    public error: string;
     public urls: string[];
 
     public workerRef: Worker;
@@ -26,6 +27,7 @@ export class Job extends IDbEntity {
             this.canceled = null;
             this.failed = null;
             this.closedAt = null;
+            this.error = null;
             this.urls = [];
         }
     }
@@ -41,6 +43,7 @@ export class Job extends IDbEntity {
         this.closed     = obj.closed;
         this.canceled   = obj.canceled;
         this.failed     = obj.failed;
+        this.error      = obj.error;
         this.urls       = isArray(obj.urls) ? obj.urls : [];
     }
 
@@ -48,14 +51,15 @@ export class Job extends IDbEntity {
         let result: any = {
             guid:       this.guid,
             apiKey:     this.apiKey,
-            createdAt:  this.createdAt || new Date(),
-            updatedAt:  this.updatedAt || new Date(),
-            closedAt:   this.closedAt || new Date(),
+            createdAt:  this.createdAt,
+            updatedAt:  this.updatedAt,
+            closedAt:   this.closedAt,
             workerGuid: this.workerGuid,
             state:      this.state,
             closed:     this.closed,
             canceled:   this.canceled,
             failed:     this.failed,
+            error:      this.error,
             urls:       this.urls,
         };
 

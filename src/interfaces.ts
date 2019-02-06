@@ -46,11 +46,11 @@ export interface IDatabase {
     //jobs
     getJob(jobGuid: string): Promise<Job>;
     getActiveJobs(workgroup: string): Promise<Job[]>;
-    insertJob(job: Job): Promise<Job>;
+    createJob(apiKey: string, workerGuid: string): Promise<Job>;
     updateJob(job: Job, setter: any): Promise<Job>;
-    completeJob(job: Job, setter: any): Promise<Job>;
-    cancelJob(job: Job, setter: any): Promise<Job>;
-    failJob(job: Job, setter: any): Promise<Job>;
+    completeJob(job: Job, urls: string[]): Promise<Job>;
+    cancelJob(job: Job): Promise<Job>;
+    failJob(job: Job, error: string): Promise<Job>;
 }
 
 export interface ISettings {
@@ -115,4 +115,8 @@ export interface IWorkerObserver {
         workerUpdatedCb: (worker: Worker) => Promise<any>,   // received next heartbeat, worker was actualized
         workerOfflineCb: (worker: Worker) => Promise<any>,   // called when worker stops sending heartbeats
         spawnerCb:      (spawner: VraySpawnerInfo) => Promise<any>): void;
+}
+
+export interface IJobHandler {
+    Notify(job: Job, session: Session): void;
 }

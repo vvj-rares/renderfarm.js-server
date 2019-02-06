@@ -31,12 +31,11 @@ rfarm.createSession = function(onCreated) {
 
     $.ajax({
         url: this.baseUrl  + "/v1/session",
-        data: { api_key: this.apiKey, workspace: this.workspace },
+        data: { api_key: this.apiKey, workspace_guid: this.workspace },
         type: 'POST',
         success: function(result) {
-            this.sessionId = result.id;
-            console.log(result);
-            if (onCreated) onCreated(result.id);
+            this.sessionId = result.data.guid;
+            if (onCreated) onCreated(result.data);
         }.bind(this),
         error: function(err) {
             console.error(err.responseJSON);
@@ -217,6 +216,26 @@ rfarm.createSpotlight = function(spotlight, spotlightTarget, onCreated) {
         }.bind(this)
     });
 }.bind(rfarm);
+
+//public
+rfarm.createJob = function(sessionGuid, onStarted) {
+    console.log("Creating new render job...");
+
+    $.ajax({
+        url: rfarm.baseUrl  + "/v1/job",
+        data: { 
+            session_guid: sessionGuid
+        },
+        type: 'POST',
+        success: function(result) {
+            console.log(result);
+            onStarted(result.data);
+        }.bind(this),
+        error: function(err) {
+            console.error(err);
+        }.bind(this)
+    });
+}
 
 //public
 rfarm.render = function(cameraName, width, height, onStarted, onProgress, onImageReady) {

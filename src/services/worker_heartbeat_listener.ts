@@ -1,8 +1,8 @@
 import { injectable, inject } from "inversify";
-import { VraySpawnerInfo } from "./model/vray_spawner_info";
-import { IWorkerHeartbeatListener, ISettings, IWorkerObserver } from "./interfaces";
-import { TYPES } from "./types";
-import { Worker } from "./database/model/worker";
+import { VraySpawnerInfo } from "../model/vray_spawner_info";
+import { IWorkerHeartbeatListener, ISettings, IWorkerObserver } from "../interfaces";
+import { TYPES } from "../types";
+import { Worker } from "../database/model/worker";
 
 const uuidv4 = require('uuid/v4');
 const dgram = require('dgram');
@@ -22,12 +22,9 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener, IWorke
     private _workerOfflineCb: ((worker: Worker) => Promise<any>) []    = [];
     private _spawnerCb: ((worker: VraySpawnerInfo) => Promise<any>) [] = [];
 
-    private _settings: ISettings;
-
-    constructor(@inject(TYPES.ISettings) settings: ISettings) 
-    {
-        this._settings = settings;
-
+    constructor(
+        @inject(TYPES.ISettings) private _settings: ISettings,
+    ) {
         this.id = Math.random();
         console.log(" >> WorkerHeartbeatListener: ", this.id);
     }
@@ -174,3 +171,4 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener, IWorke
         }
     }
 }
+

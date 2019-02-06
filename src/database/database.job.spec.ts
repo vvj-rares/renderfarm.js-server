@@ -105,23 +105,15 @@ describe("Database Job", function() {
             }
         })
 
-        async function insertSomeJob() {
-            let newJob = new Job(null);
-            newJob.guid = uuidv4();
-            newJob.createdAt = new Date();
-            newJob.updatedAt = new Date();
-            newJob.workerGuid = helpers.existingWorkerGuid;
-            newJob.state = "pending";
-            newJob.apiKey = helpers.existingApiKey;
-
-            let jobAdded = await database.insertJob(newJob);
+        async function createSomeJob() {
+            let jobAdded = await database.createJob(helpers.existingApiKey, helpers.existingWorkerGuid);
             expect(jobAdded).toBeTruthy();
 
             return jobAdded;
         }
 
         it("checks that job was correctly inserted", async function(done) {
-            let newJob = await insertSomeJob();
+            let newJob = await createSomeJob();
 
             let job = await database.getOne<Job>("jobs", { guid: newJob.guid }, obj => new Job(obj));
 
@@ -137,7 +129,7 @@ describe("Database Job", function() {
         })
 
         it("checks that job was correctly updated", async function(done) {
-            let newJob = await insertSomeJob();
+            let newJob = await createSomeJob();
 
             let updatedJob = await database.updateJob(newJob, { $set: { state: "running" , updatedAt: new Date() } });
 
@@ -149,7 +141,7 @@ describe("Database Job", function() {
         })
 
         it("checks that job was correctly closed", async function(done) {
-            let newJob = await insertSomeJob();
+            let newJob = await createSomeJob();
 
             let closedJob = await database.completeJob(newJob, [ "https://example.com/1", "https://example.com/2" ]);
 
@@ -171,7 +163,7 @@ describe("Database Job", function() {
         })
 
         it("checks that job was correctly canceled", async function(done) {
-            let newJob = await insertSomeJob();
+            let newJob = await createSomeJob();
 
             let canceledJob = await database.cancelJob(newJob);
 
@@ -191,9 +183,9 @@ describe("Database Job", function() {
         })
 
         it("checks that job was correctly failed", async function(done) {
-            let newJob = await insertSomeJob();
+            let newJob = await createSomeJob();
 
-            let failedJob = await database.failJob(newJob);
+            let failedJob: Job = await database.failJob(newJob, "test failure");
 
             expect(failedJob).toBeTruthy();
             expect(failedJob.state).toBeNull();
@@ -206,6 +198,8 @@ describe("Database Job", function() {
 
             expect(isArray(failedJob.urls)).toBeTruthy();
             expect(failedJob.urls.length).toBe(0);
+
+            expect(failedJob.error).toBe("test failure");
 
             done();
         })

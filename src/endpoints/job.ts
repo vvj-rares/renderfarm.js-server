@@ -1,29 +1,19 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings } from "../interfaces";
+import { IEndpoint, IDatabase, ISettings, IJobHandler } from "../interfaces";
 import { TYPES } from "../types";
-import { JobInfo } from "../model/job_info";
 import { Job } from "../database/model/job";
-
-const http = require('http');
+import { Session } from "../database/model/session";
+import { EndpointHelpers } from "../utils/endpoint_helpers";
 
 @injectable()
 class JobEndpoint implements IEndpoint {
-    private _settings: ISettings;
-    private _database: IDatabase;
-    // private _maxscriptClientFactory: IMaxscriptClientFactory;
-    /*
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory
-                this._maxscriptClientFactory = maxscriptClientFactory;
-    */
-
-    //todo: introduce job dispatcher that will control render and periodically update job info
-
-    constructor(@inject(TYPES.ISettings) settings: ISettings,
-                @inject(TYPES.IDatabase) database: IDatabase) 
-    {
-        this._settings = settings;
-        this._database = database;        
+    constructor(
+        @inject(TYPES.ISettings) private _settings: ISettings,
+        @inject(TYPES.IDatabase) private _database: IDatabase,
+        @inject(TYPES.IJobHandler) private _jobHandler: IJobHandler,
+    ) {
+        // initialization code here
     }
 
     bind(express: express.Application) {
@@ -52,16 +42,29 @@ class JobEndpoint implements IEndpoint {
 
         }.bind(this));
 
-        express.post('/job', async function (req, res) {
-            console.log(`POST on ${req.path}`);
+        express.post(`/v${this._settings.majorVersion}/job`, async function (req, res) {
+            let sessionGuid = req.body.session_guid;
+            console.log(`POST on ${req.path} with session: ${sessionGuid}`);
 
-            //check that session is open => means worker is assigned and alive
-            //remember apiKey from session
-            //check that worker has no job assigned => reject POST saying to open another session
-            //create job on worker
-            //push job to job dispatcher for processing
-            //return job json
-    
+            let session: Session = await EndpointHelpers.tryGetSession(sessionGuid, this._database, res);
+            if (!session) {
+                return;
+            }
+
+            let activeJobs: Job[] = await this._database.getActiveJobs();
+            if (activeJobs.find(el => el.workerGuid === session.workerGuid)) {
+                console.log(`  FAIL | session busy: ${sessionGuid}`);
+                res.status(404);
+                res.end(JSON.stringify({ ok: false, message: "session busy", error: null }, null, 2));
+                return;
+            }
+
+            let job = await this._database.createJob(session.apiKey, session.workerGuid);
+
+            this._jobHandler.Notify(job, session);
+
+            res.status(200);
+            res.end(JSON.stringify({ ok: true, type: "jobs", data: job.toJSON() }, null, 2));
         }.bind(this));
 
         express.put('/job/:uid', async function (req, res) {

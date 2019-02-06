@@ -15,11 +15,12 @@ import { SceneMaterialEndpoint } from "./endpoints/scene/scene.material";
 import { SceneGeometryEndpoint } from "./endpoints/scene/scene.geometry";
 import { WorkspaceFileEndpoint } from "./endpoints/workspace.file";
 import { RenderOutputEndpoint } from "./endpoints/renderoutput";
-import { WorkerHeartbeatListener } from "./worker_heartbeat_listener";
+import { WorkerHeartbeatListener } from "./services/worker_heartbeat_listener";
 import { Settings } from "./settings";
 import { ThreeObjectEndpoint } from "./endpoints/three/three.object";
 import { ThreeGeometryEndpoint } from "./endpoints/three/three.geometry";
 import { ThreeMaterialEndpoint } from "./endpoints/three/three.material";
+import { JobHandler } from "./services/job_handler";
 
 const myContainer = new Container();
 
@@ -44,6 +45,8 @@ myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeMaterialEndpoint
 
 myContainer.bind<interfaces.IWorkerHeartbeatListener>(TYPES.IWorkerHeartbeatListener).to(WorkerHeartbeatListener).inSingletonScope();
 myContainer.bind<interfaces.IWorkerObserver>(TYPES.IWorkerObserver).toService(TYPES.IWorkerHeartbeatListener);
+
+myContainer.bind<interfaces.IJobHandler>(TYPES.IJobHandler).to(JobHandler).inSingletonScope();
 
 myContainer.bind<interfaces.IMaxscriptClientFactory>(TYPES.IMaxscriptClientFactory).to(MaxscriptClientFactory);
 
