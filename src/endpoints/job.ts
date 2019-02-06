@@ -3,6 +3,7 @@ import * as express from "express";
 import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings } from "../interfaces";
 import { TYPES } from "../types";
 import { JobInfo } from "../model/job_info";
+import { Job } from "../database/model/job";
 
 const http = require('http');
 
@@ -26,6 +27,26 @@ class JobEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
+        express.get(`/v${this._settings.majorVersion}/job`, async function (req, res) {
+            // get all active jobs
+            console.log(`GET on ${req.path}`);
+
+            let jobs: Job[];
+            try {
+                jobs = await this._database.getActiveJobs(this._settings.current.workgroup);
+            } catch (err) {
+                console.log(`  FAIL | failed to get active jobs, `, err);
+                res.status(500);
+                res.end(JSON.stringify({ ok: false, message: "failed to get active jobs", error: err.message }, null, 2));
+                return;
+            }
+
+            let jobsPayload = jobs.map( j => j.toJSON());
+
+            res.status(200);
+            res.end(JSON.stringify({ ok: true, type: "jobs", data: jobsPayload }, null, 2));
+        }.bind(this));
+
         express.get(`/v${this._settings.majorVersion}/job/:uid`, async function (req, res) {
             console.log(`GET on ${req.path}`);
 
