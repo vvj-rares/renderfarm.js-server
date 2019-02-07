@@ -55,7 +55,7 @@ export class Job extends IDbEntity {
             updatedAt:  this.updatedAt,
             closedAt:   this.closedAt,
             workerGuid: this.workerGuid,
-            state:      this.state !== null ? this.state : undefined,
+            state:      this.state,
             closed:     this.closed,
             canceled:   this.canceled,
             failed:     this.failed,
