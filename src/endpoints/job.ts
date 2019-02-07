@@ -38,8 +38,22 @@ class JobEndpoint implements IEndpoint {
         }.bind(this));
 
         express.get(`/v${this._settings.majorVersion}/job/:uid`, async function (req, res) {
-            console.log(`GET on ${req.path}`);
+            let jobGuid = req.params.uid;
+            console.log(`GET on ${req.path} with job guid: ${jobGuid}`);
 
+            let job: Job;
+
+            try {
+                job = await this._database.getJob(jobGuid);
+            } catch (err) {
+                console.log(`  FAIL | failed to get job: ${jobGuid}`);
+                res.status(500);
+                res.end(JSON.stringify({ ok: false, message: "failed to get job", error: err.message }, null, 2));
+                return;
+            }
+
+            res.status(200);
+            res.end(JSON.stringify({ ok: true, type: "jobs", data: job.toJSON() }, null, 2));
         }.bind(this));
 
         express.post(`/v${this._settings.majorVersion}/job`, async function (req, res) {
@@ -61,7 +75,7 @@ class JobEndpoint implements IEndpoint {
 
             let job = await this._database.createJob(session.apiKey, session.workerGuid);
 
-            this._jobHandler.Notify(job, session);
+            this._jobHandler.Start(job, session);
 
             res.status(200);
             res.end(JSON.stringify({ ok: true, type: "jobs", data: job.toJSON() }, null, 2));

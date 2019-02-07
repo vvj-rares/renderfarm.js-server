@@ -24,14 +24,21 @@ export class JobHandler implements IJobHandler {
 
     public id: number;
 
-    public Notify(job: Job, session: Session): void {
+    public Start(job: Job, session: Session): void {
         this._jobs.push(job);
 
         this.StartJob(job).catch(function(err) {
             console.log(" >> job failed: ", err);
-            let jobIdx = this._jobs.find(el => el === job);
+            let jobIdx = this._jobs.findIndex(el => el === job);
             this._jobs.splice(jobIdx, 1);
         }.bind(this));
+    }
+
+    public Cancel(job: Job): void {
+        let jobIdx = this._jobs.findIndex(el => el === job);
+        this._jobs.splice(jobIdx, 1);
+
+        //todo: request Worker Manager to kill worker
     }
 
     private async StartJob(job: Job) {
@@ -58,14 +65,14 @@ export class JobHandler implements IJobHandler {
             client.renderScene("Camera001", [640, 480], "C:\\Temp\\1.png", {})
                 .then(async function(result) {
                     console.log(" >> completeJob");
-                    await this._database.completeJob(job, ["1.png"]);
+                    await this._database.completeJob(job, ["https://example.com/files/1.png"]);
                 }.bind(this))
                 .catch(async function(err) {
                     console.log(" >> failJob");
                     await this._database.failJob(job, err.message);                
                 }.bind(this));
 
-        }.bind(this), 330);
+        }.bind(this), 15000);
 
         console.log(" >> rendering job...");
         this._database.updateJob(job, { $set: { state: "rendering" } });

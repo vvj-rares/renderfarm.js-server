@@ -118,5 +118,6 @@ export interface IWorkerObserver {
 }
 
 export interface IJobHandler {
-    Notify(job: Job, session: Session): void;
+    Start(job: Job, session: Session): void;
+    Cancel(job: Job): void;
 }

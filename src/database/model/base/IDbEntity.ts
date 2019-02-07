@@ -7,4 +7,13 @@ export abstract class IDbEntity {
 
     //get unique object to filter in database
     public abstract filter: any;
+
+    protected dropNulls(obj) {
+        for (let p in obj) {
+            if (obj[p] === null) {
+                delete obj[p];
+            }
+        }
+        return obj;
+    }
 }
