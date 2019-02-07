@@ -151,8 +151,8 @@ describe("Database Job", function() {
             expect(closedJob.canceled).toBeNull();
             expect(closedJob.failed).toBeNull();
 
-            expect(closedJob.createdAt).toEqual(newJob.updatedAt);
-            expect(closedJob.createdAt.getTime()).toBeLessThanOrEqual(newJob.closedAt.getTime());
+            expect(closedJob.createdAt).toEqual(closedJob.updatedAt);
+            expect(closedJob.createdAt.getTime()).toBeLessThanOrEqual(closedJob.closedAt.getTime());
 
             expect(isArray(closedJob.urls)).toBeTruthy();
             expect(closedJob.urls.length).toBe(2);
@@ -162,10 +162,11 @@ describe("Database Job", function() {
             done();
         })
 
-        it("checks that job was correctly canceled", async function(done) {
+        fit("checks that job was correctly canceled", async function(done) {
             let newJob = await createSomeJob();
 
             let canceledJob = await database.cancelJob(newJob);
+            console.log(canceledJob);
 
             expect(canceledJob).toBeTruthy();
             expect(canceledJob.state).toBeNull();
@@ -173,8 +174,8 @@ describe("Database Job", function() {
             expect(canceledJob.canceled).toBeTruthy();
             expect(canceledJob.failed).toBeNull();
 
-            expect(canceledJob.createdAt).toEqual(newJob.updatedAt);
-            expect(canceledJob.createdAt.getTime()).toBeLessThanOrEqual(newJob.closedAt.getTime());
+            expect(canceledJob.createdAt).toEqual(canceledJob.updatedAt);
+            expect(canceledJob.createdAt.getTime()).toBeLessThanOrEqual(canceledJob.closedAt.getTime());
 
             expect(isArray(canceledJob.urls)).toBeTruthy();
             expect(canceledJob.urls.length).toBe(0);
@@ -193,8 +194,8 @@ describe("Database Job", function() {
             expect(failedJob.canceled).toBeNull();
             expect(failedJob.failed).toBeTruthy();
 
-            expect(failedJob.createdAt).toEqual(newJob.updatedAt);
-            expect(failedJob.createdAt.getTime()).toBeLessThanOrEqual(newJob.closedAt.getTime());
+            expect(failedJob.createdAt).toEqual(failedJob.updatedAt);
+            expect(failedJob.createdAt.getTime()).toBeLessThanOrEqual(failedJob.closedAt.getTime());
 
             expect(isArray(failedJob.urls)).toBeTruthy();
             expect(failedJob.urls.length).toBe(0);
