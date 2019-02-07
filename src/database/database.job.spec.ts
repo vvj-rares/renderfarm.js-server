@@ -162,7 +162,7 @@ describe("Database Job", function() {
             done();
         })
 
-        fit("checks that job was correctly canceled", async function(done) {
+        it("checks that job was correctly canceled", async function(done) {
             let newJob = await createSomeJob();
 
             let canceledJob = await database.cancelJob(newJob);
