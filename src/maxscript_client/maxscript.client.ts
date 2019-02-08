@@ -116,7 +116,7 @@ class MaxscriptClient implements IMaxscriptClient {
         let maxscript = `resetMaxFile #noPrompt \r\n`
                         + ` sceneFilename = "${w.homeDir}\\\\api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\scenes\\\\${maxSceneFilename}" \r\n`
                         + ` if existFile sceneFilename then ( \r\n`
-                        + `     sceneLoaded = loadMaxFile useFileUnits:true quiet:true \r\n`
+                        + `     sceneLoaded = loadMaxFile sceneFilename useFileUnits:true quiet:true \r\n`
                         + `     if sceneLoaded then ( \r\n`
                         + `         threejsSceneRoot = Dummy name:"${sceneName}" \r\n`
                         + `         callbacks.removeScripts id:#flipYZ \r\n`
