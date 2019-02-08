@@ -94,7 +94,7 @@ describe(`REST API system resources`, function() {
         expect(isNumber(worker.ramUsage)).toBeTruthy();
         expect(isNumber(worker.totalRam)).toBeTruthy();
 
-        expect(worker.sessionGuid).toBeNull();
+        expect(worker.sessionGuid).toBeUndefined();
     });
 
     //request:  /GET https://dev1.renderfarmjs.com:8000/v1/worker

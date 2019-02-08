@@ -180,8 +180,8 @@ describe(`REST API /session endpoint`, function() {
         let lastSeen = new Date(json.data.lastSeen);
         expect(lastSeen.getTime()).toBeGreaterThanOrEqual(firstSeen.getTime());
 
-        expect(json.data.closed).toBeNull();
-        expect(json.data.expired).toBeNull();
+        expect(json.data.closed).toBeUndefined();
+        expect(json.data.expired).toBeUndefined();
 
         return new Session(json.data);
     }
@@ -208,7 +208,7 @@ describe(`REST API /session endpoint`, function() {
         expect(closedAt.getTime()).toBe(lastSeen.getTime());
 
         expect(json.data.closed).toBeTruthy();
-        expect(json.data.expired).toBeNull();
+        expect(json.data.expired).toBeUndefined();
 
         return new Session(json.data);
     }
