@@ -63,7 +63,8 @@ export class JobHandler implements IJobHandler {
         this._database.updateJob(job, { $set: { state: "rendering" } });
 
         let filename = job.guid + ".png";
-        client.renderScene("Camera001", [640, 480], this._settings.current.renderOutputDir + "\\" + filename, {})
+        // todo: don't hardcode worker local temp directory
+        client.renderScene("Camera001", [640, 480], "C:\\Temp\\" + filename, {})
             .then(async function(result) {
                 console.log(" >> completeJob");
                 await this._database.completeJob(job, ["https://example.com/files/1.png"]);

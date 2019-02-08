@@ -308,6 +308,8 @@ class MaxscriptClient implements IMaxscriptClient {
         // see here: http://help.autodesk.com/view/3DSMAX/2018/ENU/?guid=__files_GUID_9175301C_13E6_488B_ABA6_D27CD804B205_htm
         // can also use: JPEG.setQuality(5); JPEG.setSmoothing(1);
 
+        // todo: renderScene POST file to /renderoutput
+
         return this.execMaxscript(maxscript, "renderScene");
     }
 }

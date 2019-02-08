@@ -10,7 +10,7 @@ module.exports = function() { return {
         protocol: "http",
         sslKey: "ssl/key.pem",
         sslCert: "ssl/cert.pem",
-        renderOutputDir: "C:\\Temp",
+        renderOutputDir: "/home/rfarm-api/renderoutput", // this is where /renderoutput serves files
         apiKeyCheck: true,
         workspaceCheck: true,
         expireSessions: true,
