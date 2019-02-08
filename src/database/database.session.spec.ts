@@ -47,8 +47,8 @@ describe("Database Session", function() {
             expect(new Date().getTime() - session.lastSeen.getTime()).toBeLessThan(3000); // db time minus now is less than 3 seconds
             expect(session.guid).toBe(helpers.existingSessionGuid);
             expect(session.workspaceGuid).toBe(helpers.existingWorkspaceGuid);
-            expect(session.closed).toBeNull();
-            expect(session.closedAt).toBeNull();
+            expect(session.closed).toBeUndefined();
+            expect(session.closedAt).toBeUndefined();
 
             expect(session.workerRef).toBeTruthy();
             expect(session.workerRef.guid).toBe(session.workerGuid);
@@ -141,8 +141,8 @@ describe("Database Session", function() {
             expect(session.guid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
             expect(session.workerGuid).toMatch(/\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}/);
             expect(session.workspaceGuid).toBe(workspace.guid);
-            expect(session.closed).toBeNull();
-            expect(session.closedAt).toBeNull();
+            expect(session.closed).toBeUndefined();
+            expect(session.closedAt).toBeUndefined();
             // and check that ref on assigned worker was correctly resolved
             expect(session.workerRef).toBeTruthy();
             expect(session.workerRef.guid).toBe(session.workerGuid);
@@ -201,14 +201,14 @@ describe("Database Session", function() {
             expect(closedSession).toBeTruthy();
             expect(closedSession.guid).toBe(session.guid);
             expect(closedSession.closed).toBeTruthy();
-            expect(closedSession.expired).toBeNull();
+            expect(closedSession.expired).toBeUndefined();
             expect(closedSession.closedAt).toBeTruthy();
             expect(new Date().getTime() - closedSession.closedAt.getTime()).toBeLessThan(3000); // db time minus now is less than 3 seconds
 
             //now check that we actually released worker
             expect(closedSession.workerGuid).toBe(newWorker.guid);
             expect(closedSession.workerRef).toBeTruthy();
-            expect(closedSession.workerRef.sessionGuid).toBeNull();
+            expect(closedSession.workerRef.sessionGuid).toBeUndefined();
 
             done();
         })
@@ -258,10 +258,10 @@ describe("Database Session", function() {
             }
 
             expect(releasedWorker.guid).toBe(grabbedWorker.guid); // ensure we released same worker as we grabbed
-            expect(releasedWorker.sessionGuid).toBeNull();
+            expect(releasedWorker.sessionGuid).toBeUndefined();
             //now check that expired sessions have actualized worker refs
             expect(expiredSessions[0].workerRef).toBeTruthy();
-            expect(expiredSessions[0].workerRef.sessionGuid).toBeNull();
+            expect(expiredSessions[0].workerRef.sessionGuid).toBeUndefined();
             expect(expiredSessions[0].workerRef.guid).toBe(newWorker.guid);
 
             done();
@@ -291,14 +291,14 @@ describe("Database Session", function() {
             expect(failedSession.closed).toBeTruthy();
             expect(failedSession.failed).toBeTruthy();
             expect(failedSession.failReason).toBe(failReason);
-            expect(failedSession.expired).toBeNull();
+            expect(failedSession.expired).toBeUndefined();
             expect(failedSession.closedAt).toBeTruthy();
             expect(new Date().getTime() - failedSession.closedAt.getTime()).toBeLessThan(3000); // db time minus now is less than 3 seconds
 
             //now check that we actually released worker
             expect(failedSession.workerGuid).toBe(newWorker.guid);
             expect(failedSession.workerRef).toBeTruthy();
-            expect(failedSession.workerRef.sessionGuid).toBeNull();
+            expect(failedSession.workerRef.sessionGuid).toBeUndefined();
 
             done();
         })

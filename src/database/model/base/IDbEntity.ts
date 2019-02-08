@@ -10,7 +10,7 @@ export abstract class IDbEntity {
 
     protected dropNulls(obj) {
         for (let p in obj) {
-            if (obj[p] === null) {
+            if (obj[p] === null || obj[p] === undefined) {
                 delete obj[p];
             }
         }

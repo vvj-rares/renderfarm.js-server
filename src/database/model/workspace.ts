@@ -21,11 +21,11 @@ export class Workspace extends IDbEntity {
         this.workgroup = obj.workgroup;
         this.homeDir   = obj.homeDir;
         this.name      = obj.name;
-        this.lastSeen  = obj.lastSeen ? new Date(obj.lastSeen) : null;
+        this.lastSeen  = obj.lastSeen ? new Date(obj.lastSeen) : undefined;
     }
 
     public toJSON() {
-        return {
+        let result = {
             guid:      this.guid,
             apiKey:    this.apiKey,
             workgroup: this.workgroup,
@@ -33,6 +33,8 @@ export class Workspace extends IDbEntity {
             name:      this.name,
             lastSeen:  this.lastSeen
         };
+
+        return this.dropNulls(result);
     }
 
     public get filter(): any {

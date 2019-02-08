@@ -27,7 +27,7 @@ describe("Database Worker", function() {
                 console.log(`beforeEach failed with error: ${err.message}`);
             }
         });
-    
+
         afterEach(async function() {
             try {
                 await database.disconnect();
@@ -62,12 +62,12 @@ describe("Database Worker", function() {
             expect(worker.jobRef.apiKey).toBe(helpers.existingApiKey);
             expect(worker.jobRef.createdAt).toEqual(new Date("1999-12-31T23:00:00.000Z"));
             expect(worker.jobRef.updatedAt).toEqual(new Date("1999-12-31T23:00:00.000Z"));
-            expect(worker.jobRef.closedAt).toBeNull();
+            expect(worker.jobRef.closedAt).toBeUndefined();
             expect(worker.jobRef.workerGuid).toBe(worker.guid);
             expect(worker.jobRef.state).toBe("pending");
-            expect(worker.jobRef.closed).toBeNull();
-            expect(worker.jobRef.canceled).toBeNull();
-            expect(worker.jobRef.failed).toBeNull();
+            expect(worker.jobRef.closed).toBeUndefined();
+            expect(worker.jobRef.canceled).toBeUndefined();
+            expect(worker.jobRef.failed).toBeUndefined();
             expect(isArray(worker.jobRef.urls)).toBeTruthy();
             expect(worker.jobRef.urls.length).toBe(2);
 
@@ -81,11 +81,11 @@ describe("Database Worker", function() {
             expect(worker.sessionRef.firstSeen).toEqual(new Date("2019-01-08T12:25:07.029Z"));
             expect(worker.sessionRef.lastSeen.getTime()).toBeGreaterThanOrEqual(worker.sessionRef.firstSeen.getTime());
             expect(worker.sessionRef.workspaceGuid).toBe(helpers.existingWorkspaceGuid);
-            expect(worker.sessionRef.closed).toBeNull();
-            expect(worker.sessionRef.expired).toBeNull();
-            expect(worker.sessionRef.closedAt).toBeNull();
-            expect(worker.sessionRef.failed).toBeNull();
-            expect(worker.sessionRef.failReason).toBeNull();
+            expect(worker.sessionRef.closed).toBeUndefined();
+            expect(worker.sessionRef.expired).toBeUndefined();
+            expect(worker.sessionRef.closedAt).toBeUndefined();
+            expect(worker.sessionRef.failed).toBeUndefined();
+            expect(worker.sessionRef.failReason).toBeUndefined();
 
             done();
         });

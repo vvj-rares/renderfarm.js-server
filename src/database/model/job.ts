@@ -23,11 +23,6 @@ export class Job extends IDbEntity {
         if (obj) {
             this.parse(obj);
         } else {
-            this.closed = null;
-            this.canceled = null;
-            this.failed = null;
-            this.closedAt = null;
-            this.error = null;
             this.urls = [];
         }
     }
@@ -35,9 +30,9 @@ export class Job extends IDbEntity {
     public parse(obj: any) {
         this.guid       = obj.guid;
         this.apiKey     = obj.apiKey;
-        this.createdAt  = obj.createdAt ? new Date(obj.createdAt) : null;
-        this.updatedAt  = obj.updatedAt ? new Date(obj.updatedAt) : null;
-        this.closedAt   = obj.closedAt ? new Date(obj.closedAt) : null;
+        this.createdAt  = obj.createdAt ? new Date(obj.createdAt) : undefined;
+        this.updatedAt  = obj.updatedAt ? new Date(obj.updatedAt) : undefined;
+        this.closedAt   = obj.closedAt ? new Date(obj.closedAt) : undefined;
         this.workerGuid = obj.workerGuid;
         this.state      = obj.state;
         this.closed     = obj.closed;

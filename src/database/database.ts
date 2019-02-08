@@ -233,7 +233,7 @@ export class Database implements IDatabase {
         try {
             let filter: any = {
                 guid: candidate.guid,
-                sessionGuid: { $eq: null }
+                sessionGuid: { $exists: false }
             };
             let sessionGuid = uuidv4();
             let setter: any = { $set: { 
@@ -265,7 +265,7 @@ export class Database implements IDatabase {
                 "sessions",
                 {
                     guid: sessionGuid,
-                    closedAt: null
+                    closedAt: { $exists: false }
                 },
                 {
                     $set: {
@@ -286,7 +286,7 @@ export class Database implements IDatabase {
                 guid: closedSession.workerGuid
             },
             {
-                $set: {
+                $unset: {
                     sessionGuid: null
                 }
             }, 
@@ -301,7 +301,7 @@ export class Database implements IDatabase {
                 "sessions",
                 {
                     guid: sessionGuid,
-                    closedAt: null
+                    closedAt: { $exists: false }
                 },
                 {
                     $set: {
@@ -324,7 +324,7 @@ export class Database implements IDatabase {
                 guid: closedSession.workerGuid
             },
             {
-                $set: {
+                $unset: {
                     sessionGuid: null
                 }
             }, 
@@ -337,7 +337,7 @@ export class Database implements IDatabase {
         let expirationDate = new Date(Date.now() - olderThanMinutes * 60*1000);
         let filter = { 
             lastSeen : { $lte: expirationDate },
-            closed: null
+            closed: { $exists: false }
         };
         let setter = { $set: { closed: true, closedAt: new Date(), expired: true } };
         let expiredSessions = await this.findManyAndUpdate<Session>("sessions", filter, setter, obj => new Session(obj));
@@ -354,7 +354,11 @@ export class Database implements IDatabase {
         let updatedWorkers = await this.findManyAndUpdate(
             "workers", 
             workerUpdateFilter, 
-            { $set: { sessionGuid: null } }, 
+            { 
+                $unset: { 
+                    sessionGuid: null 
+                } 
+            },
             obj => new Worker(obj));
 
         for (let si in expiredSessions) {
@@ -387,7 +391,7 @@ export class Database implements IDatabase {
             "jobs",
             { 
                 workerGuid: workerGuid,
-                closed: null
+                closed: { $exists: false }
             },
             (obj) => new Job(obj)
         ));
@@ -432,7 +436,7 @@ export class Database implements IDatabase {
         let result = await db.collection(this.envCollectionName("workers")).find({ 
              workgroup: this._settings.current.workgroup,
                 lastSeen : { $gte: recentOnlineDate },
-                sessionGuid: null
+                sessionGuid: { $exists: false }
             }).sort({
                 cpuUsage: 1 //sort by cpu load, less loaded first
             }).toArray();
@@ -493,7 +497,7 @@ export class Database implements IDatabase {
         let jobs = await this.find<Job>(
             "jobs",
             {
-                closed: null
+                closed: { $exists: false }
             },
             (obj) => new Job(obj));
         
@@ -525,14 +529,18 @@ export class Database implements IDatabase {
             "jobs", 
             {
                 guid: job.guid,
-                closed: null
+                closed: { $exists: false }
             }, 
             {
                 $set: {
                     closedAt: new Date(),
                     closed: true,
-                    state: null,
                     urls: isArray(urls) ? urls : []
+                },
+                $unset: {
+                    failed: null,
+                    canceled: null,
+                    state: null
                 }
             }, 
             obj => new Job(obj));
@@ -543,15 +551,18 @@ export class Database implements IDatabase {
             "jobs", 
             {
                 guid: job.guid,
-                closed: null
+                closed: { $exists: false }
             },
             {
                 $set: {
                     closedAt: new Date(),
                     closed: true,
                     canceled: true,
-                    state: null,
                     urls: []
+                },
+                $unset: {
+                    failed: null,
+                    state: null
                 }
             }, 
             obj => new Job(obj));
@@ -562,16 +573,19 @@ export class Database implements IDatabase {
             "jobs", 
             {
                 guid: job.guid,
-                closed: null
+                closed: { $exists: false }
             },
             {
                 $set: {
                     closedAt: new Date(),
                     closed: true,
                     failed: true,
-                    state: null,
                     urls: [],
                     error: error
+                },
+                $unset: {
+                    state: null,
+                    canceled: null
                 }
             }, 
             obj => new Job(obj));
@@ -627,6 +641,8 @@ export class Database implements IDatabase {
                     reject(Error(`nothing was updated in ${collection} by ${JSON.stringify(filter)}`));
                 }
             }.bind(this);
+
+            this.unsetNulls(setter);
     
             db.collection(this.envCollectionName(collection)).findOneAndUpdate(
                 filter,
@@ -725,6 +741,8 @@ export class Database implements IDatabase {
                     reject(Error(`nothing was updated in ${collection} by ${JSON.stringify(filter)}`));
                 }
             }.bind(this);
+
+            this.unsetNulls(setter);
     
             db.collection(this.envCollectionName(collection)).updateOne(
                 filter,
@@ -748,7 +766,10 @@ export class Database implements IDatabase {
             assert.notEqual(db, null);
     
             let trans = uuidv4();
+            if (!setter.$set) setter.$set = {};
             setter.$set._trans = trans; //remember transaction
+
+            this.unsetNulls(setter);
 
             let ops: UpdateManyOptions = { w: "majority", j: true, upsert: false };
             let callback: MongoCallback<UpdateWriteOpResult> = function(error:MongoError, res:UpdateWriteOpResult) {
@@ -782,9 +803,12 @@ export class Database implements IDatabase {
 
             let db = this._client.db(this._settings.current.databaseName);
             assert.notEqual(db, null);
-    
+
             let trans = uuidv4();
+            if (!setter.$set) setter.$set = {};
             setter.$set._trans = trans; //remember transaction
+
+            this.unsetNulls(setter);
     
             let ops: UpdateManyOptions = { w: "majority", j: true, upsert: false };
             let callback: MongoCallback<UpdateWriteOpResult> = async function(error:MongoError, res:UpdateWriteOpResult) {
@@ -860,6 +884,21 @@ export class Database implements IDatabase {
             return res;
         } catch {
             return undefined;
+        }
+    }
+
+    private unsetNulls(setter) {
+        if (setter.$set) {
+            for (let s in setter.$set) {
+                if (setter.$set[s] === null) {
+                    delete setter.$set[s];
+                    if (!setter.$unset) setter.$unset = {};
+                    setter.$unset[s] = null;
+                }
+            }
+            if (Object.keys(setter.$set).length === 0) {
+                delete setter.$set;
+            }
         }
     }
     //#endregion

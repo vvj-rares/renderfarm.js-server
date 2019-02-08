@@ -23,8 +23,6 @@ export class Worker extends IDbEntity {
         super();
         if (obj) {
             this.parse(obj);
-        } else {
-            this.sessionGuid = null;
         }
     }
 
@@ -35,8 +33,8 @@ export class Worker extends IDbEntity {
         this.port      = obj.port;
         this.endpoint  = `${obj.ip}:${obj.port}`;
         this.workgroup = obj.workgroup;
-        this.firstSeen = obj.firstSeen ? new Date(obj.firstSeen) : null;
-        this.lastSeen  = obj.lastSeen ? new Date(obj.lastSeen) : null;
+        this.firstSeen = obj.firstSeen ? new Date(obj.firstSeen) : undefined;
+        this.lastSeen  = obj.lastSeen ? new Date(obj.lastSeen) : undefined;
         this.cpuUsage  = obj.cpuUsage;
         this.ramUsage  = obj.ramUsage;
         this.totalRam  = obj.totalRam;
@@ -59,7 +57,7 @@ export class Worker extends IDbEntity {
             sessionGuid: this.sessionGuid
         };
 
-        return result;
+        return this.dropNulls(result);
     }
 
     public get filter(): any {

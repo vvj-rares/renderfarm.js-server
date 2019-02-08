@@ -7,7 +7,6 @@ import { Job } from "./model/job";
 import { isArray } from "util";
 
 require("../jasmine.config")();
-const uuidv4 = require('uuid/v4');
 
 describe("Database Job", function() {
     var originalTimeout;
@@ -47,12 +46,12 @@ describe("Database Job", function() {
 
             expect(job.createdAt).toEqual(new Date("2000-01-01 00:00:00.000"));
             expect(job.updatedAt).toEqual(new Date("2000-01-01 00:00:00.000"));
-            expect(job.closedAt).toBeNull();
+            expect(job.closedAt).toBeUndefined();
             expect(job.workerGuid).toBe(helpers.existingWorkerGuid);
             expect(job.state).toBe("pending");
-            expect(job.closed).toBeNull();
-            expect(job.canceled).toBeNull();
-            expect(job.failed).toBeNull();
+            expect(job.closed).toBeUndefined();
+            expect(job.canceled).toBeUndefined();
+            expect(job.failed).toBeUndefined();
             expect(isArray(job.urls)).toBeTruthy()
 
             expect(job.workerRef).toBeTruthy();
@@ -146,10 +145,11 @@ describe("Database Job", function() {
             let closedJob = await database.completeJob(newJob, [ "https://example.com/1", "https://example.com/2" ]);
 
             expect(closedJob).toBeTruthy();
-            expect(closedJob.state).toBeNull();
             expect(closedJob.closed).toBeTruthy();
-            expect(closedJob.canceled).toBeNull();
-            expect(closedJob.failed).toBeNull();
+
+            expect(closedJob.state).toBeUndefined();
+            expect(closedJob.canceled).toBeUndefined();
+            expect(closedJob.failed).toBeUndefined();
 
             expect(closedJob.createdAt).toEqual(closedJob.updatedAt);
             expect(closedJob.createdAt.getTime()).toBeLessThanOrEqual(closedJob.closedAt.getTime());
@@ -169,10 +169,10 @@ describe("Database Job", function() {
             console.log(canceledJob);
 
             expect(canceledJob).toBeTruthy();
-            expect(canceledJob.state).toBeNull();
+            expect(canceledJob.state).toBeUndefined();
             expect(canceledJob.closed).toBeTruthy();
             expect(canceledJob.canceled).toBeTruthy();
-            expect(canceledJob.failed).toBeNull();
+            expect(canceledJob.failed).toBeUndefined();
 
             expect(canceledJob.createdAt).toEqual(canceledJob.updatedAt);
             expect(canceledJob.createdAt.getTime()).toBeLessThanOrEqual(canceledJob.closedAt.getTime());
@@ -189,9 +189,9 @@ describe("Database Job", function() {
             let failedJob: Job = await database.failJob(newJob, "test failure");
 
             expect(failedJob).toBeTruthy();
-            expect(failedJob.state).toBeNull();
+            expect(failedJob.state).toBeUndefined();
             expect(failedJob.closed).toBeTruthy();
-            expect(failedJob.canceled).toBeNull();
+            expect(failedJob.canceled).toBeUndefined();
             expect(failedJob.failed).toBeTruthy();
 
             expect(failedJob.createdAt).toEqual(failedJob.updatedAt);
