@@ -60,21 +60,17 @@ export class JobHandler implements IJobHandler {
             throw Error(errorMessage);
         }
 
-        setTimeout(function() { // start rendering with some delay
-            console.log(" >> client.renderScene");
-            client.renderScene("Camera001", [640, 480], "C:\\Temp\\1.png", {})
-                .then(async function(result) {
-                    console.log(" >> completeJob");
-                    await this._database.completeJob(job, ["https://example.com/files/1.png"]);
-                }.bind(this))
-                .catch(async function(err) {
-                    console.log(" >> failJob");
-                    await this._database.failJob(job, err.message);                
-                }.bind(this));
-
-        }.bind(this), 15000);
-
-        console.log(" >> rendering job...");
         this._database.updateJob(job, { $set: { state: "rendering" } });
+
+        let filename = job.guid + ".png";
+        client.renderScene("Camera001", [640, 480], this._settings.current.renderOutputDir + "\\" + filename, {})
+            .then(async function(result) {
+                console.log(" >> completeJob");
+                await this._database.completeJob(job, ["https://example.com/files/1.png"]);
+            }.bind(this))
+            .catch(async function(err) {
+                console.log(" >> failJob");
+                await this._database.failJob(job, err.message);                
+            }.bind(this));
     }
 }
