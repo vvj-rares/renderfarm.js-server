@@ -5,18 +5,20 @@ import { ISettings } from "./interfaces";
 
 @injectable()
 export class Settings implements ISettings {
+    private _env: string;
     private _settings: any;
     private _majorVersion: number;
     private _version: string;
 
-    constructor(private _env: string) {
+    constructor(env: string) {
+        this._env = env;
 
         let settings = require("./settings/app.settings.js")();
         this._settings = settings.common;
 
         //now merge environment specific settings into common settings
-        for (let p in settings[this._env]) {
-            this._settings[p] = settings[this._env][p];
+        for (let p in settings[env]) {
+            this._settings[p] = settings[env][p];
         }
 
         //now evaluate command line parameters and override settings
