@@ -291,19 +291,22 @@ class MaxscriptClient implements IMaxscriptClient {
 
     renderScene(camera: string, size: number[], filename: string, vraySettings: any): Promise<boolean> {
 
-        let maxscript =   ` pngio.settype(#true24) ; `  // enums: {#paletted|#true24|#true48|#gray8|#gray16} 
-                        + ` pngio.setAlpha false ; `
-                        + ` vr = renderers.current ; `
+        let escapedFilename = filename.replace(/\\/g, "\\\\");
+
+        let maxscript =   ` pngio.settype(#true24) ;\r\n`  // enums: {#paletted|#true24|#true48|#gray8|#gray16} 
+                        + ` pngio.setAlpha false ;\r\n`
+                        + ` vr = renderers.current ;\r\n`
                         //+ ` vr.progressive_max_render_time = ${vraySettings.progressiveMaxRenderTime} ; `
                         //+ ` vr.progressive_noise_threshold = ${vraySettings.progressiveNoiseThreshold} ; `
-                        + ` viewport.setLayout #layout_1 ; `
-                        + ` viewport.setCamera $${camera} ; `
-                        + ` renderWidth  = ${size[0]} ; `
-                        + ` renderHeight = ${size[1]} ; `
-                        + ` rendUseActiveView = true ; `
-                        + ` rendSaveFile = true ; `
-                        + ` rendOutputFilename = "${filename}" ; `
-                        + ` max quick render `;
+                        + ` viewport.setLayout #layout_1 ;\r\n`
+                        + ` viewport.setCamera $${camera} ;\r\n`
+                        + ` renderWidth  = ${size[0]} ;\r\n`
+                        + ` renderHeight = ${size[1]} ;\r\n`
+                        + ` rendUseActiveView = true ;\r\n`
+                        + ` rendSaveFile = true ;\r\n`
+                        + ` rendOutputFilename = "${escapedFilename}" ;\r\n`
+                        + ` max quick render ;\r\n`
+                        + ` cmdexRun "chcp 65001 & curl -F file=@${escapedFilename} https://acc.renderfarmjs.com/v1/renderoutput" `;
 
         // see here: http://help.autodesk.com/view/3DSMAX/2018/ENU/?guid=__files_GUID_9175301C_13E6_488B_ABA6_D27CD804B205_htm
         // can also use: JPEG.setQuality(5); JPEG.setSmoothing(1);
