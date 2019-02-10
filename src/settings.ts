@@ -15,8 +15,8 @@ export class Settings implements ISettings {
         this._settings = settings.common;
 
         //now merge environment specific settings into common settings
-        for (let p in settings[_env]) {
-            this._settings[p] = settings[_env][p];
+        for (let p in settings[this._env]) {
+            this._settings[p] = settings[this._env][p];
         }
 
         //now evaluate command line parameters and override settings
