@@ -21,6 +21,7 @@ export class WorkerEndpoint implements IEndpoint {
         this._database = database;
         this._workerHeartbeatListener = workerHeartbeatListener;
 
+        console.log(`heartbeatPort: ${this._settings.current.heartbeatPort}`);
         if (this._settings.current.heartbeatPort > 0) {
             this._workerObserver.Subscribe(
                 this.onWorkerAdded.bind(this),

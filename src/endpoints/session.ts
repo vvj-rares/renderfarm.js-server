@@ -22,6 +22,7 @@ class SessionEndpoint implements IEndpoint {
         this._maxscriptClientFactory = maxscriptClientFactory;
 
         //expire sessions by timer
+        console.log(`expireSessions: ${this._settings.current.expireSessions}`);
         if (this._settings.current.expireSessions) {
             setInterval(async function() {
                 try {
