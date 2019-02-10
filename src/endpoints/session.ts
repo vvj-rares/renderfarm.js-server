@@ -1,25 +1,18 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings, IMaxscriptClient, IWorkerObserver } from "../interfaces";
+import { IEndpoint, IDatabase, ISettings, IMaxscriptClient, IWorkerObserver } from "../interfaces";
 import { TYPES } from "../types";
 import { Session } from "../database/model/session";
 import { Worker } from "../database/model/worker";
 
 @injectable()
 class SessionEndpoint implements IEndpoint {
-    private _settings: ISettings;
-    private _database: IDatabase;
-    private _maxscript: { [sessionGuid: string] : IMaxscriptClient; } = {}; // keep maxscript connections alive for open sessions
-    private _maxscriptClientFactory: IMaxscriptClientFactory;
+    // private _maxscript: { [sessionGuid: string] : IMaxscriptClient; } = {}; // keep maxscript connections alive for open sessions
 
-    constructor(@inject(TYPES.ISettings) settings: ISettings,
-                @inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IWorkerObserver) private _workerObserver: IWorkerObserver,
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
-
-        this._settings = settings;
-        this._database = database;
-        this._maxscriptClientFactory = maxscriptClientFactory;
+    constructor(@inject(TYPES.ISettings) private _settings: ISettings,
+                @inject(TYPES.IDatabase) private _database: IDatabase,
+                @inject(TYPES.IWorkerObserver) private _workerObserver: IWorkerObserver) 
+    {
 
         //expire sessions by timer
         if (this._settings.current.expireSessions) {
