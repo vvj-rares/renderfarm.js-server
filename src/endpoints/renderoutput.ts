@@ -8,10 +8,13 @@ import fs = require('fs');
 
 @injectable()
 class RenderOutputEndpoint implements IEndpoint {
+
+    private _settings: ISettings;
     private _upload: any;
 
-    constructor(@inject(TYPES.ISettings) private _settings: ISettings) 
+    constructor(@inject(TYPES.ISettings) settings: ISettings) 
     {
+        this._settings = settings;
         this._upload = multer({ dest: this._settings.current.renderOutputDir });
     }
 

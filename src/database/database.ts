@@ -20,10 +20,12 @@ const uuidv4 = require('uuid/v4');
 
 @injectable()
 export class Database implements IDatabase {
+    private _settings: ISettings;
     private _client: MongoClient;
 
-    constructor(@inject(TYPES.ISettings) private _settings: ISettings) 
+    constructor(@inject(TYPES.ISettings) settings: ISettings) 
     {
+        this._settings = settings;
     }
 
     //#region common methods

@@ -7,12 +7,20 @@ import { Worker } from "../database/model/worker";
 
 @injectable()
 export class WorkerEndpoint implements IEndpoint {
+    private _settings: ISettings;
+    private _database: IDatabase;
+    private _workerHeartbeatListener: IWorkerHeartbeatListener;
+    // private _workerObserver: IWorkerObserver;
 
-    constructor(@inject(TYPES.ISettings) private _settings: ISettings,
-                @inject(TYPES.IDatabase) private _database: IDatabase,
+    constructor(@inject(TYPES.ISettings) settings: ISettings,
+                @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.IWorkerObserver) private _workerObserver: IWorkerObserver,
-                @inject(TYPES.IWorkerHeartbeatListener) private _workerHeartbeatListener: IWorkerHeartbeatListener ) 
+                @inject(TYPES.IWorkerHeartbeatListener) workerHeartbeatListener: IWorkerHeartbeatListener ) 
     {
+        this._settings = settings;
+        this._database = database;
+        this._workerHeartbeatListener = workerHeartbeatListener;
+
         if (this._settings.current.heartbeatPort > 0) {
             this._workerObserver.Subscribe(
                 this.onWorkerAdded.bind(this),
