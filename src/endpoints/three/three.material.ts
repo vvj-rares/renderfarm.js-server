@@ -23,33 +23,45 @@ class ThreeMaterialEndpoint implements IEndpoint {
 
     bind(express: express.Application) {
         express.get(`/v${this._settings.majorVersion}/three/material/:uuid`, async function (req, res) {
-            let uuid = req.params.uuid;
             let sessionGuid = req.body.session;
-            console.log(`GET on ${req.path} with session: ${req.body.session}`);
+            console.log(`GET on ${req.path} with session: ${sessionGuid}`);
+
+            let uuid = req.params.uuid;
+            console.log(`todo: // retrieve material ${uuid}`);
+
             res.status(200);
             res.end(JSON.stringify({}));
         }.bind(this));
 
         express.post(`/v${this._settings.majorVersion}/three/material`, async function (req, res) {
-            let uuid = req.params.uuid;
             let sessionGuid = req.body.session;
-            console.log(`POST on ${req.path} with session: ${req.body.session}`);
+            console.log(`POST on ${req.path} with session: ${sessionGuid}`);
+
+            let uuid = req.params.uuid;
+            console.log(`todo: // accept posted material ${uuid}`);
+
             res.status(201);
             res.end(JSON.stringify({}));
         }.bind(this));
 
         express.put(`/v${this._settings.majorVersion}/three/material/:uuid`, async function (req, res) {
-            let uuid = req.params.uuid;
             let sessionGuid = req.body.session;
-            console.log(`PUT on ${req.path} with session: ${req.body.session}`);
+            console.log(`PUT on ${req.path} with session: ${sessionGuid}`);
+
+            let uuid = req.params.uuid;
+            console.log(`todo: // accept updated material ${uuid}`);
+
             res.status(200);
             res.end(JSON.stringify({}));
         }.bind(this));
 
         express.delete(`/v${this._settings.majorVersion}/three/material/:uuid`, async function (req, res) {
-            let uuid = req.params.uuid;
             let sessionGuid = req.body.session;
-            console.log(`DELETE on ${req.path} with session: ${req.body.session}`);
+            console.log(`DELETE on ${req.path} with session: ${sessionGuid}`);
+
+            let uuid = req.params.uuid;
+            console.log(`todo: // delete material ${uuid}`);
+
             res.status(200);
             res.end(JSON.stringify({}));
         }.bind(this));

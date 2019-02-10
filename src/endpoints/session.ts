@@ -95,7 +95,7 @@ class SessionEndpoint implements IEndpoint {
             worker = await this._database.getWorker(w.guid);
         }
         catch (err) {
-            console.log(`  FAIL | failed to close session ${worker.sessionGuid} for dead worker: ${worker.guid}: `, err);
+            console.log(`  FAIL | failed to close session ${w.sessionGuid} for dead worker: ${w.guid}: `, err);
             return;
         }
 
