@@ -67,7 +67,7 @@ export class JobHandler implements IJobHandler {
         client.renderScene("Camera001", [640, 480], "C:\\Temp\\" + filename, {})
             .then(async function(result) {
                 console.log(" >> completeJob");
-                await this._database.completeJob(job, [ `https://renderfarmjs.com/v1/renderoutput/${filename}` ]);
+                await this._database.completeJob(job, [ `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/renderoutput/${filename}` ]);
             }.bind(this))
             .catch(async function(err) {
                 console.log(" >> failJob");
