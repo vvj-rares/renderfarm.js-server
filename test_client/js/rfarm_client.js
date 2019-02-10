@@ -7,7 +7,7 @@ function pad(num, size) {
 var rfarm = {
     apiKey: "75f5-4d53-b0f4",
     workspace: "55a0bd33-9f15-4bc0-a482-17899eb67af3",
-    baseUrl: "https://mel.mbnsay.com",
+    baseUrl: "https://acc.renderfarmjs.com",
 
     geometries: {},  // here we map scene geometry uuid <==> backend geometry resource
     materials: {},   // here we map scene material uuid <==> backend material resource
@@ -31,7 +31,11 @@ rfarm.createSession = function(onCreated) {
 
     $.ajax({
         url: this.baseUrl  + "/v1/session",
-        data: { api_key: this.apiKey, workspace_guid: this.workspace },
+        data: { 
+            api_key: this.apiKey, 
+            workspace_guid: this.workspace,
+            scene_filename: "vray_simple_1.max"
+        },
         type: 'POST',
         success: function(result) {
             this.sessionId = result.data.guid;
@@ -47,13 +51,10 @@ rfarm.createSession = function(onCreated) {
 // public
 rfarm.closeSession = function(sessionGuid, onClosed) {
     console.log("Closing session...");
-    //todo: implement it
 
     $.ajax({
-        url: this.baseUrl  + "/session/" + sessionGuid,
-        data: { 
-            session: this.sessionId 
-        },
+        url: this.baseUrl  + "/v1/session/" + sessionGuid,
+        data: { },
         type: 'DELETE',
         success: function(result) {
             console.log(result);
@@ -230,6 +231,22 @@ rfarm.createJob = function(sessionGuid, onStarted) {
         success: function(result) {
             console.log(result);
             onStarted(result.data);
+        }.bind(this),
+        error: function(err) {
+            console.error(err);
+        }.bind(this)
+    });
+}
+
+//public
+rfarm.getJob = function(jobGuid, callback) {
+    $.ajax({
+        url: rfarm.baseUrl  + "/v1/job/" + jobGuid,
+        data: { },
+        type: 'GET',
+        success: function(result) {
+            console.log(result);
+            callback(result.data);
         }.bind(this),
         error: function(err) {
             console.error(err);

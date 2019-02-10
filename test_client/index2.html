@@ -31,14 +31,29 @@
         </div>
 
         <script type="text/javascript">
-            rfarm.baseUrl = "http://localhost:8000";
+            rfarm.baseUrl = "https://acc.renderfarmjs.com";
             function createSession() {
                 console.log('createSession');
+                $("#render").remove();
+
                 rfarm.createSession(function(session) {
                     console.log(session);
 
                     rfarm.createJob(session.guid, function(job) {
                         console.log(job);
+                        let updateInterval = setInterval(function() {
+                            rfarm.getJob(job.guid, function(jobUpdate) {
+                                if (jobUpdate.closed) {
+                                    clearInterval(updateInterval);
+                                    if (jobUpdate.urls.length > 0) {
+                                        $("body").append(`<img id="render" src="${jobUpdate.urls[0]}" />`);
+                                    }
+                                    rfarm.closeSession(session.guid, function() {
+                                        console.log("Session closed");
+                                    })
+                                }
+                            });
+                        }, 1000);
                     });
                 });
             }
