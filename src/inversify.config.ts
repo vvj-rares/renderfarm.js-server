@@ -21,6 +21,7 @@ import { ThreeObjectEndpoint } from "./endpoints/three/three.object";
 import { ThreeGeometryEndpoint } from "./endpoints/three/three.geometry";
 import { ThreeMaterialEndpoint } from "./endpoints/three/three.material";
 import { JobHandler } from "./services/job_handler";
+import { SessionWatchdog } from "./services/session_watchdog";
 
 const myContainer = new Container();
 
@@ -47,6 +48,7 @@ myContainer.bind<interfaces.IWorkerHeartbeatListener>(TYPES.IWorkerHeartbeatList
 myContainer.bind<interfaces.IWorkerObserver>(TYPES.IWorkerObserver).toService(TYPES.IWorkerHeartbeatListener);
 
 myContainer.bind<interfaces.IJobHandler>(TYPES.IJobHandler).to(JobHandler).inSingletonScope();
+myContainer.bind<interfaces.ISessionWatchdog>(TYPES.ISessionWatchdog).to(SessionWatchdog).inSingletonScope();
 
 myContainer.bind<interfaces.IMaxscriptClientFactory>(TYPES.IMaxscriptClientFactory).to(MaxscriptClientFactory);
 

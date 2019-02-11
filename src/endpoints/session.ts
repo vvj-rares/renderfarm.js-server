@@ -21,36 +21,6 @@ class SessionEndpoint implements IEndpoint {
         this._database = database;
         this._maxscriptClientFactory = maxscriptClientFactory;
 
-        //expire sessions by timer
-        console.log(`expireSessions: ${this._settings.current.expireSessions}`);
-        if (this._settings.current.expireSessions) {
-            setInterval(async function() {
-                try {
-                    await this._database.expireSessions(this._settings.current.sessionTimeoutMinutes)
-                        .then(function(guids){
-
-                            //todo: close maxscript connections for these sessions
-
-                            if (guids.length === 0) {
-                                return;
-                            }
-                            console.log(`    OK | expired sessions: ${guids.length}`);
-                        }.bind(this))
-                        .catch(function(err){
-                            console.error(err);
-                        }.bind(this));
-                } catch (err) {
-                    console.error(err);
-                }
-
-            }.bind(this), 5000);
-        }
-
-        //keep maxscript connections alive until session is not closed or expired
-        setInterval(async function() {
-            // todo: send keepalive message to maxscript client
-        }, 1000);
-
         this._workerObserver.Subscribe(null, null, this.onWorkerOffline.bind(this), null);
     }
 

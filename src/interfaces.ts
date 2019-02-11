@@ -121,3 +121,7 @@ export interface IJobHandler {
     Start(job: Job, session: Session): void;
     Cancel(job: Job): void;
 }
+
+export interface ISessionWatchdog {
+    Subscribe(sessionExpiredCb:  (session: Session) => Promise<any>): void;
+}

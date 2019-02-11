@@ -9,6 +9,7 @@ const TYPES = {
     IWorkerHeartbeatListener: Symbol.for("IWorkerHeartbeatListener"),
     IWorkerObserver: Symbol.for("IWorkerObserver"),
     IJobHandler: Symbol.for("IJobHandler"),
+    ISessionWatchdog: Symbol.for("ISessionWatchdog"),
 };
 
 export { TYPES };

@@ -9,6 +9,8 @@ const dgram = require('dgram');
 
 @injectable()
 export class WorkerHeartbeatListener implements IWorkerHeartbeatListener, IWorkerObserver {
+    private _settings: ISettings;
+
     private _workers: {
         [id: string]: Worker;
     } = {};
@@ -23,8 +25,10 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener, IWorke
     private _spawnerCb: ((worker: VraySpawnerInfo) => Promise<any>) [] = [];
 
     constructor(
-        @inject(TYPES.ISettings) private _settings: ISettings,
+        @inject(TYPES.ISettings) settings: ISettings,
     ) {
+        this._settings = settings;
+
         this.id = Math.random();
         console.log(" >> WorkerHeartbeatListener: ", this.id);
     }
@@ -112,7 +116,12 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener, IWorke
             knownWorker.totalRam = rec.total_ram;
 
             for (let c in this._workerUpdatedCb) {
-                this._workerUpdatedCb[c](knownWorker);
+                try {
+                    this._workerUpdatedCb[c](knownWorker);
+                } catch (err) {
+                    console.log(`  WARN | _workerUpdatedCb threw exception: `, err);
+                    console.log(`       | knownWorker was: `, knownWorker);
+                }
             }
         }
         else {
@@ -132,7 +141,12 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener, IWorke
             this._workers[workerId] = newWorker;
 
             for (let c in this._workerAddedCb) {
-                this._workerAddedCb[c](newWorker);
+                try {
+                    this._workerAddedCb[c](newWorker);
+                } catch (err) {
+                    console.log(`  WARN | _workerAddedCb threw exception: `, err);
+                    console.log(`       | newWorker was: `, newWorker);
+                }
             }
 
             console.log(`    OK | new worker, ${msg} from ${rinfo.address}:${rinfo.port}`);
@@ -152,7 +166,12 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener, IWorke
             knownVraySpawner.touch();
 
             for (let c in this._spawnerCb) {
-                this._spawnerCb[c](knownVraySpawner);
+                try {
+                    this._spawnerCb[c](knownVraySpawner);
+                } catch (err) {
+                    console.log(`  WARN | _spawnerCb threw exception: `, err);
+                    console.log(`       | knownVraySpawner was: `, knownVraySpawner);
+                }
             }
         }
         else {
@@ -164,7 +183,12 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener, IWorke
             this._vraySpawners[vraySpawnerId] = newVraySpawner;
 
             for (let c in this._spawnerCb) {
-                this._spawnerCb[c](newVraySpawner);
+                try {
+                    this._spawnerCb[c](newVraySpawner);
+                } catch (err) {
+                    console.log(`  WARN | _spawnerCb threw exception: `, err);
+                    console.log(`       | newVraySpawner was: `, newVraySpawner);
+                }
             }
 
             console.log(`new vray spawner: ${msg} from ${rinfo.address}`);
