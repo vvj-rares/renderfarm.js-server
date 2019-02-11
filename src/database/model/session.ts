@@ -6,6 +6,7 @@ export class Session extends IDbEntity {
     public apiKey: string;
     public guid: string;
     public workerGuid: string;
+    public sceneFilename?: string;
     public firstSeen: Date;
     public lastSeen: Date;
     public workspaceGuid: string;
@@ -29,6 +30,7 @@ export class Session extends IDbEntity {
         this.apiKey         = obj.apiKey;
         this.guid           = obj.guid;
         this.workerGuid     = obj.workerGuid;
+        this.sceneFilename  = obj.sceneFilename;
         this.firstSeen      = obj.firstSeen ? new Date(obj.firstSeen) : undefined;
         this.lastSeen       = obj.lastSeen ? new Date(obj.lastSeen) : undefined;
         this.workspaceGuid  = obj.workspaceGuid;
@@ -44,6 +46,7 @@ export class Session extends IDbEntity {
             apiKey:         this.apiKey,
             guid:           this.guid,
             workerGuid:     this.workerGuid,
+            sceneFilename:  this.sceneFilename,
             firstSeen:      this.firstSeen,
             lastSeen:       this.lastSeen,
             workspaceGuid:  this.workspaceGuid,

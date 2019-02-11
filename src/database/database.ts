@@ -202,10 +202,21 @@ export class Database implements IDatabase {
             obj => new Worker(obj)
         ));
 
+        // todo: add unit tests for this
+        if (session.workerRef) {
+            session.workerRef.jobRef = await this.safe<Job>(this.getOne<Job>(
+                "jobs",
+                {
+                    workerGuid: session.workerGuid
+                },
+                obj => new Job(obj)
+            ));
+        }
+
         return session;
     }
 
-    public async createSession(apiKey: string, workspaceGuid: string): Promise<Session> {
+    public async createSession(apiKey: string, workspaceGuid: string, sceneFilename: string): Promise<Session> {
         await this.ensureClientConnection();
 
         let db = this._client.db(this._settings.current.databaseName);
@@ -220,7 +231,7 @@ export class Database implements IDatabase {
         // then we just pick underlying least loaded worker.
         for(let wi in workers) {
             let candidate = workers[wi];
-            let createdSession = await this.tryCreateSessionAtWorker(apiKey, workspace, candidate);
+            let createdSession = await this.tryCreateSessionAtWorker(apiKey, workspace, sceneFilename, candidate);
             if (createdSession) {
                 return createdSession;
             }
@@ -229,7 +240,7 @@ export class Database implements IDatabase {
         throw Error("all workers busy");
     }
 
-    private async tryCreateSessionAtWorker(apiKey: string, workspace: Workspace, candidate: Worker): Promise<Session> {
+    private async tryCreateSessionAtWorker(apiKey: string, workspace: Workspace, sceneFilename: string, candidate: Worker): Promise<Session> {
         try {
             let filter: any = {
                 guid: candidate.guid,
@@ -249,6 +260,7 @@ export class Database implements IDatabase {
             session.lastSeen = session.firstSeen;
             session.workerGuid = caputuredWorker.guid;
             session.workspaceGuid = workspace.guid;
+            session.sceneFilename = sceneFilename;
 
             let result = await this.insertOne<Session>("sessions", session, obj => new Session(obj));
             result.workerRef = caputuredWorker;

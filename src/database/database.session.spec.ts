@@ -125,7 +125,7 @@ describe("Database Session", function() {
             try {
                 newWorker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
                 workspace = await helpers.createSomeWorkspace();
-                session   = await database.createSession(helpers.existingApiKey, workspace.guid);
+                session   = await database.createSession(helpers.existingApiKey, workspace.guid, null);
             } catch (err) {
                 console.log(err.message);
                 fail();
@@ -189,7 +189,7 @@ describe("Database Session", function() {
             try {
                 newWorker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
                 workspace = await helpers.createSomeWorkspace();
-                session = await database.createSession(helpers.existingApiKey, workspace.guid);
+                session = await database.createSession(helpers.existingApiKey, workspace.guid, null);
                 closedSession = await database.closeSession(session.guid);
             } catch (err) {
                 console.log(err.message);
@@ -222,7 +222,7 @@ describe("Database Session", function() {
             try {
                 newWorker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
                 workspace = await helpers.createSomeWorkspace();
-                session = await database.createSession(helpers.existingApiKey, workspace.guid);
+                session = await database.createSession(helpers.existingApiKey, workspace.guid, null);
                 grabbedWorker = await database.getOne<Worker>("workers", { guid: newWorker.guid }, obj => new Worker(obj));
             } catch (err) {
                 console.log(err.message);
@@ -277,7 +277,7 @@ describe("Database Session", function() {
             try {
                 newWorker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
                 workspace = await helpers.createSomeWorkspace();
-                session = await database.createSession(helpers.existingApiKey, workspace.guid);
+                session = await database.createSession(helpers.existingApiKey, workspace.guid, null);
                 failedSession = await database.failSession(session.guid, failReason);
             } catch (err) {
                 console.log(err.message);
@@ -313,16 +313,16 @@ describe("Database Session", function() {
                 let workspace = await helpers.createSomeWorkspace();
 
                 await helpers.touchWorkers(worker0, worker1, worker2, worker3);
-                let session0 = await database.createSession(helpers.existingApiKey, workspace.guid);
+                let session0 = await database.createSession(helpers.existingApiKey, workspace.guid, null);
 
                 await helpers.touchWorkers(worker0, worker1, worker2, worker3);
-                let session1 = await database.createSession(helpers.existingApiKey, workspace.guid);
+                let session1 = await database.createSession(helpers.existingApiKey, workspace.guid, null);
 
                 await helpers.touchWorkers(worker0, worker1, worker2, worker3);
-                let session2 = await database.createSession(helpers.existingApiKey, workspace.guid);
+                let session2 = await database.createSession(helpers.existingApiKey, workspace.guid, null);
 
                 await helpers.touchWorkers(worker0, worker1, worker2, worker3);
-                let session3 = await database.createSession(helpers.existingApiKey, workspace.guid);
+                let session3 = await database.createSession(helpers.existingApiKey, workspace.guid, null);
 
                 let grabbedWorker0 = await database.getOne<Worker>("workers", { sessionGuid: session0.guid }, obj => new Worker(obj));
                 expect(grabbedWorker0).toBeTruthy();
@@ -361,7 +361,7 @@ describe("Database Session", function() {
                 await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.1);
                 workspace = await helpers.createSomeWorkspace();
 
-                session0 = await database.createSession(helpers.existingApiKey, workspace.guid);
+                session0 = await database.createSession(helpers.existingApiKey, workspace.guid, null);
             } catch (err) {
                 console.log(err.message);
                 fail();
@@ -372,7 +372,7 @@ describe("Database Session", function() {
             expect(session0).toBeTruthy();
 
             try {
-                await database.createSession(helpers.existingApiKey, workspace.guid);
+                await database.createSession(helpers.existingApiKey, workspace.guid, null);
                 fail();
             } catch (err) {
                 // we expect to come here
@@ -390,7 +390,7 @@ describe("Database Session", function() {
             try {
                 worker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort(), 0.1);
                 workspace = await helpers.createSomeWorkspace();
-                session0 = await database.createSession(helpers.existingApiKey, workspace.guid);
+                session0 = await database.createSession(helpers.existingApiKey, workspace.guid, null);
             } catch (err) {
                 console.log(err.message);
                 fail();
@@ -415,7 +415,7 @@ describe("Database Session", function() {
 
             let session1: Session;
             try {
-                session1 = await database.createSession(helpers.existingApiKey, workspace.guid);
+                session1 = await database.createSession(helpers.existingApiKey, workspace.guid, null);
             } catch (err) {
                 console.log(err.message);
                 fail();
@@ -460,7 +460,7 @@ describe("Database Session", function() {
             expect(new Date().getTime() - offlineWorker.lastSeen.getTime()).toBeGreaterThan(2000);
 
             try {
-                await database.createSession(helpers.existingApiKey, workspace.guid);
+                await database.createSession(helpers.existingApiKey, workspace.guid, null);
                 fail();
             } catch (err) {
                 expect(isError(err));
@@ -478,7 +478,7 @@ describe("Database Session", function() {
             //worker is younger than 2 seconds => means worker is most likely alive
             expect(new Date().getTime() - onlineWorker.lastSeen.getTime()).toBeLessThan(2000);
 
-            let session = await database.createSession(helpers.existingApiKey, workspace.guid);
+            let session = await database.createSession(helpers.existingApiKey, workspace.guid, null);
             expect(session).toBeTruthy();
 
             done();
@@ -492,7 +492,7 @@ describe("Database Session", function() {
             try {
                 worker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
                 workspace = await helpers.createSomeWorkspace();
-                session0 = await database.createSession(helpers.existingApiKey, workspace.guid);
+                session0 = await database.createSession(helpers.existingApiKey, workspace.guid, null);
             } catch (err) {
                 console.log(err.message);
                 fail();
@@ -533,7 +533,7 @@ describe("Database Session", function() {
             try {
                 worker = await helpers.createSomeWorker(helpers.rndMac(), helpers.rndIp(), helpers.rndPort());
                 workspace = await helpers.createSomeWorkspace();
-                session0 = await database.createSession(helpers.existingApiKey, workspace.guid);
+                session0 = await database.createSession(helpers.existingApiKey, workspace.guid, null);
             } catch (err) {
                 console.log(err.message);
                 fail();

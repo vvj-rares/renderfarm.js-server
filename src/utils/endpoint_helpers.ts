@@ -10,13 +10,13 @@ export class EndpointHelpers {
                 console.log(`  FAIL | session not found: ${sessionGuid}`);
                 res.status(404);
                 res.end(JSON.stringify({ ok: false, message: "session not found", error: null }, null, 2));
-                return null;
+                return undefined;
             }
         } catch (err) {
             console.log(`  FAIL | failed to get session: ${sessionGuid}`);
             res.status(500);
             res.end(JSON.stringify({ ok: false, message: "failed to get session", error: err.message }, null, 2));
-            return null;
+            return undefined;
         }
         return session;
     }

@@ -9,16 +9,20 @@ import { Worker } from "../database/model/worker";
 class SessionEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
+    private _workerObserver: IWorkerObserver;
+
     private _maxscript: { [sessionGuid: string] : IMaxscriptClient; } = {}; // keep maxscript connections alive for open sessions
     private _maxscriptClientFactory: IMaxscriptClientFactory;
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IWorkerObserver) private _workerObserver: IWorkerObserver,
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) {
+                @inject(TYPES.IWorkerObserver) workerObserver: IWorkerObserver,
+                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory,
+    ) {
 
         this._settings = settings;
         this._database = database;
+        this._workerObserver = workerObserver;
         this._maxscriptClientFactory = maxscriptClientFactory;
 
         this._workerObserver.Subscribe(null, null, this.onWorkerOffline.bind(this), null);
@@ -133,7 +137,7 @@ class SessionEndpoint implements IEndpoint {
 
             let session: Session;
             try {
-                session = await this._database.createSession(apiKey, workspaceGuid);
+                session = await this._database.createSession(apiKey, workspaceGuid, sceneFilename);
             } catch (err) {
                 console.log(`  FAIL | failed to create session, `, err);
                 res.status(500);
