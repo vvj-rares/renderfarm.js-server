@@ -105,10 +105,6 @@ export interface IMaxscriptClientFactory {
     create(): IMaxscriptClient;
 }
 
-export interface IWorkerHeartbeatListener {
-    Listen(): void;
-}
-
 export interface IWorkerObserver {
     Subscribe(
         workerAddedCb:   (worker: Worker) => Promise<any>,   // received first heartbeat, worker just started

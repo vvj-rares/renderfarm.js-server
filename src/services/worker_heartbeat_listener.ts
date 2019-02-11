@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import { VraySpawnerInfo } from "../model/vray_spawner_info";
-import { IWorkerHeartbeatListener, ISettings, IWorkerObserver } from "../interfaces";
+import { ISettings, IWorkerObserver } from "../interfaces";
 import { TYPES } from "../types";
 import { Worker } from "../database/model/worker";
 
@@ -8,7 +8,7 @@ const uuidv4 = require('uuid/v4');
 const dgram = require('dgram');
 
 @injectable()
-export class WorkerHeartbeatListener implements IWorkerHeartbeatListener, IWorkerObserver {
+export class WorkerHeartbeatListener implements IWorkerObserver {
     private _settings: ISettings;
 
     private _workers: {
@@ -31,11 +31,18 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener, IWorke
 
         this.id = Math.random();
         console.log(" >> WorkerHeartbeatListener: ", this.id);
+
+        if (this._settings.current.heartbeatPort > 0) {
+            console.log(`heartbeatPort: ${this._settings.current.heartbeatPort}`);
+            this.startListener( this._settings.current.heartbeatPort );
+        } else {
+            console.log(`heartbeatPort is ${this._settings.current.heartbeatPort}, this instance will not accept worker heartbeats`);
+        }
     }
 
     public id: number;
 
-    public Listen() {
+    private startListener(port: number) {
         // add timer to check known workers if they're still alive
         setInterval(function() {
             let activeWorkers: {
@@ -80,7 +87,7 @@ export class WorkerHeartbeatListener implements IWorkerHeartbeatListener, IWorke
             console.log(`    OK | Worker monitor is listening on ${address.address}:${address.port}`);
         }.bind(this));
 
-        server.bind(this._settings.current.heartbeatPort);
+        server.bind(port);
     }
 
     public Subscribe(

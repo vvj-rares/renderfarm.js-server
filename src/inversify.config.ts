@@ -44,8 +44,9 @@ myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeObjectEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeGeometryEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeMaterialEndpoint);
 
-myContainer.bind<interfaces.IWorkerHeartbeatListener>(TYPES.IWorkerHeartbeatListener).to(WorkerHeartbeatListener).inSingletonScope();
-myContainer.bind<interfaces.IWorkerObserver>(TYPES.IWorkerObserver).toService(TYPES.IWorkerHeartbeatListener);
+myContainer.bind<interfaces.IWorkerObserver>(TYPES.IWorkerObserver).to(WorkerHeartbeatListener).inSingletonScope();
+// tip: this is how to export same instance with different interfaces
+// myContainer.bind<interfaces.IWorkerObserver>(TYPES.IWorkerObserver).toService(TYPES.IWorkerHeartbeatListener);
 
 myContainer.bind<interfaces.IJobHandler>(TYPES.IJobHandler).to(JobHandler).inSingletonScope();
 myContainer.bind<interfaces.ISessionWatchdog>(TYPES.ISessionWatchdog).to(SessionWatchdog).inSingletonScope();

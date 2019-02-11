@@ -1,38 +1,37 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IWorkerHeartbeatListener, ISettings, IWorkerObserver } from "../interfaces";
+import { IEndpoint, IDatabase, ISettings, IWorkerObserver, ISessionWatchdog } from "../interfaces";
 import { TYPES } from "../types";
 import { VraySpawnerInfo } from "../model/vray_spawner_info";
 import { Worker } from "../database/model/worker";
+import { Session } from "inspector";
 
 @injectable()
 export class WorkerEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
-    private _workerHeartbeatListener: IWorkerHeartbeatListener;
-    // private _workerObserver: IWorkerObserver;
+    private _workerObserver: IWorkerObserver;
+    private _sessionWatchdog: ISessionWatchdog;
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IWorkerObserver) private _workerObserver: IWorkerObserver,
-                @inject(TYPES.IWorkerHeartbeatListener) workerHeartbeatListener: IWorkerHeartbeatListener ) 
-    {
+                @inject(TYPES.IWorkerObserver) workerObserver: IWorkerObserver,
+                @inject(TYPES.ISessionWatchdog) sessionWatchdog: ISessionWatchdog,
+    ) {
         this._settings = settings;
         this._database = database;
-        this._workerHeartbeatListener = workerHeartbeatListener;
+        this._workerObserver = workerObserver;
+        this._sessionWatchdog = sessionWatchdog;
 
-        console.log(`heartbeatPort: ${this._settings.current.heartbeatPort}`);
-        if (this._settings.current.heartbeatPort > 0) {
-            this._workerObserver.Subscribe(
-                this.onWorkerAdded.bind(this),
-                this.onWorkerUpdated.bind(this),
-                this.onWorkerOffline.bind(this),
-                this.onSpawnerUpdate.bind(this));
-
-            this._workerHeartbeatListener.Listen();
-        } else {
-            console.log(`  WARN | this instance will not accept worker heartbeats`);
-        }
+        this._workerObserver.Subscribe(
+            this.onWorkerAdded.bind(this),
+            this.onWorkerUpdated.bind(this),
+            this.onWorkerOffline.bind(this),
+            this.onSpawnerUpdate.bind(this));
+        
+        this._sessionWatchdog.Subscribe(
+            this.onSessionExpired.bind(this)
+        );
     }
 
     bind(express: express.Application) {
@@ -119,6 +118,8 @@ export class WorkerEndpoint implements IEndpoint {
     }
 
     private async onWorkerOffline(worker: Worker) {
+        console.log(" >> todo: // handle worker offline: ", worker);
+
         try {
             // let deletedWorker = await this._database.deleteWorker(worker);
             // console.log(" >> deletedWorker: ", deletedWorker);
@@ -129,5 +130,10 @@ export class WorkerEndpoint implements IEndpoint {
 
     private onSpawnerUpdate(spawner: VraySpawnerInfo) {
         // this._database.storeVraySpawner(spawner);
+        console.log(" >> todo: // handle spawner update: ", spawner);
+    }
+
+    private onSessionExpired(session: Session) {
+        console.log(" >> todo: // kill running worker for expired session: ", session);
     }
 }
