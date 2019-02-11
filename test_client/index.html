@@ -1,21 +1,30 @@
-<html>
+<!DOCTYPE html>
+<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
+<!--[if lt IE 7 ]> <html class="ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]>    <html class="ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]>    <html class="lt-ie9" lang="en"> <![endif]-->
+<!--[if IE 9 ]>    <html class="lt-ie10" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html lang="en"> <!--<![endif]-->
     <head>
+        <meta charset="utf-8" />
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <title>renderfarm.js - Test Client</title>
-        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
         <meta name="robots" content="noindex, nofollow">
         <meta name="googlebot" content="noindex, nofollow">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <script
+            src="https://code.jquery.com/jquery-3.2.1.js"
+            integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
+            crossorigin="anonymous"></script>
 
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/91/three.js"></script>
         <script type="text/javascript" src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
         <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 
-        <script>
-            module = {};
-        </script>
-        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/eligrey/FileSaver.js@cf70d125b048349fb084d8c8395ee790b83c685c/src/FileSaver.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+        <link href="css/foundation.css" rel="stylesheet" type="text/css" />
+        <link href="css/twentytwenty.css" rel="stylesheet" type="text/css" />
 
         <style type="text/css">
             body {
@@ -27,7 +36,10 @@
                 font-family: monospace;
                 margin-left: 24px;
             }
-            #output {
+            #output-before, #output {
+                background-image: url(./img/vray.png);
+                width: 640px;
+                height: 480px;
             }
             #viewport {
             }
@@ -94,26 +106,32 @@
 
                 // document.body.appendChild(renderer.domElement);
 
-                camera.position.x = 50;
-                camera.position.y = 60;
-                camera.position.z = 70;
-                camera.lookAt(0, 0, 0);
+                camera.position.x = -3.54;
+                camera.position.y = 4.594;
+                camera.position.z = 1.671;
+                camera.lookAt(0, 0.5, 0);
                 camera.updateProjectionMatrix ();
 
-                controls = new THREE.OrbitControls(camera);
+                //controls = new THREE.OrbitControls(camera);
+                //controls.target.set(0, 0.5, 0);
 
                 var spotLight = new THREE.SpotLight( 0xffa0c0 );
                 spotLight.name = "SpotLight1";
                 spotLight.position.set( 10, 40, 10 );
                 spotLight.target.position.set( 0, 0, 0 );
+                spotLight.angle = Math.PI / 30;
+
                 spotLight.castShadow = true;
-				spotLight.shadow.bias = 0.0001;
-                spotLight.shadow.mapSize.width  = 1024;
-                spotLight.shadow.mapSize.height = 1024;
-                spotLight.shadow.camera.near = 10;
-                spotLight.shadow.camera.far = 50;
-                spotLight.shadow.camera.fov = 30;
-                spotLight.target.position.set(0.05,0,0.15);
+				spotLight.shadow.bias = 1e-6;
+                spotLight.shadow.mapSize.width  = 512;
+                spotLight.shadow.mapSize.height = 512;
+
+                spotLight.shadow.camera.near = 15;
+                spotLight.shadow.camera.far = 43;
+                spotLight.shadow.camera.fov = Math.PI / 30;
+                spotLight.shadow.camera.updateProjectionMatrix();
+
+                console.log(spotLight);
                 scene.add(spotLight);
                 document.spotLight = spotLight;
 
@@ -128,7 +146,7 @@
                 var gridHelper = new THREE.GridHelper(4, 4);
                 scene.add(gridHelper);
 
-                var geometry = new THREE.DodecahedronGeometry(4, 0);
+                var geometry = new THREE.BoxGeometry(1, 1, 1);
                     geometry = new THREE.BufferGeometry().fromGeometry(geometry);
 
                 var material = new THREE.MeshPhongMaterial({
@@ -138,52 +156,20 @@
                 });
 
                 var cube = new THREE.Mesh(geometry, material);
-                cube.name = "Dodecahedron1";
-                cube.applyMatrix(new THREE.Matrix4().makeTranslation(10, 4, 10))
+                cube.name = "Box01";
+                cube.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.5, 0))
                 cube.castShadow = true;
                 cube.receiveShadow = false;
                 scene.add(cube);
-
-                var cube2 = new THREE.Mesh(geometry, material);
-                cube2.name = "Dodecahedron2";
-                cube2.applyMatrix(new THREE.Matrix4().makeTranslation(-17.5, 4, -17.5));
-                cube2.castShadow = true;
-                cube2.receiveShadow = false;
-                scene.add(cube2);
-
-                var material3 = new THREE.MeshPhongMaterial({
-                    color: 0x40e0e0,
-                    transparent: false,
-                    opacity: 0.95
-                });
-
-                var cube3 = new THREE.Mesh(geometry, material3);
-                cube3.name = "Dodecahedron3";
-                cube3.applyMatrix(new THREE.Matrix4().makeTranslation(-17.5, 4, 17.5));
-                cube3.castShadow = true;
-                cube3.receiveShadow = false;
-                scene.add(cube3);
 // =============
-
-                var geometry = new THREE.ConeGeometry( 1, 4, 32 );
-                    geometry = new THREE.BufferGeometry().fromGeometry(geometry);
-                var material = new THREE.MeshPhongMaterial({
-                    color: 0x40e040,
-                    transparent: false,
-                    opacity: 0.95
-                });
-                var cone = new THREE.Mesh( geometry, material );
-                cone.name = "Cone1";
-                cone.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/4));
-                cone.applyMatrix(new THREE.Matrix4().makeRotationY(-Math.PI/4));
-                cone.applyMatrix(new THREE.Matrix4().makeTranslation(12, 2.2, -12));
-                cube3.add( cone );
 
                 var planeGeometry = new THREE.PlaneGeometry( 5, 5, 1 );
                     planeGeometry = new THREE.BufferGeometry().fromGeometry(planeGeometry);
                 var material = new THREE.MeshPhongMaterial( {
                     color: 0xf0ffff, 
-                    // side: THREE.DoubleSide
+                    transparent: true,
+                    opacity: 0.5,
+                    side: THREE.DoubleSide
                 } );
 
                 var plane = new THREE.Mesh( planeGeometry, material );
@@ -195,7 +181,7 @@
 
                 var animate = function() {
                     requestAnimationFrame(animate);
-                    controls.update();
+                    // controls.update();
                     renderer.render(scene, camera);
                 };
 
@@ -295,7 +281,7 @@
         </script>
     </head>
     <body>
-        <div class="canvas-wrapper">
+        <div class="canvas-wrapper" style="display: none;">
             <div class="toolbar">
                 <button id="render" onclick="renderScene()">render</button>
                 <button id="cancel" onclick="cancelRender()">cancel</button>
@@ -309,12 +295,29 @@
                 <button id="put-camera" onclick="putCamera()">PUT camera</button>
                 <button id="delete-camera" onclick="deleteCamera()">DELETE camera</button>
             </div>
-
-            <canvas id="viewport"></canvas>
-            <img id="output">
         </div>
 
+        <div class="twentytwenty-container" style="width: 640px;">
+            <canvas id="viewport"></canvas>
+            <img src="img/vray.png" />
+        </div>
+          
         <div id="elapsed"></div>
         <div id="progress"></div>
+
+        <script src="js/jquery.event.move.js"></script>
+        <script src="js/jquery.twentytwenty.js"></script>
+        <script>
+            $(function(){
+                $(".twentytwenty-container[data-orientation!='vertical']").twentytwenty({default_offset_pct: 0.7});
+            });
+        </script>
+
+        <script>
+            module = {};
+        </script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/eligrey/FileSaver.js@cf70d125b048349fb084d8c8395ee790b83c685c/src/FileSaver.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+      
     </body>
 </html>
