@@ -22,6 +22,7 @@ import { ThreeGeometryEndpoint } from "./endpoints/three/three.geometry";
 import { ThreeMaterialEndpoint } from "./endpoints/three/three.material";
 import { JobHandler } from "./services/job_handler";
 import { SessionWatchdog } from "./services/session_watchdog";
+import { SessionHandler } from "./services/session_handler";
 
 const myContainer = new Container();
 
@@ -45,11 +46,13 @@ myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeGeometryEndpoint
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeMaterialEndpoint);
 
 myContainer.bind<interfaces.IWorkerObserver>(TYPES.IWorkerObserver).to(WorkerHeartbeatListener).inSingletonScope();
-// tip: this is how to export same instance with different interfaces
-// myContainer.bind<interfaces.IWorkerObserver>(TYPES.IWorkerObserver).toService(TYPES.IWorkerHeartbeatListener);
 
 myContainer.bind<interfaces.IJobHandler>(TYPES.IJobHandler).to(JobHandler).inSingletonScope();
 myContainer.bind<interfaces.ISessionWatchdog>(TYPES.ISessionWatchdog).to(SessionWatchdog).inSingletonScope();
+
+// tip: this is how to export same instance with different interfaces
+myContainer.bind<interfaces.ISessionHandler>(TYPES.ISessionHandler).to(SessionHandler).inSingletonScope();
+myContainer.bind<interfaces.ISessionObserver>(TYPES.ISessionObserver).toService(TYPES.ISessionObserver);
 
 myContainer.bind<interfaces.IMaxscriptClientFactory>(TYPES.IMaxscriptClientFactory).to(MaxscriptClientFactory);
 

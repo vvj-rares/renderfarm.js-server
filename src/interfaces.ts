@@ -121,3 +121,16 @@ export interface IJobHandler {
 export interface ISessionWatchdog {
     Subscribe(sessionExpiredCb:  (session: Session) => Promise<any>): void;
 }
+
+export interface ISessionHandler {
+    Open(): Promise<Session>;
+    KeepAlive(sessionGuid: string): Promise<Session>;
+    Close(sessionGuid: string): Promise<Session>;
+    Expire(sessionGuid: string): Promise<Session>;
+    Fail(sessionGuid: string): Promise<Session>;
+}
+
+export interface ISessionObserver {
+    Subscribe(sessionOpenCb:  (session: Session) => Promise<any>): void;
+}
+
