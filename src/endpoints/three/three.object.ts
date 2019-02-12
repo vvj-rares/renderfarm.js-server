@@ -5,6 +5,8 @@ import { TYPES } from "../../types";
 import { Session } from "../../database/model/session";
 import { EndpointHelpers } from "../../utils/endpoint_helpers";
 
+const LZString = require("lz-string");
+
 @injectable()
 class ThreeObjectEndpoint implements IEndpoint {
     private _settings: ISettings;
@@ -59,7 +61,33 @@ class ThreeObjectEndpoint implements IEndpoint {
                 return;
             }
 
-            // todo: decompress json,
+            let sceneJsonText = LZString.decompressFromBase64(compressedJson);
+            let sceneJson: any = JSON.parse(sceneJsonText);
+
+            if (!sceneJson.metadata) {
+                res.status(400);
+                res.end(JSON.stringify({ ok: false, message: "object missing metadata", error: null }, null, 2));
+                return;
+            }
+
+            if (sceneJson.metadata.version !== 4.5) {
+                res.status(400);
+                res.end(JSON.stringify({ ok: false, message: "object version not supported (expected 4.5)", error: null }, null, 2));
+                return;
+            }
+
+            if (sceneJson.metadata.type !== "Object") {
+                res.status(400);
+                res.end(JSON.stringify({ ok: false, message: "object type not supported, expected 'Object'", error: null }, null, 2));
+                return;
+            }
+
+            if (sceneJson.metadata.generator !== "Object3D.toJSON") {
+                res.status(400);
+                res.end(JSON.stringify({ ok: false, message: "unexpected generator, expected 'Object3D.toJSON'", error: null }, null, 2));
+                return;
+            }
+
             // todo: check that this object is not exist yet
             // todo: check that this object is of supported type
             // todo: cache json is it is
