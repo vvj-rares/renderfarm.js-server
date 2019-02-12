@@ -25,7 +25,7 @@ var rfarm = {
 };
 
 // public
-rfarm.createSession = function(onCreated) {
+rfarm.createSession = function(onCreated, onError) {
     console.log("Requesting new session...");
 
     $.ajax({
@@ -41,7 +41,7 @@ rfarm.createSession = function(onCreated) {
             if (onCreated) onCreated(result.data);
         }.bind(this),
         error: function(err) {
-            console.error(err.responseJSON);
+            if (onError) onError(err.responseJSON);
         }.bind(this)
     });
 
@@ -56,8 +56,7 @@ rfarm.closeSession = function(sessionGuid, onClosed) {
         data: { },
         type: 'DELETE',
         success: function(result) {
-            console.log(result);
-            if (onClosed) onClosed();
+            if (onClosed) onClosed(result);
         }.bind(this),
         error: function(err) {
             console.error(err);
@@ -335,13 +334,13 @@ rfarm.postScene = function(sessionGuid, scene, onComplete) {
     }
 
     var sceneText = JSON.stringify(sceneJson);
-    var compressedSceneData = LZString144.compressToBase64(sceneText);
+    var compressedSceneData = LZString.compressToBase64(sceneText);
 
     $.ajax({
         url: this.baseUrl  + "/v1/three",
         data: { 
             session_guid: sessionGuid,
-            compressed_data: compressedSceneData
+            compressed_json: compressedSceneData
         },
         type: 'POST',
         success: function(result) {

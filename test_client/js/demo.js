@@ -5,6 +5,7 @@ function initScene() {
     var camera;
     var controls;
     var scene = new THREE.Scene();
+    window.demo.scene = scene;
 
     let viewportElement = document.getElementById("viewport");
     { // init renderer
@@ -99,11 +100,50 @@ function initScene() {
     animate();
 }
 
-function renderScene() {
+function renderScene(scene) {
+    $("#btnRender").attr("disabled", true);
+    $("#renderStatus").css("color", "gray");
+    $("#renderStatus").text("Opening new session...");
+
     rfarm.createSession(function(newSession) {
         console.log("newSession: ", newSession);
-        rfarm.closeSession(newSession.guid, function(closedSession) {
-            console.log("closedSession: ", closedSession);
-        })
+
+        console.log("Uploading scene...");
+        rfarm.postScene(newSession.guid, scene, function(result) {
+            console.log(result);
+        });
+
+        $("#renderStatus").text("Starting render...");
+        rfarm.createJob(newSession.guid, function(job) {
+
+            $("#renderStatus").text(`Rendering...`);
+
+            let t0 = new Date();
+
+            let jobTimer = setInterval(function() {
+                let t1 = new Date();
+
+                rfarm.getJob (job.guid, function(updatedJob) {
+                    $("#renderStatus").text(`Rendering... ${ ((t1 - t0) / 1000).toFixed(0) } sec.`);
+
+                    if (updatedJob.closed) {
+                        $("#renderStatus").text(`Render complete, downloading image...`);
+
+                        clearInterval(jobTimer);
+                        console.log(updatedJob.urls);
+                        $("#vray").attr("src", updatedJob.urls[0]);
+
+                        rfarm.closeSession(newSession.guid, function(closedSession) {
+                            $("#renderStatus").text(`Session closed.`);
+                            console.log("closedSession: ", closedSession);
+                        });
+                    }
+                });
+            }, 1000);
+        });
+    }, function(sessionError) {
+        $("#renderStatus").text(`${sessionError.message} - ${sessionError.error}`);
+        $("#renderStatus").css("color", "red");
+        $("#btnRender").attr("disabled", false);
     })
 }

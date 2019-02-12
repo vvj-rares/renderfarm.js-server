@@ -25,7 +25,7 @@ class ThreeObjectEndpoint implements IEndpoint {
 
     bind(express: express.Application) {
         express.get(`/v${this._settings.majorVersion}/three/:uuid`, async function (req, res) {
-            let sessionGuid = req.body.session;
+            let sessionGuid = req.body.session_guid;
             console.log(`GET on ${req.path} with session: ${sessionGuid}`);
 
             let uuid = req.params.uuid;
@@ -36,7 +36,7 @@ class ThreeObjectEndpoint implements IEndpoint {
         }.bind(this));
 
         express.post(`/v${this._settings.majorVersion}/three`, async function (req, res) {
-            let sessionGuid = req.body.session;
+            let sessionGuid = req.body.session_guid;
             console.log(`POST on ${req.path} with session: ${sessionGuid}`);
 
             // check that session is actually open
@@ -74,7 +74,7 @@ class ThreeObjectEndpoint implements IEndpoint {
         }.bind(this));
 
         express.put(`/v${this._settings.majorVersion}/three/:uuid`, async function (req, res) {
-            let sessionGuid = req.body.session;
+            let sessionGuid = req.body.session_guid;
             console.log(`PUT on ${req.path} with session: ${sessionGuid}`);
 
             let uuid = req.params.uuid;
@@ -85,7 +85,7 @@ class ThreeObjectEndpoint implements IEndpoint {
         }.bind(this));
 
         express.delete(`/v${this._settings.majorVersion}/three/:uuid`, async function (req, res) {
-            let sessionGuid = req.body.session;
+            let sessionGuid = req.body.session_guid;
             console.log(`DELETE on ${req.path} with session: ${sessionGuid}`);
 
             let uuid = req.params.uuid;

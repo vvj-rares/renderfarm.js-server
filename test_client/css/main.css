@@ -3,11 +3,7 @@ body {
     padding: 0;
     margin: 0;
 }
-#progress, #elapsed {
-    font-family: monospace;
-    margin-left: 24px;
-}
-#output-before, #output {
+#output {
     background-image: url(./img/vray.png);
     width: 640px;
     height: 480px;
@@ -25,4 +21,10 @@ body {
 }
 .toolbar {
     padding: 2px;
+    line-height: 32px;
+}
+.status {
+    margin-left: 8px;
+    display: inline-block;
+    font-size: 10pt;
 }

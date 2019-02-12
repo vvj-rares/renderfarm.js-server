@@ -36,13 +36,14 @@
     <body onload="initScene()">
         <div class="canvas-wrapper">
             <div class="toolbar">
-                <button id="render" onclick="renderScene()">render</button>
+                <button id="btnRender" onclick="renderScene(demo.scene)">render</button>
+                <div id="renderStatus" class="status"></div>
             </div>
         </div>
 
         <div class="twentytwenty-container" style="width: 640px;">
             <canvas id="viewport"></canvas>
-            <img src="img/vray.png" />
+            <img id="vray" src="img/vray.png" />
         </div>
           
         <script>
