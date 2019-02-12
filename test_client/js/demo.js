@@ -111,36 +111,39 @@ function renderScene(scene) {
         console.log("Uploading scene...");
         rfarm.postScene(newSession.guid, scene, function(result) {
             console.log(result);
+
+            $("#renderStatus").text("Starting render...");
+            rfarm.createJob(newSession.guid, function(job) {
+
+                $("#renderStatus").text(`Rendering...`);
+
+                let t0 = new Date();
+
+                let jobTimer = setInterval(function() {
+                    let t1 = new Date();
+
+                    rfarm.getJob (job.guid, function(updatedJob) {
+                        $("#renderStatus").text(`Rendering... ${ ((t1 - t0) / 1000).toFixed(0) } sec.`);
+
+                        if (updatedJob.closed) {
+                            $("#renderStatus").text(`Render complete, downloading image...`);
+
+                            clearInterval(jobTimer);
+                            console.log(updatedJob.urls);
+                            $("#vray").attr("src", updatedJob.urls[0]);
+
+                            rfarm.closeSession(newSession.guid, function(closedSession) {
+                                $("#renderStatus").text(`Session closed.`);
+                                $("#btnRender").attr("disabled", false);
+                                console.log("closedSession: ", closedSession);
+                            });
+                        }
+                    });
+                }, 1000);
+            });
+
         });
 
-        $("#renderStatus").text("Starting render...");
-        rfarm.createJob(newSession.guid, function(job) {
-
-            $("#renderStatus").text(`Rendering...`);
-
-            let t0 = new Date();
-
-            let jobTimer = setInterval(function() {
-                let t1 = new Date();
-
-                rfarm.getJob (job.guid, function(updatedJob) {
-                    $("#renderStatus").text(`Rendering... ${ ((t1 - t0) / 1000).toFixed(0) } sec.`);
-
-                    if (updatedJob.closed) {
-                        $("#renderStatus").text(`Render complete, downloading image...`);
-
-                        clearInterval(jobTimer);
-                        console.log(updatedJob.urls);
-                        $("#vray").attr("src", updatedJob.urls[0]);
-
-                        rfarm.closeSession(newSession.guid, function(closedSession) {
-                            $("#renderStatus").text(`Session closed.`);
-                            console.log("closedSession: ", closedSession);
-                        });
-                    }
-                });
-            }, 1000);
-        });
     }, function(sessionError) {
         $("#renderStatus").text(`${sessionError.message} - ${sessionError.error}`);
         $("#renderStatus").css("color", "red");

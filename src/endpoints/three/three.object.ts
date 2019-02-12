@@ -46,7 +46,7 @@ class ThreeObjectEndpoint implements IEndpoint {
             }
 
             // check that session has no active job, i.e. it is not being rendered
-            if (session.workerRef && !session.workerRef.jobRef) {
+            if (session.workerRef && session.workerRef.jobRef) {
                 res.status(403);
                 res.end(JSON.stringify({ ok: false, message: "changes forbidden, session is being rendered", error: null }, null, 2));
                 return;
