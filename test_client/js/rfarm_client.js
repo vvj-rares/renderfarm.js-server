@@ -27,14 +27,13 @@ var rfarm = {
 // public
 rfarm.createSession = function(onCreated) {
     console.log("Requesting new session...");
-    //todo: implement it
 
     $.ajax({
         url: this.baseUrl  + "/v1/session",
         data: { 
             api_key: this.apiKey, 
             workspace_guid: this.workspace,
-            scene_filename: "vray_simple_1.max"
+            scene_filename: "vray_cube.max"
         },
         type: 'POST',
         success: function(result) {
@@ -305,6 +304,7 @@ rfarm.render = function(cameraName, width, height, onStarted, onProgress, onImag
     });
 }.bind(rfarm);
 
+//public
 rfarm.cancelRender = function(jobGuid, onCanceled) {
     console.log("Cancelling job...");
 
@@ -322,6 +322,36 @@ rfarm.cancelRender = function(jobGuid, onCanceled) {
             console.error(err);
         }.bind(this)
     });
+}.bind(rfarm);
+
+rfarm.postScene = function(sessionGuid, scene, onComplete) {
+    var sceneJson = scene.toJSON();
+
+    if (sceneJson.materials) {
+        delete sceneJson.materials;
+    }
+    if (sceneJson.geometries) {
+        delete sceneJson.geometries;
+    }
+
+    var sceneText = JSON.stringify(sceneJson);
+    var compressedSceneData = LZString144.compressToBase64(sceneText);
+
+    $.ajax({
+        url: this.baseUrl  + "/v1/three",
+        data: { 
+            session_guid: sessionGuid,
+            compressed_data: compressedSceneData
+        },
+        type: 'POST',
+        success: function(result) {
+            onComplete(result);
+        },
+        error: function(err) {
+            console.error(err);
+        }
+    });
+
 }.bind(rfarm);
 
 //=== private =
