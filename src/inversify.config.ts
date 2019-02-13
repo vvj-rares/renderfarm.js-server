@@ -3,6 +3,7 @@ import { Container, decorate, injectable } from "inversify";
 import { TYPES } from "./types";
 import * as interfaces from "./interfaces";
 
+import "reflect-metadata";
 ///<reference path="./typings/node/node.d.ts" />
 import { EventEmitter } from "events";
 decorate(injectable(), EventEmitter);
