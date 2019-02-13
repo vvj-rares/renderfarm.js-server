@@ -24,11 +24,11 @@ export class WorkerEndpoint implements IEndpoint {
         this._sessionService = sessionService;
 
         this._workerService.on("worker:added", this.onWorkerAdded.bind(this));
-        this._workerService.on("worker:added", this.onWorkerUpdated.bind(this));
-        this._workerService.on("worker:added", this.onWorkerOffline.bind(this));;
+        this._workerService.on("worker:updated", this.onWorkerUpdated.bind(this));
+        this._workerService.on("worker:offline", this.onWorkerOffline.bind(this));;
 
-        this._workerService.on("worker:added", this.onSpawnerAdded.bind(this));
-        this._workerService.on("worker:updated", this.onSpawnerUpdated.bind(this));
+        this._workerService.on("spawner:added", this.onSpawnerAdded.bind(this));
+        this._workerService.on("spawner:updated", this.onSpawnerUpdated.bind(this));
 
         this._sessionService.on("session:expired", this.onSessionExpired.bind(this));
     }
