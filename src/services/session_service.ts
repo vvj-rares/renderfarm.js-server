@@ -5,7 +5,6 @@ import { Session } from "../database/model/session";
 
 ///<reference path="./typings/node/node.d.ts" />
 import { EventEmitter } from "events";
-decorate(injectable(), EventEmitter)
 
 @injectable()
 export class SessionService extends EventEmitter implements ISessionService {

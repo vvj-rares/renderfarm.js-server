@@ -1,4 +1,4 @@
-import { Container } from "inversify";
+import { Container, decorate, injectable } from "inversify";
 import { TYPES } from "./types";
 import * as interfaces from "./interfaces";
 import { Database } from "./database/database";
@@ -16,6 +16,10 @@ import { ThreeMaterialEndpoint } from "./endpoints/three/three.material";
 import { SessionService } from "./services/session_service";
 import { JobService } from "./services/job_service";
 import { WorkerService } from "./services/worker_service";
+
+///<reference path="./typings/node/node.d.ts" />
+import { EventEmitter } from "events";
+decorate(injectable(), EventEmitter);
 
 const myContainer = new Container();
 

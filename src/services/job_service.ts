@@ -5,7 +5,6 @@ import { Job } from "../database/model/job";
 
 ///<reference path="./typings/node/node.d.ts" />
 import { EventEmitter } from "events";
-decorate(injectable(), EventEmitter)
 
 @injectable()
 export class JobService extends EventEmitter implements IJobService {

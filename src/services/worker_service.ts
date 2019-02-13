@@ -6,7 +6,6 @@ import { Worker } from "../database/model/worker";
 
 ///<reference path="./typings/node/node.d.ts" />
 import { EventEmitter } from "events";
-decorate(injectable(), EventEmitter)
 
 const uuidv4 = require('uuid/v4');
 const dgram = require('dgram');
