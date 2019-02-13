@@ -10,7 +10,6 @@ class SessionEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
     private _sessionService: ISessionService;
-    private _workerService: IWorkerService;
 
     private _maxscript: { [sessionGuid: string] : IMaxscriptClient; } = {}; // keep maxscript connections alive for open sessions
     private _maxscriptClientFactory: IMaxscriptClientFactory;
@@ -18,17 +17,13 @@ class SessionEndpoint implements IEndpoint {
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.ISessionService) sessionService: ISessionService,
-                @inject(TYPES.IWorkerService) workerService: IWorkerService,
                 @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory,
     ) {
 
         this._settings = settings;
         this._sessionService = sessionService;
         this._database = database;
-        this._workerService = workerService;
         this._maxscriptClientFactory = maxscriptClientFactory;
-
-        this._workerService.on("worker:offline", this.onWorkerOffline);
     }
 
     async validateApiKey(res: any, apiKey: string) {
@@ -62,29 +57,6 @@ class SessionEndpoint implements IEndpoint {
             res.status(403);
             res.end(JSON.stringify({ ok: false, message: "workspace_guid rejected", error: err.message }, null, 2));
             return false;
-        }
-    }
-
-    async onWorkerOffline(w: Worker) {
-        console.log("Worker went offline: ", w);
-
-        let worker: Worker;
-        try {
-            worker = await this._database.getWorker(w.guid);
-        }
-        catch (err) {
-            console.log(`  FAIL | failed to close session ${w.sessionGuid} for dead worker: ${w.guid}: `, err);
-            return;
-        }
-
-        if (worker.sessionGuid) {
-            try {
-                await this._sessionService.FailSession(worker.sessionGuid, "worker failed");
-
-                console.log(`    OK | closed session ${worker.sessionGuid} for dead worker: ${worker.guid}`);
-            } catch (err) {
-                console.log(`  FAIL | failed to close session ${worker.sessionGuid} for dead worker: ${worker.guid}: `, err);
-            }
         }
     }
 

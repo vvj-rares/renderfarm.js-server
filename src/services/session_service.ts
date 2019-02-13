@@ -1,7 +1,8 @@
-import { injectable, inject, decorate } from "inversify";
+import { injectable, inject } from "inversify";
 import { TYPES } from "../types";
-import { ISettings, IDatabase, ISessionService } from "../interfaces";
+import { ISettings, IDatabase, ISessionService, IWorkerService } from "../interfaces";
 import { Session } from "../database/model/session";
+import { Worker } from "../database/model/worker";
 
 ///<reference path="./typings/node/node.d.ts" />
 import { EventEmitter } from "events";
@@ -10,18 +11,23 @@ import { EventEmitter } from "events";
 export class SessionService extends EventEmitter implements ISessionService {
     private _settings: ISettings;
     private _database: IDatabase;
+    private _workerService: IWorkerService;
 
     constructor(
         @inject(TYPES.ISettings) settings: ISettings,
         @inject(TYPES.IDatabase) database: IDatabase,
+        @inject(TYPES.IWorkerService) workerService: IWorkerService,
     ) {
         super();
 
         this._settings = settings;
         this._database = database;
+        this._workerService = workerService;
 
         this.id = Math.random();
         console.log(" >> SessionService: ", this.id);
+
+        this._workerService.on("worker:offline", this.onWorkerOffline.bind(this));
 
         if (this._settings.current.expireSessions) {
             console.log(`expireSessions (in minutes): ${this._settings.current.expireSessions}`);
@@ -104,5 +110,28 @@ export class SessionService extends EventEmitter implements ISessionService {
 
         }.bind(this), 5000); // check old sessions each 5 seconds
         this.emit("session-watchdog:started");
+    }
+
+    private async onWorkerOffline(w: Worker) {
+        console.log("Worker went offline: ", w);
+
+        let worker: Worker;
+        try {
+            worker = await this._database.getWorker(w.guid);
+        }
+        catch (err) {
+            console.log(`  FAIL | failed to close session ${w.sessionGuid} for dead worker: ${w.guid}: `, err);
+            return;
+        }
+
+        if (worker.sessionGuid) {
+            try {
+                await this.FailSession(worker.sessionGuid, "worker failed");
+
+                console.log(`    OK | closed session ${worker.sessionGuid} for dead worker: ${worker.guid}`);
+            } catch (err) {
+                console.log(`  FAIL | failed to close session ${worker.sessionGuid} for dead worker: ${worker.guid}: `, err);
+            }
+        }
     }
 }

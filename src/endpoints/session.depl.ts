@@ -23,6 +23,8 @@ describe(`REST API /session endpoint`, function() {
         settings = new Settings("dev");
         baseUrl = `https://${settings.current.host}:${settings.current.port}`;
 
+        console.log("baseUrl: ", baseUrl);
+
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
         axios.defaults.baseURL = baseUrl;
         axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
@@ -47,7 +49,7 @@ describe(`REST API /session endpoint`, function() {
 
         let res: any;
         try {
-            await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+            await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session`, data, config);
             fail();
         } catch (err) {
             res = err.response;
@@ -73,7 +75,7 @@ describe(`REST API /session endpoint`, function() {
 
         let res: any;
         try {
-            await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+            await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session`, data, config);
             fail();
         } catch (err) {
             res = err.response;
@@ -98,7 +100,7 @@ describe(`REST API /session endpoint`, function() {
 
         let res: any;
         try {
-            await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+            await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session`, data, config);
             fail();
         } catch (err) {
             res = err.response;
@@ -125,7 +127,7 @@ describe(`REST API /session endpoint`, function() {
 
         let res: any;
         try {
-            await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+            await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session`, data, config);
             fail();
         } catch (err) {
             res = err.response;
@@ -151,7 +153,7 @@ describe(`REST API /session endpoint`, function() {
 
         let res: any;
         try {
-            await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+            await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session`, data, config);
             fail();
         } catch (err) {
             res = err.response;
@@ -163,7 +165,7 @@ describe(`REST API /session endpoint`, function() {
 
     async function getOpenSessionAndCheck(apiKey: string, workspaceGuid: string, sessionGuid: string) {
         console.log(`GET open session and check: apiKey=${apiKey}, workspaceGuid=${workspaceGuid}, sessionGuid=${sessionGuid}`);
-        let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
+        let res: any = await axios.get(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session/${sessionGuid}`);
         console.log("Response on GET: ", res.data);
 
         JasmineDeplHelpers.checkResponse(res, 200);
@@ -188,7 +190,7 @@ describe(`REST API /session endpoint`, function() {
 
     async function getClosedSessionAndCheck(apiKey: string, workspaceGuid: string, sessionGuid: string) {
         console.log(`GET closed session and check: apiKey=${apiKey}, workspaceGuid=${workspaceGuid}, sessionGuid=${sessionGuid}`);
-        let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
+        let res: any = await axios.get(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session/${sessionGuid}`);
         console.log("Response on GET: ", res.data);
 
         JasmineDeplHelpers.checkResponse(res, 200);
@@ -220,7 +222,7 @@ describe(`REST API /session endpoint`, function() {
         };
         let config: AxiosRequestConfig = {};
 
-        let res: any = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+        let res: any = await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session`, data, config);
         console.log("Response on POST: ", res.data);
 
         JasmineDeplHelpers.checkResponse(res, 201, "session");
@@ -247,7 +249,7 @@ describe(`REST API /session endpoint`, function() {
             };
             let config: AxiosRequestConfig = {};
 
-            let res: any = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+            let res: any = await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session`, data, config);
             console.log("Response on POST: ", res.data);
 
             JasmineDeplHelpers.checkResponse(res, 201);
@@ -261,7 +263,7 @@ describe(`REST API /session endpoint`, function() {
         }
 
         { //now close the session
-            let res: any = await axios.delete(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
+            let res: any = await axios.delete(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session/${sessionGuid}`);
             console.log("Response on DELETE: ", res.data);
 
             JasmineDeplHelpers.checkResponse(res, 200, "session");
@@ -287,7 +289,7 @@ describe(`REST API /session endpoint`, function() {
             config.params = {
                 api_key: JasmineDeplHelpers.existingApiKey
             };
-            let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
+            let res: any = await axios.get(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/worker`, config);
             JasmineDeplHelpers.checkResponse(res, 200, "worker");
             let json = res.data;
 
@@ -309,7 +311,7 @@ describe(`REST API /session endpoint`, function() {
 
             let res: any
             try {
-                res = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+                res = await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session`, data, config);
             } catch (err) {
                 // this is not ok, because we expected more workers to be available
                 JasmineDeplHelpers.checkErrorResponse(err.response, 500, "failed to create session", "all workers busy");
@@ -329,7 +331,7 @@ describe(`REST API /session endpoint`, function() {
             config.params = {
                 api_key: JasmineDeplHelpers.existingApiKey
             };
-            let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
+            let res: any = await axios.get(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/worker`, config);
             JasmineDeplHelpers.checkResponse(res, 200, "worker");
             let json = res.data;
 
@@ -341,7 +343,7 @@ describe(`REST API /session endpoint`, function() {
         { // now close sessions that we opened
             for (let si in openSessions) {
                 let sessionGuid = openSessions[si];
-                let res: any = await axios.delete(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`);
+                let res: any = await axios.delete(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session/${sessionGuid}`);
 
                 JasmineDeplHelpers.checkResponse(res, 200, "session");
             }
@@ -352,7 +354,7 @@ describe(`REST API /session endpoint`, function() {
             config.params = {
                 api_key: JasmineDeplHelpers.existingApiKey
             };
-            let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
+            let res: any = await axios.get(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/worker`, config);
             JasmineDeplHelpers.checkResponse(res, 200, "worker");
             let json = res.data;
 
@@ -464,7 +466,7 @@ describe(`REST API /session endpoint`, function() {
             config.params = {
                 api_key: JasmineDeplHelpers.existingApiKey
             };
-            let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
+            let res: any = await axios.get(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/worker`, config);
             JasmineDeplHelpers.checkResponse(res, 200, "worker");
 
             let json = res.data;
@@ -503,7 +505,7 @@ describe(`REST API /session endpoint`, function() {
         let config: AxiosRequestConfig = {};
         let res: any
         try {
-            res = await axios.post(`${settings.current.publicUrl}/v${settings.majorVersion}/session`, data, config);
+            res = await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session`, data, config);
         } catch (err) {
             // this is not ok, because we expected more workers to be available
             JasmineDeplHelpers.checkErrorResponse(err.response, 500, "failed to create session", "all workers busy");
@@ -525,7 +527,7 @@ describe(`REST API /session endpoint`, function() {
         console.log("retrieve worker that was assigned to the session");
 
         console.log("1. get session details to know worker guid");
-        let getSessionUrl = `${settings.current.publicUrl}/v${settings.majorVersion}/session/${sessionGuid}`;
+        let getSessionUrl = `${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session/${sessionGuid}`;
         console.log(`GET on ${getSessionUrl}`);
         let getSessionResponse = await axios.get(getSessionUrl);
 
@@ -535,7 +537,7 @@ describe(`REST API /session endpoint`, function() {
         let workerGuid = getSessionResponse.data.data.workerGuid;
 
         console.log("2. now get worker");
-        let getWorkerUrl = `${settings.current.publicUrl}/v${settings.majorVersion}/worker/${workerGuid}`;
+        let getWorkerUrl = `${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/worker/${workerGuid}`;
         console.log(`GET on ${getWorkerUrl}`);
         let getWorkerResponse = await axios.get(getWorkerUrl);
 
@@ -549,7 +551,7 @@ describe(`REST API /session endpoint`, function() {
     // helper to close sessions
     async function closeSession(guid) {
         console.log(`Closing session ${guid}`);
-        let res: any = await axios.delete(`${settings.current.publicUrl}/v${settings.majorVersion}/session/${guid}`);
+        let res: any = await axios.delete(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session/${guid}`);
         JasmineDeplHelpers.checkResponse(res, 200, "session");
     }
 
@@ -708,7 +710,7 @@ describe(`REST API /session endpoint`, function() {
         config.params = {
             api_key: JasmineDeplHelpers.existingApiKey
         };
-        let res: any = await axios.get(`${settings.current.publicUrl}/v${settings.majorVersion}/worker`, config);
+        let res: any = await axios.get(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/worker`, config);
         JasmineDeplHelpers.checkResponse(res, 200);
         let json = res.data;
 
