@@ -194,7 +194,7 @@ describe("Database Job", function() {
             expect(failedJob.canceled).toBeUndefined();
             expect(failedJob.failed).toBeTruthy();
 
-            expect(failedJob.createdAt).toEqual(failedJob.updatedAt);
+            expect(failedJob.createdAt.getTime()).toBeLessThanOrEqual(failedJob.updatedAt.getTime());
             expect(failedJob.createdAt.getTime()).toBeLessThanOrEqual(failedJob.closedAt.getTime());
 
             expect(isArray(failedJob.urls)).toBeTruthy();
