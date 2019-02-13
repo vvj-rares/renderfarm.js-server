@@ -1,4 +1,4 @@
-import { injectable, inject } from "inversify";
+import { injectable, inject, decorate } from "inversify";
 import { TYPES } from "../types";
 import { ISettings, IDatabase, ISessionService } from "../interfaces";
 import { Session } from "../database/model/session";
