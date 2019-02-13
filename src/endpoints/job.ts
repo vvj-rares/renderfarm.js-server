@@ -81,7 +81,7 @@ class JobEndpoint implements IEndpoint {
 
             let job = await this._database.createJob(session.apiKey, session.workerGuid);
 
-            this._jobHandler.Start(job, session);
+            this._jobService.Start(job, session);
 
             res.status(200);
             res.end(JSON.stringify({ ok: true, type: "jobs", data: job.toJSON() }, null, 2));
