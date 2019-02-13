@@ -25,7 +25,7 @@ export interface IDatabase {
 
     //sessions
     getSession(sessionGuid: string, options?: any): Promise<Session>;
-    createSession(apiKey: string, workspace: string, sceneFilename: string): Promise<Session>;
+    createSession(apiKey: string, workspace: string, sceneFilename?: string): Promise<Session>;
     expireSessions(olderThanMinutes: number): Promise<Session[]>;
     closeSession(sessionGuid: string): Promise<Session>;
     failSession(sessionGuid: string, failReason?: string | undefined): Promise<Session>;
@@ -122,12 +122,13 @@ export interface ISessionWatchdog {
     Subscribe(sessionExpiredCb:  (session: Session) => Promise<any>): void;
 }
 
-export interface ISessionHandler {
-    Open(): Promise<Session>;
-    KeepAlive(sessionGuid: string): Promise<Session>;
-    Close(sessionGuid: string): Promise<Session>;
-    Expire(sessionGuid: string): Promise<Session>;
-    Fail(sessionGuid: string): Promise<Session>;
+export interface ISessionService {
+    GetSession(sessionGuid: string, allowClosed?: boolean, letTouch?: boolean): Promise<Session>;
+    CreateSession(apiKey: string, workspaceGuid: string, sceneFilename?: string): Promise<Session>;
+    KeepSessionAlive(sessionGuid: string): Promise<Session>;
+    CloseSession(sessionGuid: string): Promise<Session>;
+    ExpireSessions(sessionTimeoutMinutes: number): Promise<Session[]>;
+    FailSession(sessionGuid: string, failReason?: string): Promise<Session>;
 }
 
 export interface ISessionObserver {

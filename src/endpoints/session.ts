@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings, IMaxscriptClient, IWorkerObserver } from "../interfaces";
+import { IEndpoint, IMaxscriptClientFactory, ISettings, IMaxscriptClient, IWorkerObserver, ISessionService, IDatabase } from "../interfaces";
 import { TYPES } from "../types";
 import { Session } from "../database/model/session";
 import { Worker } from "../database/model/worker";
@@ -9,6 +9,7 @@ import { Worker } from "../database/model/worker";
 class SessionEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
+    private _sessionService: ISessionService;
     private _workerObserver: IWorkerObserver;
 
     private _maxscript: { [sessionGuid: string] : IMaxscriptClient; } = {}; // keep maxscript connections alive for open sessions
@@ -16,11 +17,13 @@ class SessionEndpoint implements IEndpoint {
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
+                @inject(TYPES.ISessionService) sessionService: ISessionService,
                 @inject(TYPES.IWorkerObserver) workerObserver: IWorkerObserver,
                 @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory,
     ) {
 
         this._settings = settings;
+        this._sessionService = sessionService;
         this._database = database;
         this._workerObserver = workerObserver;
         this._maxscriptClientFactory = maxscriptClientFactory;
@@ -76,7 +79,8 @@ class SessionEndpoint implements IEndpoint {
 
         if (worker.sessionGuid) {
             try {
-                await this._database.failSession(worker.sessionGuid, "worker failed");
+                await this._sessionService.FailSession(worker.sessionGuid, "worker failed");
+
                 console.log(`    OK | closed session ${worker.sessionGuid} for dead worker: ${worker.guid}`);
             } catch (err) {
                 console.log(`  FAIL | failed to close session ${worker.sessionGuid} for dead worker: ${worker.guid}: `, err);
@@ -91,7 +95,7 @@ class SessionEndpoint implements IEndpoint {
 
             let session: Session;
             try {
-                session = await this._database.getSession(sessionGuid, { allowClosed: true, readOnly: true });
+                session = await this._sessionService.GetSession(sessionGuid, { allowClosed: true, readOnly: true });
                 if (!session) {
                     console.log(`  FAIL | session not found: ${sessionGuid}`);
                     res.status(404);
@@ -137,7 +141,7 @@ class SessionEndpoint implements IEndpoint {
 
             let session: Session;
             try {
-                session = await this._database.createSession(apiKey, workspaceGuid, sceneFilename);
+                session = await this._sessionService.CreateSession(apiKey, workspaceGuid, sceneFilename);
             } catch (err) {
                 console.log(`  FAIL | failed to create session, `, err);
                 res.status(500);
@@ -154,7 +158,7 @@ class SessionEndpoint implements IEndpoint {
                 console.log(`    OK | SessionEndpoint connected to maxscript client`);
             } catch (err) {
                 try {
-                    session = await this._database.closeSession(session.guid);
+                    session = await this._sessionService.CloseSession(session.guid);
                 } catch (sessionErr) {
                     console.log(`  WARN | failed to close session, `, sessionErr);
                 }
@@ -171,7 +175,7 @@ class SessionEndpoint implements IEndpoint {
                 console.log(`    OK | SessionGuid on worker was updated`);
             } catch (err) {
                 try {
-                    session = await this._database.closeSession(session.guid);
+                    session = await this._sessionService.CloseSession(session.guid);
                 } catch (sessionErr) {
                     console.log(`  WARN | failed to close session, `, sessionErr);
                 }
@@ -189,7 +193,7 @@ class SessionEndpoint implements IEndpoint {
                 console.log(`    OK | workspace ${session.workspaceGuid} assigned to session ${session.guid}`);
             } catch (err) {
                 try {
-                    session = await this._database.closeSession(session.guid);
+                    session = await this._sessionService.CloseSession(session.guid);
                 } catch (sessionErr) {
                     console.log(`  WARN | failed to close session, `, sessionErr);
                 }
@@ -208,7 +212,7 @@ class SessionEndpoint implements IEndpoint {
                     console.log(`    OK | scene open: ${sceneFilename}`);
                 } catch (err) {
                     try {
-                        session = await this._database.closeSession(session.guid);
+                        session = await this._sessionService.CloseSession(session.guid);
                     } catch (sessionErr) {
                         console.log(`  WARN | failed to close session, `, sessionErr);
                     }
@@ -235,7 +239,7 @@ class SessionEndpoint implements IEndpoint {
 
             let closedSession: Session;
             try {
-                closedSession = await this._database.closeSession(sessionGuid);
+                closedSession = await this._sessionService.CloseSession(sessionGuid);
             } catch (err) {
                 console.log(`  FAIL | failed to close session, `, err);
                 res.status(500);
@@ -283,56 +287,7 @@ class SessionEndpoint implements IEndpoint {
             res.end(JSON.stringify({ 
                 ok: true, 
                 type: "session", 
-                data: { 
-                    guid: closedSession.guid, 
-                    firstSeen: closedSession.firstSeen,
-                    closedAt: closedSession.closedAt,
-                    closed: closedSession.closed
-                } }, null, 2));
-
-                // .then(function(value){
-
-                //     //now we're going to reset 3ds max as this session is being closed
-                //     this._database.getWorker(sessionGuid)
-                //     .then(function(worker){
-    
-                //         let maxscriptClient = this._maxscriptClientFactory.create();
-                //         maxscriptClient.connect(worker.ip, worker.port)
-                //             .then(function(value) {
-
-                //                 maxscriptClient.resetScene()
-                //                     .then(function(value) {
-                //                         maxscriptClient.disconnect();
-                //                         console.log(`    OK | scene reset`);
-                //                         res.end(JSON.stringify({ success: true }, null, 2));
-                //                     }.bind(this))
-                //                     .catch(function(err) {
-                //                         maxscriptClient.disconnect();
-                //                         res.status(500);
-                //                         console.error(`  FAIL | failed to reset worker scene, `, err);
-                //                         res.end(JSON.stringify({ error: "failed to reset worker scene" }, null, 2));
-                //                     }.bind(this)); // end of maxscriptClient.resetScene promise
-                
-                //             }.bind(this))
-                //             .catch(function(err) {
-                //                 res.status(500);
-                //                 console.error("failed to connect session worker, ", err);
-                //                 res.end(JSON.stringify({ error: "failed to connect session worker" }, null, 2));
-                //             }.bind(this)); // end of maxscriptClient.connect promise
-    
-                //     }.bind(this))
-                //     .catch(function(err){
-                //         res.status(500);
-                //         console.error(`  FAIL | failed to get session worker, `, err);
-                //         res.end(JSON.stringify({ error: "failed to get session worker" }, null, 2));
-                //     }.bind(this)); // end of this._database.getWorker promise
-                    
-                // }.bind(this))
-                // .catch(function(err){
-                //     res.status(500);
-                //     console.error(`  FAIL | failed to close session\n`, err);
-                //     res.end(JSON.stringify({ error: "failed to close session" }, null, 2));
-                // }.bind(this));
+                data: closedSession.toJSON() }, null, 2));
 
         }.bind(this));
     }

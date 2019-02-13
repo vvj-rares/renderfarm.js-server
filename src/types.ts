@@ -10,7 +10,7 @@ const TYPES = {
     IWorkerObserver: Symbol.for("IWorkerObserver"),
     IJobHandler: Symbol.for("IJobHandler"),
     ISessionWatchdog: Symbol.for("ISessionWatchdog"),
-    ISessionHandler: Symbol.for("ISessionHandler"),
+    ISessionService: Symbol.for("ISessionService"),
     ISessionObserver: Symbol.for("ISessionObserver"),
 };
 
