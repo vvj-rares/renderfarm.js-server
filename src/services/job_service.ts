@@ -1,10 +1,11 @@
-import { injectable, inject } from "inversify";
+import { injectable, inject, decorate } from "inversify";
 import { TYPES } from "../types";
 import { ISettings, IDatabase, IMaxscriptClient, IMaxscriptClientFactory, IJobService } from "../interfaces";
 import { Job } from "../database/model/job";
 
 ///<reference path="./typings/node/node.d.ts" />
 import { EventEmitter } from "events";
+decorate(injectable(), EventEmitter)
 
 @injectable()
 export class JobService extends EventEmitter implements IJobService {

@@ -1,4 +1,4 @@
-import { injectable, inject } from "inversify";
+import { injectable, inject, decorate } from "inversify";
 import { VraySpawnerInfo } from "../model/vray_spawner_info";
 import { ISettings, IWorkerService } from "../interfaces";
 import { TYPES } from "../types";
@@ -6,6 +6,7 @@ import { Worker } from "../database/model/worker";
 
 ///<reference path="./typings/node/node.d.ts" />
 import { EventEmitter } from "events";
+decorate(injectable(), EventEmitter)
 
 const uuidv4 = require('uuid/v4');
 const dgram = require('dgram');

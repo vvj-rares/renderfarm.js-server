@@ -1,7 +1,6 @@
 "use strict";
 
 import * as express from "express";
-import { VraySpawnerInfo } from "./model/vray_spawner_info";
 import { ApiKey } from "./database/model/api_key";
 import { Workspace } from "./database/model/workspace";
 import { Session } from "./database/model/session";
