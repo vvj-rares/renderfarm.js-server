@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, ISettings, IWorkerObserver, ISessionWatchdog } from "../interfaces";
+import { IEndpoint, IDatabase, ISettings, IWorkerService, ISessionService } from "../interfaces";
 import { TYPES } from "../types";
 import { VraySpawnerInfo } from "../model/vray_spawner_info";
 import { Worker } from "../database/model/worker";
@@ -10,28 +10,27 @@ import { Session } from "inspector";
 export class WorkerEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
-    private _workerObserver: IWorkerObserver;
-    private _sessionWatchdog: ISessionWatchdog;
+    private _workerService: IWorkerService;
+    private _sessionService: ISessionService;
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IWorkerObserver) workerObserver: IWorkerObserver,
-                @inject(TYPES.ISessionWatchdog) sessionWatchdog: ISessionWatchdog,
+                @inject(TYPES.IWorkerService) workerService: IWorkerService,
+                @inject(TYPES.ISessionService) sessionService: ISessionService,
     ) {
         this._settings = settings;
         this._database = database;
-        this._workerObserver = workerObserver;
-        this._sessionWatchdog = sessionWatchdog;
+        this._workerService = workerService;
+        this._sessionService = sessionService;
 
-        this._workerObserver.Subscribe(
-            this.onWorkerAdded.bind(this),
-            this.onWorkerUpdated.bind(this),
-            this.onWorkerOffline.bind(this),
-            this.onSpawnerUpdate.bind(this));
-        
-        this._sessionWatchdog.Subscribe(
-            this.onSessionExpired.bind(this)
-        );
+        this._workerService.on("worker:added", this.onWorkerAdded.bind(this));
+        this._workerService.on("worker:added", this.onWorkerUpdated.bind(this));
+        this._workerService.on("worker:added", this.onWorkerOffline.bind(this));;
+
+        this._workerService.on("worker:added", this.onSpawnerAdded.bind(this));
+        this._workerService.on("worker:updated", this.onSpawnerUpdated.bind(this));
+
+        this._sessionService.on("session:expired", this.onSessionExpired.bind(this));
     }
 
     bind(express: express.Application) {
@@ -128,7 +127,12 @@ export class WorkerEndpoint implements IEndpoint {
         }
     }
 
-    private onSpawnerUpdate(spawner: VraySpawnerInfo) {
+    private onSpawnerAdded(spawner: VraySpawnerInfo) {
+        // this._database.storeVraySpawner(spawner);
+        console.log(" >> todo: // handle spawner added: ", spawner);
+    }
+
+    private onSpawnerUpdated(spawner: VraySpawnerInfo) {
         // this._database.storeVraySpawner(spawner);
         console.log(" >> todo: // handle spawner update: ", spawner);
     }

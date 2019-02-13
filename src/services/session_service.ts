@@ -1,28 +1,35 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../types";
-import { ISettings, IDatabase, ISessionService, ISessionObserver } from "../interfaces";
+import { ISettings, IDatabase, ISessionService } from "../interfaces";
 import { Session } from "../database/model/session";
 
+///<reference path="./typings/node/node.d.ts" />
+import { EventEmitter } from 'events';
+
 @injectable()
-export class SessionService implements ISessionService, ISessionObserver {
+export class SessionService extends EventEmitter implements ISessionService {
     private _settings: ISettings;
     private _database: IDatabase;
-
-    private _sessionCreatedCb:   ((session: Session) => Promise<any>) [] = []; // array of callbacks
-    private _sessionUpdatedCb: ((session: Session) => Promise<any>) [] = [];
-    private _sessionClosedCb:  ((session: Session) => Promise<any>) [] = [];
-    private _sessionFailedCb:   ((session: Session) => Promise<any>) [] = [];
-    private _sessionExpiredCb:   ((session: Session) => Promise<any>) [] = [];
 
     constructor(
         @inject(TYPES.ISettings) settings: ISettings,
         @inject(TYPES.IDatabase) database: IDatabase,
     ) {
+        super();
+
         this._settings = settings;
         this._database = database;
 
         this.id = Math.random();
-        console.log(" >> SessionHandler: ", this.id);
+        console.log(" >> SessionService: ", this.id);
+
+        if (this._settings.current.expireSessions) {
+            console.log(`expireSessions (in minutes): ${this._settings.current.expireSessions}`);
+            this.StartSessionWatchdogTimer(this._settings.current.sessionTimeoutMinutes);
+        } else {
+            console.log(`expireSessions is ${this._settings.current.expireSessions}, this instance will not expire abandoned sessions`);
+        }
+
     }
 
     public id: number;
@@ -37,42 +44,65 @@ export class SessionService implements ISessionService, ISessionObserver {
         );
     }
 
-    public CreateSession(apiKey: string, workspaceGuid: string, sceneFilename?: string): Promise<Session> {
-        return this._database.createSession(
+    public async CreateSession(apiKey: string, workspaceGuid: string, sceneFilename?: string): Promise<Session> {
+        let createdSession = await this._database.createSession(
             apiKey,
             workspaceGuid,
             sceneFilename,
         );
+        this.emit("session:created", createdSession);
+        return createdSession;
     }
 
-    public KeepSessionAlive(sessionGuid: string): Promise<Session> {
-        return this._database.getSession(
+    public async KeepSessionAlive(sessionGuid: string): Promise<Session> {
+        let updatedSession = await this._database.getSession(
             sessionGuid,
             {
                 allowClosed: false,
                 readOnly: false,
             },
         );
+        this.emit("session:updated", updatedSession);
+        return updatedSession;
     }
 
-    public CloseSession(sessionGuid: string): Promise<Session> {
-        return this._database.closeSession(sessionGuid);
+    public async CloseSession(sessionGuid: string): Promise<Session> {
+        let closedSession = await this._database.closeSession(sessionGuid);
+        this.emit("session:closed", closedSession);
+        return closedSession;
     }
 
-    public ExpireSessions(sessionTimeoutMinutes: number): Promise<Session[]> {
-        return this._database.expireSessions(sessionTimeoutMinutes);
+    public async ExpireSessions(sessionTimeoutMinutes: number): Promise<Session[]> {
+        let expiredSessions = await this._database.expireSessions(sessionTimeoutMinutes);
+        for (let s in expiredSessions) {
+            this.emit("session:expired", expiredSessions[s]);
+        }
+        return expiredSessions;
     }
 
-    public FailSession(sessionGuid: string, failReason?: string): Promise<Session> {
-        return this._database.failSession(
+    public async FailSession(sessionGuid: string, failReason?: string): Promise<Session> {
+        let failedSession = await this._database.failSession(
             sessionGuid,
             failReason,
         );
+        this.emit("session:failed", failedSession);
+        return failedSession;
     }
 
-    public Subscribe(sessionCreatedCb:  (session: Session) => Promise<any>): void {
-        if (sessionCreatedCb) {
-            this._sessionCreatedCb.push(sessionCreatedCb);
-        }
+    private StartSessionWatchdogTimer(sessionTimeoutMinutes: number) {
+        //expire sessions by timer
+        setInterval(async function() {
+            try {
+                let expiredSession = await this.ExpireSessions(sessionTimeoutMinutes);
+                if (expiredSession.length === 0) {
+                    return;
+                }
+                console.log(`    OK | expired sessions: ${expiredSession.length}`);
+            } catch (err) {
+                console.error(err);
+            }
+
+        }.bind(this), 5000); // check old sessions each 5 seconds
+        this.emit("session-watchdog:started");
     }
 }

@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, ISettings, IJobHandler } from "../interfaces";
+import { IEndpoint, IDatabase, ISettings, IJobService } from "../interfaces";
 import { TYPES } from "../types";
 import { Job } from "../database/model/job";
 import { Session } from "../database/model/session";
@@ -8,12 +8,18 @@ import { EndpointHelpers } from "../utils/endpoint_helpers";
 
 @injectable()
 class JobEndpoint implements IEndpoint {
+    private _settings: ISettings;
+    private _database: IDatabase;
+    private _jobService: IJobService;
+
     constructor(
-        @inject(TYPES.ISettings) private _settings: ISettings,
-        @inject(TYPES.IDatabase) private _database: IDatabase,
-        @inject(TYPES.IJobHandler) private _jobHandler: IJobHandler,
+        @inject(TYPES.ISettings) settings: ISettings,
+        @inject(TYPES.IDatabase) database: IDatabase,
+        @inject(TYPES.IJobService) jobService: IJobService,
     ) {
-        // initialization code here
+        this._settings = settings;
+        this._database = database;
+        this._jobService = jobService;
     }
 
     bind(express: express.Application) {

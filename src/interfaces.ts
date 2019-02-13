@@ -105,21 +105,14 @@ export interface IMaxscriptClientFactory {
     create(): IMaxscriptClient;
 }
 
-export interface IWorkerObserver {
-    Subscribe(
-        workerAddedCb:   (worker: Worker) => Promise<any>,   // received first heartbeat, worker just started
-        workerUpdatedCb: (worker: Worker) => Promise<any>,   // received next heartbeat, worker was actualized
-        workerOfflineCb: (worker: Worker) => Promise<any>,   // called when worker stops sending heartbeats
-        spawnerCb:      (spawner: VraySpawnerInfo) => Promise<any>): void;
+export interface IWorkerService {
+    on(event: string | symbol, listener: (...args: any[]) => void): this;
 }
 
-export interface IJobHandler {
-    Start(job: Job, session: Session): void;
+export interface IJobService {
+    Start(job: Job): void;
     Cancel(job: Job): void;
-}
-
-export interface ISessionWatchdog {
-    Subscribe(sessionExpiredCb:  (session: Session) => Promise<any>): void;
+    on(event: string | symbol, listener: (...args: any[]) => void): this;
 }
 
 export interface ISessionService {
@@ -129,9 +122,5 @@ export interface ISessionService {
     CloseSession(sessionGuid: string): Promise<Session>;
     ExpireSessions(sessionTimeoutMinutes: number): Promise<Session[]>;
     FailSession(sessionGuid: string, failReason?: string): Promise<Session>;
+    on(event: string | symbol, listener: (...args: any[]) => void): this;
 }
-
-export interface ISessionObserver {
-    Subscribe(sessionOpenCb:  (session: Session) => Promise<any>): void;
-}
-

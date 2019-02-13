@@ -14,7 +14,8 @@ module.exports = function() { return {
         apiKeyCheck: true,
         workspaceCheck: true,
         expireSessions: true,
-        sessionTimeoutMinutes: 30
+        sessionTimeoutMinutes: 3,
+        workerTimeoutSeconds: 3
     },
     test: {
         connectionUrl: "mongodb://rfarmmgr:123456@192.168.0.151:27017/rfarmdb",

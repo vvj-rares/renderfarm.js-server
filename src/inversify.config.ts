@@ -4,55 +4,49 @@ import * as interfaces from "./interfaces";
 import { Database } from "./database/database";
 import { App } from "./app";
 import { SessionEndpoint } from "./endpoints/session";
-import { SceneEndpoint } from "./endpoints/scene/scene";
-import { SceneCameraEndpoint } from "./endpoints/scene/scene.camera";
-import { SceneLightEndpoint } from "./endpoints/scene/scene.light";
-import { SceneMeshEndpoint } from "./endpoints/scene/scene.mesh";
 import { JobEndpoint } from "./endpoints/job";
 import { WorkerEndpoint } from "./endpoints/worker";
 import { MaxscriptClientFactory } from "./maxscript_client/maxscript.client.factory";
-import { SceneMaterialEndpoint } from "./endpoints/scene/scene.material";
-import { SceneGeometryEndpoint } from "./endpoints/scene/scene.geometry";
 import { WorkspaceFileEndpoint } from "./endpoints/workspace.file";
 import { RenderOutputEndpoint } from "./endpoints/renderoutput";
-import { WorkerHeartbeatListener } from "./services/worker_heartbeat_listener";
 import { Settings } from "./settings";
 import { ThreeObjectEndpoint } from "./endpoints/three/three.object";
 import { ThreeGeometryEndpoint } from "./endpoints/three/three.geometry";
 import { ThreeMaterialEndpoint } from "./endpoints/three/three.material";
-import { JobHandler } from "./services/job_handler";
-import { SessionWatchdog } from "./services/session_watchdog";
 import { SessionService } from "./services/session_service";
+import { JobService } from "./services/job_service";
+import { WorkerService } from "./services/worker_service";
 
 const myContainer = new Container();
 
 myContainer.bind<interfaces.IDatabase>(TYPES.IDatabase).to(Database).inSingletonScope();
 myContainer.bind<interfaces.IApp>(TYPES.IApp).to(App);
+
+//endpoints
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SessionEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(JobEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(WorkerEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(WorkspaceFileEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(RenderOutputEndpoint);
 
-myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneEndpoint);
-myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneCameraEndpoint);
-myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneLightEndpoint);
-myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneMaterialEndpoint);
-myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneGeometryEndpoint);
-myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneMeshEndpoint);
+// myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneEndpoint);
+// myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneCameraEndpoint);
+// myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneLightEndpoint);
+// myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneMaterialEndpoint);
+// myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneGeometryEndpoint);
+// myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(SceneMeshEndpoint);
 
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeObjectEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeGeometryEndpoint);
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeMaterialEndpoint);
 
-myContainer.bind<interfaces.IWorkerObserver>(TYPES.IWorkerObserver).to(WorkerHeartbeatListener).inSingletonScope();
-
-myContainer.bind<interfaces.IJobHandler>(TYPES.IJobHandler).to(JobHandler).inSingletonScope();
-myContainer.bind<interfaces.ISessionWatchdog>(TYPES.ISessionWatchdog).to(SessionWatchdog).inSingletonScope();
+//services
+myContainer.bind<interfaces.IWorkerService>(TYPES.IWorkerService).to(WorkerService).inSingletonScope();
+myContainer.bind<interfaces.IJobService>(TYPES.IJobService).to(JobService).inSingletonScope();
+myContainer.bind<interfaces.ISessionService>(TYPES.ISessionService).to(SessionService).inSingletonScope();
 
 // tip: this is how to export same instance with different interfaces
-myContainer.bind<interfaces.ISessionService>(TYPES.ISessionService).to(SessionService).inSingletonScope();
-myContainer.bind<interfaces.ISessionObserver>(TYPES.ISessionObserver).toService(TYPES.ISessionObserver);
+// EXAMPLE: myContainer.bind<interfaces.ISessionObserver>(TYPES.ISessionObserver).toService(TYPES.ISessionObserver);
 
 myContainer.bind<interfaces.IMaxscriptClientFactory>(TYPES.IMaxscriptClientFactory).to(MaxscriptClientFactory);
 

@@ -1,14 +1,17 @@
 import { injectable, inject } from "inversify";
 import { VraySpawnerInfo } from "../model/vray_spawner_info";
-import { ISettings, IWorkerObserver } from "../interfaces";
+import { ISettings, IWorkerService } from "../interfaces";
 import { TYPES } from "../types";
 import { Worker } from "../database/model/worker";
+
+///<reference path="./typings/node/node.d.ts" />
+import { EventEmitter } from "events";
 
 const uuidv4 = require('uuid/v4');
 const dgram = require('dgram');
 
 @injectable()
-export class WorkerHeartbeatListener implements IWorkerObserver {
+export class WorkerService extends EventEmitter implements IWorkerService {
     private _settings: ISettings;
 
     private _workers: {
@@ -19,61 +22,57 @@ export class WorkerHeartbeatListener implements IWorkerObserver {
         [id: string]: VraySpawnerInfo;
     } = {};
 
-    private _workerAddedCb: ((worker: Worker) => Promise<any>) []      = []; // array of callbacks
-    private _workerUpdatedCb: ((worker: Worker) => Promise<any>) []    = [];
-    private _workerOfflineCb: ((worker: Worker) => Promise<any>) []    = [];
-    private _spawnerCb: ((worker: VraySpawnerInfo) => Promise<any>) [] = [];
-
     constructor(
         @inject(TYPES.ISettings) settings: ISettings,
     ) {
+        super();
+
         this._settings = settings;
 
         this.id = Math.random();
-        console.log(" >> WorkerHeartbeatListener: ", this.id);
+        console.log(" >> WorkerService: ", this.id);
 
         if (this._settings.current.heartbeatPort > 0) {
             console.log(`heartbeatPort: ${this._settings.current.heartbeatPort}`);
-            this.startListener( this._settings.current.heartbeatPort );
+            this.StartListener( this._settings.current.heartbeatPort );
+            this.StartWorkerWatchdogTimer(this._settings.current.workerTimeoutSeconds)
         } else {
             console.log(`heartbeatPort is ${this._settings.current.heartbeatPort}, this instance will not accept worker heartbeats`);
         }
     }
 
     public id: number;
+    private listenerRetryCount: number;
 
-    private startListener(port: number) {
-        // add timer to check known workers if they're still alive
-        setInterval(function() {
-            let activeWorkers: {
-                [id: string]: Worker;
-            } = {};
-
-            for (let i in this._workers) {
-                let w = this._workers[i];
-                if (Date.now() - w.lastSeen.getTime() > 3000) { // no heartbeat for more than 3 sec? dead!
-                    for (let c in this._workerOfflineCb) {
-                        this._workerOfflineCb[c](w);
-                    }
-                    // and exclude this worker from activeWorkers
-                } else {
-                    activeWorkers[i] = w;
-                }
-            }
-
-            this._workers = activeWorkers;
-        }.bind(this), 1000);
-
+    private StartListener(port: number) {
         const server = dgram.createSocket('udp4');
 
         server.on('error', function (err) {
-            console.log(`Worker monitor error:\n${err.stack}`);
+            console.error(`Worker monitor error: ${err.message}\r\n`, err);
             server.close();
+
+            ++ this.listenerRetryCount;
+            if (this.listenerRetryCount < 100) {
+                console.log(`listenerRetryCount: ${this.listenerRetryCount}`);
+                setTimeout(function() {
+                    this.StartListener(port);
+                }.bind(this), 250);
+            } else if (this.listenerRetryCount === 100) {
+                console.log(`Limit reached! listenerRetryCount: ${this.listenerRetryCount}`);
+            }
         }.bind(this));
 
         server.on('message', async function (msg, rinfo) {
-            var rec = JSON.parse(msg.toString());
-            // console.log(rec);
+            let rec: any;
+            let msgStr = msg.toString();
+            try {
+                rec = JSON.parse(msgStr);
+            } catch (err) {
+                console.error(`Can't parse: ${msgStr}`);
+                console.error(err);
+                return;
+            }
+
             if (rec.type === "heartbeat" && rec.sender === "remote-maxscript") {
                 this.handleHeartbeatFromRemoteMaxscript(msg, rinfo, rec);
             }
@@ -90,24 +89,24 @@ export class WorkerHeartbeatListener implements IWorkerObserver {
         server.bind(port);
     }
 
-    public Subscribe(
-        workerAddedCb: (worker: Worker) => Promise<any>,
-        workerUpdatedCb: (worker: Worker) => Promise<any>,
-        workerOfflineCb: (worker: Worker) => Promise<any>,
-        spawnerCb: (spawner: VraySpawnerInfo) => Promise<any>)
-    {
-        if (workerAddedCb) {
-            this._workerAddedCb.push(workerAddedCb);
-        }
-        if (workerUpdatedCb) {
-            this._workerUpdatedCb.push(workerUpdatedCb);
-        }
-        if (workerOfflineCb) {
-            this._workerOfflineCb.push(workerOfflineCb);
-        }
-        if (spawnerCb) {
-            this._spawnerCb.push(spawnerCb);
-        }
+    private StartWorkerWatchdogTimer(workerTimeoutSeconds: number) {
+        // add timer to check known workers if they're still alive
+        setInterval(function() {
+            let activeWorkers: {
+                [id: string]: Worker;
+            } = {};
+
+            for (let i in this._workers) {
+                let w = this._workers[i];
+                if (Date.now() - w.lastSeen.getTime() > workerTimeoutSeconds * 1000) { // no heartbeat for more than 3 sec? dead!
+                    this.emit("worker:offline", w);
+                } else {
+                    activeWorkers[i] = w;
+                }
+            }
+
+            this._workers = activeWorkers;
+        }.bind(this), 1000);
     }
 
     private handleHeartbeatFromRemoteMaxscript(msg, rinfo, rec) {
@@ -122,14 +121,7 @@ export class WorkerHeartbeatListener implements IWorkerObserver {
             knownWorker.ramUsage = rec.ram_usage;
             knownWorker.totalRam = rec.total_ram;
 
-            for (let c in this._workerUpdatedCb) {
-                try {
-                    this._workerUpdatedCb[c](knownWorker);
-                } catch (err) {
-                    console.log(`  WARN | _workerUpdatedCb threw exception: `, err);
-                    console.log(`       | knownWorker was: `, knownWorker);
-                }
-            }
+            this.emit("worker:updated", knownWorker);
         }
         else {
             // all who report into this api belongs to current workgroup
@@ -147,14 +139,7 @@ export class WorkerHeartbeatListener implements IWorkerObserver {
 
             this._workers[workerId] = newWorker;
 
-            for (let c in this._workerAddedCb) {
-                try {
-                    this._workerAddedCb[c](newWorker);
-                } catch (err) {
-                    console.log(`  WARN | _workerAddedCb threw exception: `, err);
-                    console.log(`       | newWorker was: `, newWorker);
-                }
-            }
+            this.emit("worker:added", newWorker);
 
             console.log(`    OK | new worker, ${msg} from ${rinfo.address}:${rinfo.port}`);
         }
@@ -172,14 +157,7 @@ export class WorkerHeartbeatListener implements IWorkerObserver {
             knownVraySpawner.totalRam = rec.total_ram;
             knownVraySpawner.touch();
 
-            for (let c in this._spawnerCb) {
-                try {
-                    this._spawnerCb[c](knownVraySpawner);
-                } catch (err) {
-                    console.log(`  WARN | _spawnerCb threw exception: `, err);
-                    console.log(`       | knownVraySpawner was: `, knownVraySpawner);
-                }
-            }
+            this.emit("spawner:updated", knownVraySpawner);
         }
         else {
             // all who report into this api belongs to current workgroup
@@ -189,14 +167,7 @@ export class WorkerHeartbeatListener implements IWorkerObserver {
             newVraySpawner.totalRam = rec.total_ram;
             this._vraySpawners[vraySpawnerId] = newVraySpawner;
 
-            for (let c in this._spawnerCb) {
-                try {
-                    this._spawnerCb[c](newVraySpawner);
-                } catch (err) {
-                    console.log(`  WARN | _spawnerCb threw exception: `, err);
-                    console.log(`       | newVraySpawner was: `, newVraySpawner);
-                }
-            }
+            this.emit("spawner:added", newVraySpawner);
 
             console.log(`new vray spawner: ${msg} from ${rinfo.address}`);
         }

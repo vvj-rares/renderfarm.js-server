@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IMaxscriptClientFactory, ISettings, IMaxscriptClient, IWorkerObserver, ISessionService, IDatabase } from "../interfaces";
+import { IEndpoint, IMaxscriptClientFactory, ISettings, IMaxscriptClient, ISessionService, IDatabase, IWorkerService } from "../interfaces";
 import { TYPES } from "../types";
 import { Session } from "../database/model/session";
 import { Worker } from "../database/model/worker";
@@ -10,7 +10,7 @@ class SessionEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
     private _sessionService: ISessionService;
-    private _workerObserver: IWorkerObserver;
+    private _workerService: IWorkerService;
 
     private _maxscript: { [sessionGuid: string] : IMaxscriptClient; } = {}; // keep maxscript connections alive for open sessions
     private _maxscriptClientFactory: IMaxscriptClientFactory;
@@ -18,17 +18,17 @@ class SessionEndpoint implements IEndpoint {
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.ISessionService) sessionService: ISessionService,
-                @inject(TYPES.IWorkerObserver) workerObserver: IWorkerObserver,
+                @inject(TYPES.IWorkerService) workerService: IWorkerService,
                 @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory,
     ) {
 
         this._settings = settings;
         this._sessionService = sessionService;
         this._database = database;
-        this._workerObserver = workerObserver;
+        this._workerService = workerService;
         this._maxscriptClientFactory = maxscriptClientFactory;
 
-        this._workerObserver.Subscribe(null, null, this.onWorkerOffline.bind(this), null);
+        this._workerService.on("worker:offline", this.onWorkerOffline);
     }
 
     async validateApiKey(res: any, apiKey: string) {
