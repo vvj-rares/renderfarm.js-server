@@ -1,9 +1,7 @@
-import { injectable } from "inversify";
 import { IMaxscriptClient } from "../interfaces";
 import { Socket } from "net";
 import { Workspace } from "../database/model/workspace";
 
-@injectable()
 class MaxscriptClient implements IMaxscriptClient {
 
     private _responseHandler:        (data: any) => boolean;

@@ -100,8 +100,8 @@ export interface IMaxscriptClient {
     renderScene(camera: string, size: number[], filename: string, vraySettings: any): Promise<boolean>;
 }
 
-export interface IMaxscriptClientFactory {
-    create(): IMaxscriptClient;
+export interface IFactory<T> {
+    create(): T;
 }
 
 export interface IWorkerService {
@@ -122,4 +122,21 @@ export interface ISessionService {
     ExpireSessions(sessionTimeoutMinutes: number): Promise<Session[]>;
     FailSession(sessionGuid: string, failReason?: string): Promise<Session>;
     on(event: string | symbol, listener: (...args: any[]) => void): this;
+}
+
+export enum SessionServiceEvents {
+    Created = "session:created",
+    Updated = "session:updated",
+    Closed = "session:closed",
+    Expired = "session:expired",
+    Failed = "session:failed",
+    WatchdogStarted = "session-watchdog:started",
+}
+
+export interface IMaxScriptConnectionPoolService {
+    // todo:
+}
+
+export interface IThree2MaxScriptConnector {
+    // todo: 
 }

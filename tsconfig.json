@@ -3,7 +3,7 @@
         "outDir": "dist",
         "target": "es2017",
         "lib": ["es6", "dom"],
-        "types": ["node", "jasmine", "reflect-metadata", "mongodb", "uuid", "three"],
+        "types": ["node", "jasmine", "reflect-metadata", "mongodb", "uuid"],
         "module": "commonjs",
     "allowJs": false,
     "checkJs": false,

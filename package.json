@@ -15,14 +15,12 @@
     "multer": "^1.4.1",
     "reflect-metadata": "^0.1.13",
     "ssh2-sftp-client": "^2.4.3",
-    "three": "^0.100.0",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
     "@types/jasmine": "^2.8.16",
     "@types/mongodb": "^3.1.19",
     "@types/node": "^10.12.19",
-    "@types/three": "^0.93.18",
     "@types/uuid": "^3.4.4",
     "form-data": "^2.3.3",
     "ftp": "^0.3.10",

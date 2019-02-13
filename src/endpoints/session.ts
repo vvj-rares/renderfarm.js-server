@@ -1,9 +1,8 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IMaxscriptClientFactory, ISettings, IMaxscriptClient, ISessionService, IDatabase, IWorkerService } from "../interfaces";
+import { IEndpoint, ISettings, IMaxscriptClient, ISessionService, IDatabase, IWorkerService, IFactory } from "../interfaces";
 import { TYPES } from "../types";
 import { Session } from "../database/model/session";
-import { Worker } from "../database/model/worker";
 
 @injectable()
 class SessionEndpoint implements IEndpoint {
@@ -12,12 +11,12 @@ class SessionEndpoint implements IEndpoint {
     private _sessionService: ISessionService;
 
     private _maxscript: { [sessionGuid: string] : IMaxscriptClient; } = {}; // keep maxscript connections alive for open sessions
-    private _maxscriptClientFactory: IMaxscriptClientFactory;
+    private _maxscriptClientFactory: IFactory<IMaxscriptClient>;
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.ISessionService) sessionService: ISessionService,
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory,
+                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IFactory<IMaxscriptClient>,
     ) {
 
         this._settings = settings;

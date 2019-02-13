@@ -1,6 +1,6 @@
 import { injectable, inject, decorate } from "inversify";
 import { TYPES } from "../types";
-import { ISettings, IDatabase, IMaxscriptClient, IMaxscriptClientFactory, IJobService } from "../interfaces";
+import { ISettings, IDatabase, IMaxscriptClient, IJobService, IFactory } from "../interfaces";
 import { Job } from "../database/model/job";
 
 ///<reference path="./typings/node/node.d.ts" />
@@ -8,6 +8,9 @@ import { EventEmitter } from "events";
 
 @injectable()
 export class JobService extends EventEmitter implements IJobService {
+    private _settings: ISettings;
+    private _database: IDatabase;
+    private _maxscriptClientFactory: IFactory<IMaxscriptClient>;
 
     private _clients: {
         [jobGuid: string]: IMaxscriptClient;
@@ -16,11 +19,15 @@ export class JobService extends EventEmitter implements IJobService {
     private _jobs: Job[] = [];
 
     constructor(
-        @inject(TYPES.ISettings) private _settings: ISettings,
-        @inject(TYPES.IDatabase) private _database: IDatabase,
-        @inject(TYPES.IMaxscriptClientFactory) private _maxscriptClientFactory: IMaxscriptClientFactory,
+        @inject(TYPES.ISettings) settings: ISettings,
+        @inject(TYPES.IDatabase) database: IDatabase,
+        @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IFactory<IMaxscriptClient>,
     ) {
         super();
+
+        this._settings = settings;
+        this._database = database;
+        this._maxscriptClientFactory = maxscriptClientFactory;
 
         this.id = Math.random();
         console.log(" >> JobService: ", this.id);

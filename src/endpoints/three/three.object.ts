@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings } from "../../interfaces";
+import { IEndpoint, IDatabase, ISettings, ISessionService, SessionServiceEvents, IFactory, IMaxscriptClient } from "../../interfaces";
 import { TYPES } from "../../types";
 import { Session } from "../../database/model/session";
 import { EndpointHelpers } from "../../utils/endpoint_helpers";
@@ -11,18 +11,28 @@ const LZString = require("lz-string");
 class ThreeObjectEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
-    private _maxscriptClientFactory: IMaxscriptClientFactory;
+    private _sessionService: ISessionService;
+    private _maxscriptClientFactory: IFactory<IMaxscriptClient>;
 
-    private _objects: { [uuid: string] : THREE.Object3D; } = {};
-    private _objectsJson: { [uuid: string] : any; } = {};
+    private _objects: { [sessionGuid: string] : any; } = {};
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) 
+                @inject(TYPES.ISessionService) sessionService: ISessionService,
+                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IFactory<IMaxscriptClient>) 
     {
         this._settings = settings;
         this._database = database;
+        this._sessionService = sessionService;
         this._maxscriptClientFactory = maxscriptClientFactory;
+
+        this._sessionService.on(SessionServiceEvents.Closed, this.onSessionClosed.bind(this));
+        this._sessionService.on(SessionServiceEvents.Expired, this.onSessionClosed.bind(this));
+        this._sessionService.on(SessionServiceEvents.Failed, this.onSessionClosed.bind(this));
+    }
+
+    private onSessionClosed(session: Session) {
+        delete this._objects[session.guid];
     }
 
     bind(express: express.Application) {
@@ -86,6 +96,18 @@ class ThreeObjectEndpoint implements IEndpoint {
                 res.status(400);
                 res.end(JSON.stringify({ ok: false, message: "unexpected generator, expected 'Object3D.toJSON'", error: null }, null, 2));
                 return;
+            }
+
+            if (!sceneJson.object) {
+                res.status(400);
+                res.end(JSON.stringify({ ok: false, message: "object is missing", error: null }, null, 2));
+                return;
+            }
+
+            if (this._objects[sessionGuid]) {
+                this._objects[sessionGuid] = sceneJson;
+
+                this._maxScriptAdapter.postScene(sceneJson.object);
             }
 
             // todo: check that this object is not exist yet

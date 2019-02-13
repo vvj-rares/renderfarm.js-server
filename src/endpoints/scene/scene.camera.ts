@@ -1,4 +1,4 @@
-import { injectable, inject } from "inversify";
+/* import { injectable, inject } from "inversify";
 import * as express from "express";
 import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings } from "../../interfaces";
 import { TYPES } from "../../types";
@@ -133,4 +133,4 @@ class SceneCameraEndpoint implements IEndpoint {
     }
 }
 
-export { SceneCameraEndpoint };
+export { SceneCameraEndpoint }; */

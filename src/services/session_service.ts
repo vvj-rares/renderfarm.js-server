@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../types";
-import { ISettings, IDatabase, ISessionService, IWorkerService } from "../interfaces";
+import { ISettings, IDatabase, ISessionService, IWorkerService, SessionServiceEvents } from "../interfaces";
 import { Session } from "../database/model/session";
 import { Worker } from "../database/model/worker";
 
@@ -35,7 +35,6 @@ export class SessionService extends EventEmitter implements ISessionService {
         } else {
             console.log(`expireSessions is ${this._settings.current.expireSessions}, this instance will not expire abandoned sessions`);
         }
-
     }
 
     public id: number;
@@ -56,7 +55,7 @@ export class SessionService extends EventEmitter implements ISessionService {
             workspaceGuid,
             sceneFilename,
         );
-        this.emit("session:created", createdSession);
+        this.emit(SessionServiceEvents.Created, createdSession);
         return createdSession;
     }
 
@@ -68,20 +67,20 @@ export class SessionService extends EventEmitter implements ISessionService {
                 readOnly: false,
             },
         );
-        this.emit("session:updated", updatedSession);
+        this.emit(SessionServiceEvents.Updated, updatedSession);
         return updatedSession;
     }
 
     public async CloseSession(sessionGuid: string): Promise<Session> {
         let closedSession = await this._database.closeSession(sessionGuid);
-        this.emit("session:closed", closedSession);
+        this.emit(SessionServiceEvents.Closed, closedSession);
         return closedSession;
     }
 
     public async ExpireSessions(sessionTimeoutMinutes: number): Promise<Session[]> {
         let expiredSessions = await this._database.expireSessions(sessionTimeoutMinutes);
         for (let s in expiredSessions) {
-            this.emit("session:expired", expiredSessions[s]);
+            this.emit(SessionServiceEvents.Expired, expiredSessions[s]);
         }
         return expiredSessions;
     }
@@ -91,7 +90,7 @@ export class SessionService extends EventEmitter implements ISessionService {
             sessionGuid,
             failReason,
         );
-        this.emit("session:failed", failedSession);
+        this.emit(SessionServiceEvents.Failed, failedSession);
         return failedSession;
     }
 
@@ -109,7 +108,7 @@ export class SessionService extends EventEmitter implements ISessionService {
             }
 
         }.bind(this), 5000); // check old sessions each 5 seconds
-        this.emit("session-watchdog:started");
+        this.emit(SessionServiceEvents.WatchdogStarted);
     }
 
     private async onWorkerOffline(w: Worker) {

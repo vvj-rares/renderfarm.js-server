@@ -1,20 +1,19 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, IMaxscriptClientFactory, ISettings } from "../../interfaces";
+import { IEndpoint, IDatabase, ISettings, IFactory, IMaxscriptClient } from "../../interfaces";
 import { TYPES } from "../../types";
 
 @injectable()
 class ThreeMaterialEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
-    private _maxscriptClientFactory: IMaxscriptClientFactory;
+    private _maxscriptClientFactory: IFactory<IMaxscriptClient>;
 
-    private _materials: { [uuid: string] : THREE.Material; } = {};
-    private _materialsJson: { [uuid: string] : any; } = {};
+    private _materialsJson: { [sessionGuid: string] : any; } = {};
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IMaxscriptClientFactory) 
+                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IFactory<IMaxscriptClient>) 
     {
         this._settings = settings;
         this._database = database;
