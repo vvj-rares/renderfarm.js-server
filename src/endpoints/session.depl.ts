@@ -573,6 +573,7 @@ describe(`REST API /session endpoint`, function() {
         let requests: string[] = [];
         for (let i in lines) {
             let line = lines[i];
+            if (line.match(/^\s*$/) !== null) continue; // skip empty lines
             if (line.indexOf("[request]") === -1 && line.indexOf("[response]") === -1) {
                 // requests may be multiline, we just include complete lines into collection
                 requests.push(line.replace(/[\r\n]/g, ''));
@@ -624,14 +625,12 @@ describe(`REST API /session endpoint`, function() {
             let logUrl = getWorkerLogDownloadUrl(currentVersion, testName, testRun, sessionWorker.port);
             let requests = await getMaxscriptFromFakeWorker(logUrl);
 
-            expect(requests.length).toBe(8);
+            expect(requests.length).toBe(5);
             expect(requests[0]).toBe(`SessionGuid = "${sessionGuid}"`);
             expect(requests[1]).toBe(`for i=1 to pathConfig.mapPaths.count() do ( pathConfig.mapPaths.delete 1 )`);
             expect(requests[2]).toBe(`for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 )`);
             expect(requests[3]).toBe(`pathConfig.mapPaths.add "C:\\\\Temp\\\\api-keys\\\\${JasmineDeplHelpers.existingApiKey}\\\\workspaces\\\\${JasmineDeplHelpers.existingWorkspaceGuid}\\\\maps"`);
             expect(requests[4]).toBe(`pathConfig.xrefPaths.add "C:\\\\Temp\\\\api-keys\\\\${JasmineDeplHelpers.existingApiKey}\\\\workspaces\\\\${JasmineDeplHelpers.existingWorkspaceGuid}\\\\xrefs"`);
-            expect(requests[5]).toBe(`SessionGuid = ""`);
-            expect(requests[6]).toBe(`resetMaxFile #noPrompt`);
         }
 
         done();
@@ -671,7 +670,7 @@ describe(`REST API /session endpoint`, function() {
             let logUrl = getWorkerLogDownloadUrl(currentVersion, testName, testRun, sessionWorker.port);
             let requests = await getMaxscriptFromFakeWorker(logUrl);
 
-            expect(requests.length).toBe(24);
+            expect(requests.length).toBe(22);
             expect(requests[0]).toBe(`SessionGuid = "${sessionGuid}"`);
 
 /*
@@ -696,9 +695,6 @@ describe(`REST API /session endpoint`, function() {
     ) else (
     print "FAIL | scene file not found"
     )
-    SessionGuid = ""
-    resetMaxFile #noPrompt
-
 */
         }
 
