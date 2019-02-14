@@ -670,7 +670,7 @@ describe(`REST API /session endpoint`, function() {
             let logUrl = getWorkerLogDownloadUrl(currentVersion, testName, testRun, sessionWorker.port);
             let requests = await getMaxscriptFromFakeWorker(logUrl);
 
-            expect(requests.length).toBe(22);
+            expect(requests.length).toBe(21);
             expect(requests[0]).toBe(`SessionGuid = "${sessionGuid}"`);
 
 /*
