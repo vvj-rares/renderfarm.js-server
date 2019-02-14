@@ -13,7 +13,7 @@ import { App } from "./app";
 import { SessionEndpoint } from "./endpoints/session";
 import { JobEndpoint } from "./endpoints/job";
 import { WorkerEndpoint } from "./endpoints/worker";
-import { MaxscriptClientFactory } from "./maxscript_client/maxscript_client_factory";
+import { MaxscriptClientFactory } from "./maxscript/maxscript_client_factory";
 import { WorkspaceFileEndpoint } from "./endpoints/workspace.file";
 import { RenderOutputEndpoint } from "./endpoints/renderoutput";
 import { Settings } from "./settings";
@@ -23,7 +23,8 @@ import { ThreeMaterialEndpoint } from "./endpoints/three/three.material";
 import { SessionService } from "./services/session_service";
 import { JobService } from "./services/job_service";
 import { WorkerService } from "./services/worker_service";
-import { MaxScriptConnectionPoolService } from "./services/maxscript_connection_pool_service";
+import { MaxScriptConnectionPool } from "./maxscript/maxscript_connection_pool";
+import { MaxscriptThreeConnectorFactory } from "./maxscript/maxscript_three_connector_factory";
 
 const myContainer = new Container();
 
@@ -52,14 +53,14 @@ myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeMaterialEndpoint
 myContainer.bind<interfaces.IWorkerService>(TYPES.IWorkerService).to(WorkerService).inSingletonScope();
 myContainer.bind<interfaces.IJobService>(TYPES.IJobService).to(JobService).inSingletonScope();
 myContainer.bind<interfaces.ISessionService>(TYPES.ISessionService).to(SessionService).inSingletonScope();
-myContainer.bind<interfaces.IMaxScriptConnectionPoolService>(TYPES.IMaxScriptConnectionPoolService).to(MaxScriptConnectionPoolService).inSingletonScope();
+myContainer.bind<interfaces.IMaxscriptConnectionPool>(TYPES.IMaxscriptConnectionPool).to(MaxScriptConnectionPool).inSingletonScope();
 
 
 // tip: this is how to export same instance with different interfaces
 // EXAMPLE: myContainer.bind<interfaces.ISessionObserver>(TYPES.ISessionObserver).toService(TYPES.ISessionObserver);
 
 myContainer.bind<interfaces.IFactory<interfaces.IMaxscriptClient>>(TYPES.IMaxscriptClientFactory).to(MaxscriptClientFactory);
-myContainer.bind<interfaces.IFactory<interfaces.IThree2MaxScriptConnector>>(TYPES.IThree2MaxScriptConnectorFactory).to(MaxscriptClientFactory);
+myContainer.bind<interfaces.IFactory<interfaces.IMaxscriptThreeConnector>>(TYPES.IMaxscriptThreeConnectorFactory).to(MaxscriptThreeConnectorFactory);
 
 // now bind settings
 let env: string;

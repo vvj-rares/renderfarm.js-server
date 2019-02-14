@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, ISettings, IMaxscriptClient, ISessionService, IDatabase, IWorkerService, IFactory } from "../interfaces";
+import { IEndpoint, ISettings, IMaxscriptClient, ISessionService, IDatabase, IMaxscriptConnectionPool } from "../interfaces";
 import { TYPES } from "../types";
 import { Session } from "../database/model/session";
 
@@ -9,20 +9,18 @@ class SessionEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
     private _sessionService: ISessionService;
-
-    private _maxscript: { [sessionGuid: string] : IMaxscriptClient; } = {}; // keep maxscript connections alive for open sessions
-    private _maxscriptClientFactory: IFactory<IMaxscriptClient>;
+    private _maxscriptConnectionPool: IMaxscriptConnectionPool;
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.ISessionService) sessionService: ISessionService,
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IFactory<IMaxscriptClient>,
+                @inject(TYPES.IMaxscriptConnectionPool) maxscriptConnectionPool: IMaxscriptConnectionPool,
     ) {
 
         this._settings = settings;
         this._sessionService = sessionService;
         this._database = database;
-        this._maxscriptClientFactory = maxscriptClientFactory;
+        this._maxscriptConnectionPool = maxscriptConnectionPool;
     }
 
     async validateApiKey(res: any, apiKey: string) {
@@ -120,83 +118,21 @@ class SessionEndpoint implements IEndpoint {
                 return;
             }
 
-            // try connect to worker
-            let maxscript: IMaxscriptClient = this._maxscriptClientFactory.create();
-            this._maxscript[session.guid] = maxscript;
-
             try {
-                await maxscript.connect(session.workerRef.ip, session.workerRef.port);
-                console.log(`    OK | SessionEndpoint connected to maxscript client`);
+                await this._maxscriptConnectionPool.Create(session);
             } catch (err) {
+                console.log(`  FAIL | failed to establish remote maxscript connection, session will close.`, err);
+
                 try {
                     session = await this._sessionService.CloseSession(session.guid);
                 } catch (sessionErr) {
                     console.log(`  WARN | failed to close session, `, sessionErr);
                 }
 
-                console.log(`  FAIL | failed to connect to worker, `, err);
                 res.status(500);
-                res.end(JSON.stringify({ ok: false, message: "failed to connect to worker", error: err.message, data: session }, null, 2));
+                res.end(JSON.stringify({ ok: false, message: "failed to establish remote maxscript connection", error: err.message }, null, 2));
                 return;
             }
-
-            // try to set maxscript SessionGuid global variable
-            try {
-                await maxscript.setSession(session.guid);
-                console.log(`    OK | SessionGuid on worker was updated`);
-            } catch (err) {
-                try {
-                    session = await this._sessionService.CloseSession(session.guid);
-                } catch (sessionErr) {
-                    console.log(`  WARN | failed to close session, `, sessionErr);
-                }
-
-                console.log(`  FAIL | failed to update SessionGuid on worker, `, err);
-                maxscript.disconnect();
-                res.status(500);
-                res.end(JSON.stringify({ ok: false, type: "session", message: "failed to update SessionGuid on worker", error: err.message, data: session }, null, 2));
-                return;
-            }
-
-            // try to configure 3ds max folders from workspace
-            try {
-                await maxscript.setWorkspace(session.workspaceRef);
-                console.log(`    OK | workspace ${session.workspaceGuid} assigned to session ${session.guid}`);
-            } catch (err) {
-                try {
-                    session = await this._sessionService.CloseSession(session.guid);
-                } catch (sessionErr) {
-                    console.log(`  WARN | failed to close session, `, sessionErr);
-                }
-
-                console.log(`  FAIL | failed to set workspace on worker, `, err);
-                maxscript.disconnect();
-                res.status(500);
-                res.end(JSON.stringify({ ok: false, type: "session", message: "failed to set workspace on worker", error: err.message, data: session }, null, 2));
-                return;
-            }
-
-            //try to open scene if defined
-            if (sceneFilename) {
-                try {
-                    await maxscript.openScene("root", sceneFilename, session.workspaceRef);
-                    console.log(`    OK | scene open: ${sceneFilename}`);
-                } catch (err) {
-                    try {
-                        session = await this._sessionService.CloseSession(session.guid);
-                    } catch (sessionErr) {
-                        console.log(`  WARN | failed to close session, `, sessionErr);
-                    }
-    
-                    console.log(`  FAIL | failed to open scene, `, err);
-                    maxscript.disconnect();
-                    res.status(500);
-                    res.end(JSON.stringify({ ok: false, type: "session", message: "failed to open scene on worker", error: err.message, data: session }, null, 2));
-                    return;
-                }
-            }
-
-            maxscript.disconnect();
 
             res.status(201);
             res.end(JSON.stringify({ ok: true, type: "session", data: { guid: session.guid } }, null, 2));
@@ -217,42 +153,6 @@ class SessionEndpoint implements IEndpoint {
                 res.end(JSON.stringify({ ok: false, message: "failed to close session", error: err.message }, null, 2));
                 return;
             }
-
-            // try connect to worker
-            let maxscript: IMaxscriptClient = this._maxscriptClientFactory.create();
-            try {
-                await maxscript.connect(closedSession.workerRef.ip, closedSession.workerRef.port);
-                console.log(`    OK | SessionEndpoint connected to maxscript client`);
-            } catch (err) {
-                console.log(`  FAIL | failed to connect to worker, `, err);
-                res.status(500);
-                res.end(JSON.stringify({ ok: false, message: "failed to connect to worker", error: err.message }, null, 2));
-                return;
-            }
-
-            // try to reset maxscript SessionGuid global variable
-            try {
-                await maxscript.setSession("");
-                console.log(`    OK | SessionGuid on worker was updated`);
-            } catch (err) {
-                console.log(`  FAIL | failed to update SessionGuid on worker, `, err);
-                res.status(500);
-                res.end(JSON.stringify({ ok: false, type: "session", message: "failed to update SessionGuid on worker", error: err.message }, null, 2));
-                return;
-            }
-
-            // try to reset 3ds max to initial state
-            try {
-                await maxscript.resetScene();
-                console.log(`    OK | resetScene complete`);
-            } catch (err) {
-                console.log(`  FAIL | failed to revert 3ds max to initial state, `, err);
-                res.status(500);
-                res.end(JSON.stringify({ ok: false, type: "session", message: "failed to revert 3ds max to initial state", error: err.message }, null, 2));
-                return;
-            }
-
-            maxscript.disconnect();
 
             res.status(200);
             res.end(JSON.stringify({ 

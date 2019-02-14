@@ -133,10 +133,10 @@ export enum SessionServiceEvents {
     WatchdogStarted = "session-watchdog:started",
 }
 
-export interface IMaxScriptConnectionPoolService {
-    // todo:
+export interface IMaxscriptConnectionPool {
+    Create(session: Session): Promise<IMaxscriptClient>;
 }
 
-export interface IThree2MaxScriptConnector {
+export interface IMaxscriptThreeConnector {
     // todo: 
 }
