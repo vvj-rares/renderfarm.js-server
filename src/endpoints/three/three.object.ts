@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, ISettings, ISessionService, SessionServiceEvents, IFactory, IMaxscriptClient } from "../../interfaces";
+import { IEndpoint, IDatabase, ISettings, ISessionService, SessionServiceEvents, IFactory, IMaxscriptClient, IMaxscriptThreeConnector } from "../../interfaces";
 import { TYPES } from "../../types";
 import { Session } from "../../database/model/session";
 import { EndpointHelpers } from "../../utils/endpoint_helpers";
@@ -13,18 +13,21 @@ class ThreeObjectEndpoint implements IEndpoint {
     private _database: IDatabase;
     private _sessionService: ISessionService;
     private _maxscriptClientFactory: IFactory<IMaxscriptClient>;
+    private _maxscriptThreeConnectorFactory: IFactory<IMaxscriptThreeConnector>;
 
     private _objects: { [sessionGuid: string] : any; } = {};
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.ISessionService) sessionService: ISessionService,
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IFactory<IMaxscriptClient>) 
-    {
+                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IFactory<IMaxscriptClient>,
+                @inject(TYPES.IMaxscriptThreeConnectorFactory) maxscriptThreeConnectorFactory: IFactory<IMaxscriptThreeConnector>
+    ) {
         this._settings = settings;
         this._database = database;
         this._sessionService = sessionService;
         this._maxscriptClientFactory = maxscriptClientFactory;
+        this._maxscriptThreeConnectorFactory = maxscriptThreeConnectorFactory;
 
         this._sessionService.on(SessionServiceEvents.Closed, this.onSessionClosed.bind(this));
         this._sessionService.on(SessionServiceEvents.Expired, this.onSessionClosed.bind(this));
@@ -74,50 +77,25 @@ class ThreeObjectEndpoint implements IEndpoint {
             let sceneJsonText = LZString.decompressFromBase64(compressedJson);
             let sceneJson: any = JSON.parse(sceneJsonText);
 
-            if (!sceneJson.metadata) {
-                res.status(400);
-                res.end(JSON.stringify({ ok: false, message: "object missing metadata", error: null }, null, 2));
+            if (!this.validateSceneJson(sceneJson, res)) {
                 return;
             }
 
-            if (sceneJson.metadata.version !== 4.5) {
-                res.status(400);
-                res.end(JSON.stringify({ ok: false, message: "object version not supported (expected 4.5)", error: null }, null, 2));
-                return;
-            }
-
-            if (sceneJson.metadata.type !== "Object") {
-                res.status(400);
-                res.end(JSON.stringify({ ok: false, message: "object type not supported, expected 'Object'", error: null }, null, 2));
-                return;
-            }
-
-            if (sceneJson.metadata.generator !== "Object3D.toJSON") {
-                res.status(400);
-                res.end(JSON.stringify({ ok: false, message: "unexpected generator, expected 'Object3D.toJSON'", error: null }, null, 2));
-                return;
-            }
-
-            if (!sceneJson.object) {
-                res.status(400);
-                res.end(JSON.stringify({ ok: false, message: "object is missing", error: null }, null, 2));
-                return;
-            }
-
+            // cache it now
             if (this._objects[sessionGuid]) {
                 this._objects[sessionGuid] = sceneJson;
-
-                this._maxScriptAdapter.postScene(sceneJson.object);
             }
 
-            // todo: check that this object is not exist yet
-            // todo: check that this object is of supported type
-            // todo: cache json is it is
-            // todo: if this is a scene object, => reopen scene in 3ds max
-            // todo: if this is not a scene object, => find parent and inject as a child
+            let maxscriptConnector: IMaxscriptThreeConnector = this._maxscriptThreeConnectorFactory.create();
+            try {
+                await maxscriptConnector.PostScene(sceneJson.object);
+            } catch (err) {
+                //todo: should this error close existing session? (maybe not)
 
-            // todo: traverse all children and create 3ds max objects by three.js objects, remember uuids and cache all necessary data
-            // todo: this is a good place for plugin, as this step converts json to worker text commands and must be replaceable
+                res.status(500);
+                res.end(JSON.stringify({ ok: false, message: "failed to post scene to 3ds max", error: err.message }, null, 2));
+                return;
+            }
 
             res.status(201);
             res.end(JSON.stringify({}));
@@ -144,6 +122,40 @@ class ThreeObjectEndpoint implements IEndpoint {
             res.status(200);
             res.end(JSON.stringify({}));
         }.bind(this));
+    }
+
+    private validateSceneJson(sceneJson, res): boolean {
+        if (!sceneJson.metadata) {
+            res.status(400);
+            res.end(JSON.stringify({ ok: false, message: "object missing metadata", error: null }, null, 2));
+            return false;
+        }
+
+        if (sceneJson.metadata.version !== 4.5) {
+            res.status(400);
+            res.end(JSON.stringify({ ok: false, message: "object version not supported (expected 4.5)", error: null }, null, 2));
+            return false;
+        }
+
+        if (sceneJson.metadata.type !== "Object") {
+            res.status(400);
+            res.end(JSON.stringify({ ok: false, message: "object type not supported, expected 'Object'", error: null }, null, 2));
+            return false;
+        }
+
+        if (sceneJson.metadata.generator !== "Object3D.toJSON") {
+            res.status(400);
+            res.end(JSON.stringify({ ok: false, message: "unexpected generator, expected 'Object3D.toJSON'", error: null }, null, 2));
+            return false;
+        }
+
+        if (!sceneJson.object) {
+            res.status(400);
+            res.end(JSON.stringify({ ok: false, message: "object is missing", error: null }, null, 2));
+            return false;
+        }
+
+        return true;
     }
 }
 

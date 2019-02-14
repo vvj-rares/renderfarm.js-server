@@ -101,7 +101,11 @@ export interface IMaxscriptClient {
 }
 
 export interface IFactory<T> {
-    create(): T;
+    create(sessionGuid: string): T;
+}
+
+export interface ISessionPool<T> {
+    Get(sessionGuid: string): T;
 }
 
 export interface IWorkerService {
@@ -109,7 +113,7 @@ export interface IWorkerService {
 }
 
 export interface IJobService {
-    Start(job: Job): void;
+    Start(sessionGuid: string, job: Job): void;
     Cancel(job: Job): void;
     on(event: string | symbol, listener: (...args: any[]) => void): this;
 }
@@ -133,10 +137,12 @@ export enum SessionServiceEvents {
     WatchdogStarted = "session-watchdog:started",
 }
 
+//todo: rename to IMaxscriptClientPool
 export interface IMaxscriptConnectionPool {
-    Create(session: Session): Promise<IMaxscriptClient>;
+    Get(sessionGuid: string): IMaxscriptClient;
+    Connect(session: Session): Promise<IMaxscriptClient>;
 }
 
 export interface IMaxscriptThreeConnector {
-    // todo: 
+    PostScene(sceneJson: any): Promise<any>;
 }

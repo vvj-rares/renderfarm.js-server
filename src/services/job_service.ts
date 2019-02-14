@@ -35,10 +35,10 @@ export class JobService extends EventEmitter implements IJobService {
 
     public id: number;
 
-    public Start(job: Job): void {
+    public Start(sessionGuid: string, job: Job): void {
         this._jobs.push(job);
 
-        this.StartJob(job).catch(async function(err) {
+        this.StartJob(sessionGuid, job).catch(async function(err) {
             console.log(" >> job failed: ", err);
             let jobIdx = this._jobs.findIndex(el => el === job);
             this._jobs.splice(jobIdx, 1);
@@ -57,10 +57,10 @@ export class JobService extends EventEmitter implements IJobService {
         this.emit("job:canceled", canceledJob);
     }
 
-    private async StartJob(job: Job) {
+    private async StartJob(sessionGuid: string, job: Job) {
         console.log(" >> StartJob: ", job);
 
-        let client = this._maxscriptClientFactory.create();
+        let client = this._maxscriptClientFactory.create(sessionGuid);
         this._clients[job.guid] = client;
         this.emit("job:added", job);
 
