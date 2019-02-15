@@ -137,7 +137,6 @@ export enum SessionServiceEvents {
     WatchdogStarted = "session-watchdog:started",
 }
 
-//todo: rename to IMaxscriptClientPool
 export interface IMaxscriptConnectionPool {
     Get(sessionGuid: string): IMaxscriptClient;
     Connect(session: Session): Promise<IMaxscriptClient>;
@@ -145,4 +144,9 @@ export interface IMaxscriptConnectionPool {
 
 export interface IMaxscriptThreeConnector {
     PostScene(sceneJson: any): Promise<any>;
+}
+
+export interface IMaxscriptThreeConnectorPool {
+    Get(sessionGuid: string): IMaxscriptThreeConnector;
+    Create(session: Session): Promise<IMaxscriptThreeConnector>;
 }

@@ -14,6 +14,7 @@ const TYPES = {
     IJobService: Symbol.for("IJobService"),
     ISessionService: Symbol.for("ISessionService"),
     IMaxscriptConnectionPool: Symbol.for("IMaxscriptConnectionPool"),
+    IMaxscriptThreeConnectorPool: Symbol.for("IMaxscriptThreeConnectorPool"),
 };
 
 export { TYPES };

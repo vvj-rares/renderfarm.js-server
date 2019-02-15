@@ -11,7 +11,7 @@ export abstract class SessionPoolBase<T> implements ISessionPool<T> {
         return this._items[sessionGuid];
     }
 
-    protected async Create(session: Session, itemFactory: (sessionGuid: string) => T ): Promise<T> {
+    protected async _create(session: Session, itemFactory: (sessionGuid: string) => T ): Promise<T> {
         if (this._items[session.guid]) {
             throw Error("item already exists");
         }

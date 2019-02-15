@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, ISettings, IMaxscriptClient, ISessionService, IDatabase, IMaxscriptConnectionPool } from "../interfaces";
+import { IEndpoint, ISettings, ISessionService, IDatabase, IMaxscriptConnectionPool, IMaxscriptThreeConnectorPool } from "../interfaces";
 import { TYPES } from "../types";
 import { Session } from "../database/model/session";
 
@@ -10,17 +10,20 @@ class SessionEndpoint implements IEndpoint {
     private _database: IDatabase;
     private _sessionService: ISessionService;
     private _maxscriptConnectionPool: IMaxscriptConnectionPool;
+    private _maxscriptThreeConnectorPool: IMaxscriptThreeConnectorPool;
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.ISessionService) sessionService: ISessionService,
                 @inject(TYPES.IMaxscriptConnectionPool) maxscriptConnectionPool: IMaxscriptConnectionPool,
+                @inject(TYPES.IMaxscriptThreeConnectorPool) maxscriptThreeConnectorPool: IMaxscriptThreeConnectorPool,
     ) {
 
         this._settings = settings;
         this._sessionService = sessionService;
         this._database = database;
         this._maxscriptConnectionPool = maxscriptConnectionPool;
+        this._maxscriptThreeConnectorPool = maxscriptThreeConnectorPool;
     }
 
     async validateApiKey(res: any, apiKey: string) {
@@ -131,6 +134,22 @@ class SessionEndpoint implements IEndpoint {
 
                 res.status(500);
                 res.end(JSON.stringify({ ok: false, message: "failed to establish remote maxscript connection", error: err.message }, null, 2));
+                return;
+            }
+
+            try {
+                await this._maxscriptThreeConnectorPool.Create(session);
+            } catch (err) {
+                console.log(`  FAIL | failed to initialize maxscript <-> three.js connector, session will close.`, err);
+
+                try {
+                    session = await this._sessionService.CloseSession(session.guid);
+                } catch (sessionErr) {
+                    console.log(`  WARN | failed to close session, `, sessionErr);
+                }
+
+                res.status(500);
+                res.end(JSON.stringify({ ok: false, message: "failed to initialize maxscript <-> three.js connector", error: err.message }, null, 2));
                 return;
             }
 

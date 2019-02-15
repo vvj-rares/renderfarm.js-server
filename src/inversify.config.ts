@@ -25,6 +25,7 @@ import { JobService } from "./services/job_service";
 import { WorkerService } from "./services/worker_service";
 import { MaxScriptConnectionPool } from "./maxscript/maxscript_connection_pool";
 import { MaxscriptThreeConnectorFactory } from "./maxscript/maxscript_three_connector_factory";
+import { MaxscriptThreeConnectorPool } from "./maxscript/maxscript_three_connector_pool";
 
 const myContainer = new Container();
 
@@ -54,6 +55,8 @@ myContainer.bind<interfaces.IWorkerService>(TYPES.IWorkerService).to(WorkerServi
 myContainer.bind<interfaces.IJobService>(TYPES.IJobService).to(JobService).inSingletonScope();
 myContainer.bind<interfaces.ISessionService>(TYPES.ISessionService).to(SessionService).inSingletonScope();
 myContainer.bind<interfaces.IMaxscriptConnectionPool>(TYPES.IMaxscriptConnectionPool).to(MaxScriptConnectionPool).inSingletonScope();
+myContainer.bind<interfaces.IMaxscriptThreeConnectorPool>(TYPES.IMaxscriptThreeConnectorPool).to(MaxscriptThreeConnectorPool).inSingletonScope();
+
 
 
 // tip: this is how to export same instance with different interfaces

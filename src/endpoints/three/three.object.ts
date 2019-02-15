@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, ISettings, ISessionService, SessionServiceEvents, IFactory, IMaxscriptClient, IMaxscriptThreeConnector } from "../../interfaces";
+import { IEndpoint, IDatabase, ISettings, ISessionService, SessionServiceEvents, IFactory, IMaxscriptClient, IMaxscriptThreeConnector, IMaxscriptConnectionPool, IMaxscriptThreeConnectorPool } from "../../interfaces";
 import { TYPES } from "../../types";
 import { Session } from "../../database/model/session";
 import { EndpointHelpers } from "../../utils/endpoint_helpers";
@@ -12,22 +12,19 @@ class ThreeObjectEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
     private _sessionService: ISessionService;
-    private _maxscriptClientFactory: IFactory<IMaxscriptClient>;
-    private _maxscriptThreeConnectorFactory: IFactory<IMaxscriptThreeConnector>;
+    private _maxscriptThreeConnectorPool: IMaxscriptThreeConnectorPool;
 
     private _objects: { [sessionGuid: string] : any; } = {};
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.ISessionService) sessionService: ISessionService,
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IFactory<IMaxscriptClient>,
-                @inject(TYPES.IMaxscriptThreeConnectorFactory) maxscriptThreeConnectorFactory: IFactory<IMaxscriptThreeConnector>
+                @inject(TYPES.IMaxscriptThreeConnectorPool) maxscriptThreeConnectorPool: IMaxscriptThreeConnectorPool,
     ) {
         this._settings = settings;
         this._database = database;
         this._sessionService = sessionService;
-        this._maxscriptClientFactory = maxscriptClientFactory;
-        this._maxscriptThreeConnectorFactory = maxscriptThreeConnectorFactory;
+        this._maxscriptThreeConnectorPool = maxscriptThreeConnectorPool;
 
         this._sessionService.on(SessionServiceEvents.Closed, this.onSessionClosed.bind(this));
         this._sessionService.on(SessionServiceEvents.Expired, this.onSessionClosed.bind(this));
@@ -86,11 +83,11 @@ class ThreeObjectEndpoint implements IEndpoint {
                 this._objects[sessionGuid] = sceneJson;
             }
 
-            let maxscriptConnector: IMaxscriptThreeConnector = this._maxscriptThreeConnectorFactory.create(sessionGuid);
+            let maxscriptThreeConnector = this._maxscriptThreeConnectorPool.Get(sessionGuid);
             try {
-                await maxscriptConnector.PostScene(sceneJson.object);
+                await maxscriptThreeConnector.PostScene(sceneJson.object);
             } catch (err) {
-                //todo: should this error close existing session? (maybe not)
+                console.log(" >> ", err);
 
                 res.status(500);
                 res.end(JSON.stringify({ ok: false, message: "failed to post scene to 3ds max", error: err.message }, null, 2));
