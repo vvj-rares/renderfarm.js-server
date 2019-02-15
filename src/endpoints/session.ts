@@ -119,7 +119,7 @@ class SessionEndpoint implements IEndpoint {
             }
 
             try {
-                await this._maxscriptConnectionPool.Create(session);
+                await this._maxscriptConnectionPool.Connect(session);
             } catch (err) {
                 console.log(`  FAIL | failed to establish remote maxscript connection, session will close.`, err);
 
