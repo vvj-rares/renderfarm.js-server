@@ -34,13 +34,13 @@ export class WorkerEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get(`/v${this._settings.majorVersion}/worker/:uid`, async function (req, res) {
+        express.get(`/v${this._settings.majorVersion}/worker/:uid`, async function (this: WorkerEndpoint, req, res) {
             let workerGuid = req.params.uid;
             console.log(`GET on ${req.path}`);
 
             let worker: Worker;
             try {
-                worker = await this._database.getWorker(workerGuid, { allowClosed: true, readOnly: true });
+                worker = await this._database.getWorker(workerGuid);
                 if (!worker) {
                     console.log(`  FAIL | worker not found: ${workerGuid}`);
                     res.status(404);
@@ -59,7 +59,7 @@ export class WorkerEndpoint implements IEndpoint {
 
         }.bind(this));
 
-        express.get(`/v${this._settings.majorVersion}/worker`, async function (req, res) {
+        express.get(`/v${this._settings.majorVersion}/worker`, async function (this: WorkerEndpoint, req, res) {
             let apiKey = req.query.api_key;
             console.log(`GET on ${req.path} with api_key: ${apiKey}`);
 

@@ -1,25 +1,29 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, ISettings } from "../interfaces";
+import { IEndpoint, ISettings, IDatabase } from "../interfaces";
 import { TYPES } from "../types";
 
 @injectable()
-class WorkspaceFileEndpoint implements IEndpoint {
+export class WorkspaceFileEndpoint implements IEndpoint {
     private _settings: ISettings;
+    private _database: IDatabase;
 
-    constructor(@inject(TYPES.ISettings) settings: ISettings) 
-    {
+    constructor(
+        @inject(TYPES.ISettings) settings: ISettings,
+        @inject(TYPES.IDatabase) database: IDatabase
+    ) {
         this._settings = settings;
+        this._database = database;
     }
 
     bind(express: express.Application) {
-        express.get(`/v${this._settings.majorVersion}/workspace/:guid/file/*/:filename`, async function (req, res) {
+        express.get(`/v${this._settings.majorVersion}/workspace/:guid/file/*/:filename`, async function (this: WorkspaceFileEndpoint, req, res) {
             console.log(`GET on /workspace/${req.params.guid}/file/${req.params[0]}/${req.params.filename}`);
 
             let workspaceGuid = req.params.guid;
 
             this._database.getWorkspace(workspaceGuid)
-                .then(function(workspaceInfo){
+                .then(function(this: WorkspaceFileEndpoint, workspaceInfo){
 
                     if (!workspaceInfo.value) {
                         console.error(`  FAIL | workspace not found: ${workspaceGuid}`);
@@ -46,7 +50,7 @@ class WorkspaceFileEndpoint implements IEndpoint {
                     };
 
                     let fileName = req.params.filename;
-                    res.sendFile(fileName, options, function (err) {
+                    res.sendFile(fileName, options, function (this: WorkspaceFileEndpoint, err) {
                         if (err) {
                             console.error(err);
                             res.status(404);
@@ -57,7 +61,7 @@ class WorkspaceFileEndpoint implements IEndpoint {
                     });
 
                 }.bind(this))
-                .catch(function(err){
+                .catch(function(this: WorkspaceFileEndpoint, err){
                     console.error(`  FAIL | failed to get workspace: ${workspaceGuid}, \n`, err);
                     res.status(500);
                     res.end(JSON.stringify({ error: "failed to get workspace" }, null, 2));
@@ -66,5 +70,3 @@ class WorkspaceFileEndpoint implements IEndpoint {
         }.bind(this));
     }
 }
-
-export { WorkspaceFileEndpoint };

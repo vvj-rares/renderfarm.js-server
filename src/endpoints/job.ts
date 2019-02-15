@@ -23,7 +23,7 @@ class JobEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get(`/v${this._settings.majorVersion}/job`, async function (req, res) {
+        express.get(`/v${this._settings.majorVersion}/job`, async function (this: JobEndpoint, req: express.Request, res: express.Response) {
             // get all active jobs
             console.log(`GET on ${req.path}`);
 
@@ -43,7 +43,7 @@ class JobEndpoint implements IEndpoint {
             res.end(JSON.stringify({ ok: true, type: "jobs", data: jobsPayload }, null, 2));
         }.bind(this));
 
-        express.get(`/v${this._settings.majorVersion}/job/:uid`, async function (req, res) {
+        express.get(`/v${this._settings.majorVersion}/job/:uid`, async function (this: JobEndpoint, req: express.Request, res: express.Response) {
             let jobGuid = req.params.uid;
             console.log(`GET on ${req.path} with job guid: ${jobGuid}`);
 
@@ -62,7 +62,8 @@ class JobEndpoint implements IEndpoint {
             res.end(JSON.stringify({ ok: true, type: "jobs", data: job.toJSON() }, null, 2));
         }.bind(this));
 
-        express.post(`/v${this._settings.majorVersion}/job`, async function (req, res) {
+        express.post(`/v${this._settings.majorVersion}/job`, async function (this: JobEndpoint, req: express.Request, res: express.Response) {
+            let _this: JobEndpoint = this as JobEndpoint;
             let sessionGuid = req.body.session_guid;
             console.log(`POST on ${req.path} with session: ${sessionGuid}`);
 
@@ -71,7 +72,7 @@ class JobEndpoint implements IEndpoint {
                 return;
             }
 
-            let activeJobs: Job[] = await this._database.getActiveJobs();
+            let activeJobs: Job[] = await this._database.getActiveJobs(this._settings.current)
             if (activeJobs.find(el => el.workerGuid === session.workerGuid)) {
                 console.log(`  FAIL | session busy: ${sessionGuid}`);
                 res.status(404);
@@ -81,13 +82,13 @@ class JobEndpoint implements IEndpoint {
 
             let job = await this._database.createJob(session.apiKey, session.workerGuid);
 
-            this._jobService.Start(job, session);
+            this._jobService.Start(session.guid, job);
 
             res.status(200);
             res.end(JSON.stringify({ ok: true, type: "jobs", data: job.toJSON() }, null, 2));
         }.bind(this));
 
-        express.put('/job/:uid', async function (req, res) {
+        express.put('/job/:uid', async function (this: JobEndpoint, req: express.Request, res: express.Response) {
             console.log(`PUT on ${req.path}`);
 
             //check that session is open => means worker is assigned and alive

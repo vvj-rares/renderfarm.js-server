@@ -19,7 +19,7 @@ class RenderOutputEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get(`/v${this._settings.majorVersion}/renderoutput/:filename`, async function (req, res) {
+        express.get(`/v${this._settings.majorVersion}/renderoutput/:filename`, async function (this: RenderOutputEndpoint, req, res) {
             console.log(`GET on /renderoutput/${req.params.filename}`);
 
             let mime = require('mime-types');
@@ -47,7 +47,7 @@ class RenderOutputEndpoint implements IEndpoint {
 
         }.bind(this));
 
-        express.post(`/v${this._settings.majorVersion}/renderoutput`, this._upload.single('file'), async function (req, res, next) {
+        express.post(`/v${this._settings.majorVersion}/renderoutput`, this._upload.single('file'), async function (this: RenderOutputEndpoint, req, res) {
             console.log(`POST on /renderoutput with: `, req.file ? req.file : "undefined");
 
             if (!req.file) {
@@ -76,7 +76,7 @@ class RenderOutputEndpoint implements IEndpoint {
             res.end(JSON.stringify({ ok: true, type: "renderoutput", data: { url: fileUrl } }));
         }.bind(this))
 
-        express.post(`/v${this._settings.majorVersion}/renderoutput/upload`, this._upload.array('files', 32), async function (req, res, next) {
+        express.post(`/v${this._settings.majorVersion}/renderoutput/upload`, this._upload.array('files', 32), async function (this: RenderOutputEndpoint, req, res) {
             console.log(`POST on /renderoutput/upload with: `, req.files ? req.files : "undefined");
 
             if (!req.files || req.files.length === 0) {

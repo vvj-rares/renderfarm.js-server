@@ -4,8 +4,8 @@ import { Workspace } from "../database/model/workspace";
 
 class MaxscriptClient implements IMaxscriptClient {
 
-    private _responseHandler:        (data: any) => boolean;
-    private _errorHandler:           (err: any) => void;
+    private _responseHandler:        (this: MaxscriptClient, data: any) => void;
+    private _errorHandler:           (this: MaxscriptClient, err: any) => void;
     private _client: Socket;
 
     constructor() {
@@ -13,29 +13,29 @@ class MaxscriptClient implements IMaxscriptClient {
 
     connect(ip: string, port: number): Promise<boolean> {
 
-        return new Promise<boolean>(function(resolve, reject) {
+        return new Promise<boolean>(function(this: MaxscriptClient, resolve, reject) {
 
             this._client = new Socket();
 
-            this._client.on('data', function(data) {
+            this._client.on('data', function(this: MaxscriptClient, data) {
                 if (this._responseHandler) {
                     this._responseHandler(data);
                 }
             }.bind(this));
 
-            this._client.on('error', function(err) {
+            this._client.on('error', function(this: MaxscriptClient, err) {
                 if (this._errorHandler) {
                     this._errorHandler(err);
                 }
                 reject(err)
             }.bind(this));
 
-            this._client.on('close', function() {
+            this._client.on('close', function(this: MaxscriptClient) {
                 // just ok
             }.bind(this));
 
             // now connect and test a connection with some simple command
-            this._client.connect(port, ip, function() {
+            this._client.connect(port, ip, function(this: MaxscriptClient) {
                 resolve(true);
             }.bind(this));
 
@@ -51,9 +51,9 @@ class MaxscriptClient implements IMaxscriptClient {
 
     execMaxscript(maxscript: string, actionDesc: string, responseChecker: (resp: string) => boolean = null): Promise<boolean> {
 
-        return new Promise<boolean>(function(resolve, reject) {
+        return new Promise<boolean>(function(this: MaxscriptClient, resolve, reject) {
             // prepare response handlers for the command
-            this._responseHandler = function(data) {
+            this._responseHandler = function(this: MaxscriptClient, data) {
                 this._responseHandler = undefined;
 
                 let maxscriptResp = data.toString();
@@ -77,7 +77,7 @@ class MaxscriptClient implements IMaxscriptClient {
                 }
             };
 
-            this._errorHandler = function(err) {
+            this._errorHandler = function(this: MaxscriptClient, err) {
                 console.log ( `      >> maxscript = ${maxscript}`);
                 console.error(`  FAIL | MaxscriptClient.${actionDesc} error: `, err);
                 reject(err);

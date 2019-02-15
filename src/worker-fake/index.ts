@@ -1,6 +1,24 @@
 import { Settings } from "../settings";
 import { isFunction, isNumber, isString } from "util";
 
+interface FakeWorker {
+    hbcount: number;
+    pid: number;
+    port: number;
+    responseDelay: number; // how much time it takes until response
+    response: string;      // controls what gonna be the response on maxscript request
+    heartbeat: boolean;    // control if heartbeats are being sent
+    logFile?: string;      // where to output maxscript commands?
+    mac?: string;
+    version?: string;
+    cpuUsage?: number;
+    ramUsage?: number;
+    totalRam?: number;
+    testRun?: string;
+    testName?: string;
+    $timeout?: any;
+}
+
 const dgram = require('dgram');
 const net   = require('net');
 const fs    = require('fs');
@@ -35,9 +53,9 @@ if (countArg) {
 console.log(JSON.stringify({ status: `starting fake workers...` }));
 console.log(JSON.stringify({ workerCount: simulateWorkersCount }));
 
-let workers: any[] = [];
+let workers: FakeWorker[] = [];
 for (let i=0; i<simulateWorkersCount; i++) {
-    let worker: any = {
+    let worker: FakeWorker = {
         hbcount: 1,
         pid: Math.round(1000 + 8000 * Math.random()),
         port: Math.round(10000 + 50000 * Math.random()),
@@ -48,9 +66,9 @@ for (let i=0; i<simulateWorkersCount; i++) {
     };
 
     // each worker opens port, echos requests to console and replies OK
-    var server = net.createServer(function (socket) {
+    var server = net.createServer(function (this: FakeWorker, socket) {
 
-        socket.on("data", function (obj) {
+        socket.on("data", function (this: FakeWorker, obj) {
             let w = this;
             let request = obj.toString();
 
@@ -98,7 +116,7 @@ for (let i=0; i<simulateWorkersCount; i++) {
                 }
 
                 let response1 = this.response;
-                this.$timeout = setTimeout(function () {
+                this.$timeout = setTimeout(function (this: FakeWorker) {
                     delete this.$timeout;
                     socket.write(response1);
                     console.log(JSON.stringify({ response: response1 }));
@@ -127,7 +145,7 @@ for (let i=0; i<simulateWorkersCount; i++) {
 
 let client = null;
 
-setInterval(function() {
+setInterval(function(this: FakeWorker) {
     for (let k=0; k<workers.length; k++) {
         let w = workers[k];
         if (!w.heartbeat) {

@@ -39,7 +39,7 @@ class ThreeObjectEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get(`/v${this._settings.majorVersion}/three/:uuid`, async function (req, res) {
+        express.get(`/v${this._settings.majorVersion}/three/:uuid`, async function (this: ThreeObjectEndpoint, req, res) {
             let sessionGuid = req.body.session_guid;
             console.log(`GET on ${req.path} with session: ${sessionGuid}`);
 
@@ -50,7 +50,7 @@ class ThreeObjectEndpoint implements IEndpoint {
             res.end(JSON.stringify({}));
         }.bind(this));
 
-        express.post(`/v${this._settings.majorVersion}/three`, async function (req, res) {
+        express.post(`/v${this._settings.majorVersion}/three`, async function (this: ThreeObjectEndpoint, req, res) {
             let sessionGuid = req.body.session_guid;
             console.log(`POST on ${req.path} with session: ${sessionGuid}`);
 
@@ -86,7 +86,7 @@ class ThreeObjectEndpoint implements IEndpoint {
                 this._objects[sessionGuid] = sceneJson;
             }
 
-            let maxscriptConnector: IMaxscriptThreeConnector = this._maxscriptThreeConnectorFactory.create();
+            let maxscriptConnector: IMaxscriptThreeConnector = this._maxscriptThreeConnectorFactory.create(sessionGuid);
             try {
                 await maxscriptConnector.PostScene(sceneJson.object);
             } catch (err) {
@@ -101,7 +101,7 @@ class ThreeObjectEndpoint implements IEndpoint {
             res.end(JSON.stringify({}));
         }.bind(this));
 
-        express.put(`/v${this._settings.majorVersion}/three/:uuid`, async function (req, res) {
+        express.put(`/v${this._settings.majorVersion}/three/:uuid`, async function (this: ThreeObjectEndpoint, req, res) {
             let sessionGuid = req.body.session_guid;
             console.log(`PUT on ${req.path} with session: ${sessionGuid}`);
 
@@ -112,7 +112,7 @@ class ThreeObjectEndpoint implements IEndpoint {
             res.end(JSON.stringify({}));
         }.bind(this));
 
-        express.delete(`/v${this._settings.majorVersion}/three/:uuid`, async function (req, res) {
+        express.delete(`/v${this._settings.majorVersion}/three/:uuid`, async function (this: ThreeObjectEndpoint, req, res) {
             let sessionGuid = req.body.session_guid;
             console.log(`DELETE on ${req.path} with session: ${sessionGuid}`);
 

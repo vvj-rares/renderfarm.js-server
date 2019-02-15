@@ -58,13 +58,13 @@ class SessionEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get(`/v${this._settings.majorVersion}/session/:uid`, async function (req, res) {
+        express.get(`/v${this._settings.majorVersion}/session/:uid`, async function (this: SessionEndpoint, req, res) {
             let sessionGuid = req.params.uid;
             console.log(`GET on ${req.path}`);
 
             let session: Session;
             try {
-                session = await this._sessionService.GetSession(sessionGuid, { allowClosed: true, readOnly: true });
+                session = await this._sessionService.GetSession(sessionGuid, true, false);
                 if (!session) {
                     console.log(`  FAIL | session not found: ${sessionGuid}`);
                     res.status(404);
@@ -83,7 +83,7 @@ class SessionEndpoint implements IEndpoint {
 
         }.bind(this));
 
-        express.post(`/v${this._settings.majorVersion}/session`, async function (req, res) {
+        express.post(`/v${this._settings.majorVersion}/session`, async function (this: SessionEndpoint, req, res) {
             let apiKey = req.body.api_key;
             let workspaceGuid = req.body.workspace_guid;
             let sceneFilename = req.body.scene_filename;
@@ -139,7 +139,7 @@ class SessionEndpoint implements IEndpoint {
 
         }.bind(this));
 
-        express.delete(`/v${this._settings.majorVersion}/session/:uid`, async function (req, res) {
+        express.delete(`/v${this._settings.majorVersion}/session/:uid`, async function (this: SessionEndpoint, req, res) {
             console.log(`DELETE on ${req.path}`);
 
             let sessionGuid = req.params.uid;

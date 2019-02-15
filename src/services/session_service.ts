@@ -96,7 +96,7 @@ export class SessionService extends EventEmitter implements ISessionService {
 
     private StartSessionWatchdogTimer(sessionTimeoutMinutes: number) {
         //expire sessions by timer
-        setInterval(async function() {
+        setInterval(async function(this: SessionService) {
             try {
                 let expiredSession = await this.ExpireSessions(sessionTimeoutMinutes);
                 if (expiredSession.length === 0) {

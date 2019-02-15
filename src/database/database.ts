@@ -631,7 +631,7 @@ export class Database implements IDatabase {
     }
 
     public findOneAndUpdate<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T> {
-        return new Promise<T>(async function(resolve, reject){
+        return new Promise<T>(async function(this: Database, resolve, reject){
             try {
                 await this.ensureClientConnection();
             } catch (err) {
@@ -666,7 +666,7 @@ export class Database implements IDatabase {
     }
 
     public insertOne<T extends IDbEntity>(collection: string, entity: IDbEntity, ctor: (obj: any) => T): Promise<T> {
-        return new Promise<T>(async function(resolve, reject) {
+        return new Promise<T>(async function(this: Database, resolve, reject) {
             try {
                 await this.ensureClientConnection();
             } catch (err) {
@@ -698,7 +698,7 @@ export class Database implements IDatabase {
     }
 
     public upsertOne(collection: string, entity: IDbEntity): Promise<boolean> {
-        return new Promise<boolean>(async function(resolve, reject) {
+        return new Promise<boolean>(async function(this: Database, resolve, reject) {
             try {
                 await this.ensureClientConnection();
             } catch (err) {
@@ -731,7 +731,7 @@ export class Database implements IDatabase {
     }
 
     public updateOne(collection: string, filter: any, setter: any): Promise<boolean> {
-        return new Promise<boolean>(async function(resolve, reject){
+        return new Promise<boolean>(async function(this: Database, resolve, reject){
             try {
                 await this.ensureClientConnection();
             } catch (err) {
@@ -766,7 +766,7 @@ export class Database implements IDatabase {
     }
 
     public async updateMany(collection: string, filter: any, setter: any): Promise<number> {
-        return new Promise<number>(async function(resolve, reject){
+        return new Promise<number>(async function(this: Database, resolve, reject){
             try {
                 await this.ensureClientConnection();
             } catch (err) {
@@ -805,7 +805,7 @@ export class Database implements IDatabase {
     }
 
     public async findManyAndUpdate<T extends IDbEntity>(collection: string, filter: any, setter: any, ctor: (obj: any) => T): Promise<T[]> {
-        return new Promise<T[]>(async function(resolve, reject){
+        return new Promise<T[]>(async function(this: Database, resolve, reject){
             try {
                 await this.ensureClientConnection();
             } catch (err) {
@@ -823,7 +823,7 @@ export class Database implements IDatabase {
             this.unsetNulls(setter);
     
             let ops: UpdateManyOptions = { w: "majority", j: true, upsert: false };
-            let callback: MongoCallback<UpdateWriteOpResult> = async function(error:MongoError, res:UpdateWriteOpResult) {
+            let callback: MongoCallback<UpdateWriteOpResult> = async function(this: Database, error:MongoError, res:UpdateWriteOpResult) {
                 if (res && res.matchedCount === 0) {
                     resolve([]);
                 } else if (res && res.matchedCount > 0 && res.modifiedCount > 0) {
@@ -848,7 +848,7 @@ export class Database implements IDatabase {
     }
 
     public async findOneAndDelete<T extends IDbEntity>(collection: string, filter: any, ctor: (obj: any) => T): Promise<T> {
-        return new Promise<T>(async function(resolve, reject){
+        return new Promise<T>(async function(this: Database, resolve, reject){
             try {
                 await this.ensureClientConnection();
             } catch (err) {

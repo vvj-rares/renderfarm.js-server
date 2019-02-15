@@ -34,7 +34,7 @@ export class JobService extends EventEmitter implements IJobService {
     public Start(sessionGuid: string, job: Job): void {
         this._jobs.push(job);
 
-        this.StartJob(sessionGuid, job).catch(async function(err) {
+        this.StartJob(sessionGuid, job).catch(async function(this: JobService, err) {
             console.log(" >> job failed: ", err);
             let jobIdx = this._jobs.findIndex(el => el === job);
             this._jobs.splice(jobIdx, 1);
@@ -65,12 +65,12 @@ export class JobService extends EventEmitter implements IJobService {
         let filename = job.guid + ".png";
         // todo: don't hardcode worker local temp directory, workers must report it by heartbeat
         client.renderScene("Camera001", [640, 480], "C:\\Temp\\" + filename, {})
-            .then(async function(result) {
+            .then(async function(this: JobService, result) {
                 console.log(" >> completeJob");
                 let completedJob = await this._database.completeJob(job, [ `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/renderoutput/${filename}` ]);
                 this.emit("job:completed", completedJob);
             }.bind(this))
-            .catch(async function(err) {
+            .catch(async function(this: JobService, err) {
                 console.log(" >> failJob: ", err);
                 let failedJob = await this._database.failJob(job, err.message);
                 this.emit("job:failed", failedJob);

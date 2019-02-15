@@ -21,7 +21,7 @@ class ThreeGeometryEndpoint implements IEndpoint {
     }
 
     bind(express: express.Application) {
-        express.get(`/v${this._settings.majorVersion}/three/geometry/:uuid`, async function (req, res) {
+        express.get(`/v${this._settings.majorVersion}/three/geometry/:uuid`, async function (this: ThreeGeometryEndpoint, req, res) {
             let sessionGuid = req.body.session;
             console.log(`GET on ${req.path} with session: ${sessionGuid}`);
 
@@ -32,7 +32,7 @@ class ThreeGeometryEndpoint implements IEndpoint {
             res.end(JSON.stringify({}));
         }.bind(this));
 
-        express.post(`/v${this._settings.majorVersion}/three/geometry`, async function (req, res) {
+        express.post(`/v${this._settings.majorVersion}/three/geometry`, async function (this: ThreeGeometryEndpoint, req, res) {
             let sessionGuid = req.body.session;
             console.log(`POST on ${req.path} with session: ${sessionGuid}`);
 
@@ -43,7 +43,7 @@ class ThreeGeometryEndpoint implements IEndpoint {
             res.end(JSON.stringify({}));
         }.bind(this));
 
-        express.put(`/v${this._settings.majorVersion}/three/geometry/:uuid`, async function (req, res) {
+        express.put(`/v${this._settings.majorVersion}/three/geometry/:uuid`, async function (this: ThreeGeometryEndpoint, req, res) {
             let sessionGuid = req.body.session;
             console.log(`PUT on ${req.path} with session: ${sessionGuid}`);
 
@@ -54,7 +54,7 @@ class ThreeGeometryEndpoint implements IEndpoint {
             res.end(JSON.stringify({}));
         }.bind(this));
 
-        express.delete(`/v${this._settings.majorVersion}/three/geometry/:uuid`, async function (req, res) {
+        express.delete(`/v${this._settings.majorVersion}/three/geometry/:uuid`, async function (this: ThreeGeometryEndpoint, req, res) {
             let sessionGuid = req.body.session;
             console.log(`DELETE on ${req.path} with session: ${sessionGuid}`);
 

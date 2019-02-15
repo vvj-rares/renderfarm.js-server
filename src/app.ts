@@ -46,12 +46,12 @@ class App implements IApp {
 
     private bindEndpoints(endpoints: IEndpoint[]) {
         // report server status
-        this._express.get('/', function (req, res) {
+        this._express.get('/', function (this: App, req, res) {
             console.log(`GET on /`);
             res.end(JSON.stringify({ ok: true, type: "version", data: { env: this._settings.env, version: this._settings.version } }));
         }.bind(this));
 
-        this._express.get('/favicon.ico', function (req, res) {
+        this._express.get('/favicon.ico', function (this: App, req, res) {
             console.log(`GET on /favicon.ico`);
 
             let mimeType = "image/x-icon";

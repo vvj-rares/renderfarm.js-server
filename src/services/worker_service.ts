@@ -47,14 +47,14 @@ export class WorkerService extends EventEmitter implements IWorkerService {
     private StartListener(port: number) {
         const server = dgram.createSocket('udp4');
 
-        server.on('error', function (err) {
+        server.on('error', function (this: WorkerService, err) {
             console.error(`Worker monitor error: ${err.message}\r\n`, err);
             server.close();
 
             ++ this.listenerRetryCount;
             if (this.listenerRetryCount < 100) {
                 console.log(`listenerRetryCount: ${this.listenerRetryCount}`);
-                setTimeout(function() {
+                setTimeout(function(this: WorkerService) {
                     this.StartListener(port);
                 }.bind(this), 250);
             } else if (this.listenerRetryCount === 100) {
@@ -62,7 +62,7 @@ export class WorkerService extends EventEmitter implements IWorkerService {
             }
         }.bind(this));
 
-        server.on('message', async function (msg, rinfo) {
+        server.on('message', async function (this: WorkerService, msg, rinfo) {
             let rec: any;
             let msgStr = msg.toString();
             try {
@@ -81,7 +81,7 @@ export class WorkerService extends EventEmitter implements IWorkerService {
             }
         }.bind(this));
 
-        server.on('listening', function () {
+        server.on('listening', function (this: WorkerService) {
             const address = server.address();
             console.log(`    OK | Worker monitor is listening on ${address.address}:${address.port}`);
         }.bind(this));
@@ -91,7 +91,7 @@ export class WorkerService extends EventEmitter implements IWorkerService {
 
     private StartWorkerWatchdogTimer(workerTimeoutSeconds: number) {
         // add timer to check known workers if they're still alive
-        setInterval(function() {
+        setInterval(function(this: WorkerService) {
             let activeWorkers: {
                 [id: string]: Worker;
             } = {};

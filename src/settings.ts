@@ -3,10 +3,28 @@ import "reflect-metadata";
 import { injectable } from "inversify";
 import { ISettings } from "./interfaces";
 
+export interface SettingsData {
+    workgroup: string;
+    host: string;
+    port: number;
+    publicUrl: string;
+    workerManagerPort: number;
+    heartbeatPort: number;
+    protocol: "http" | "https";
+    sslKey: string;
+    sslCert: string;
+    renderOutputDir: string;
+    apiKeyCheck: boolean;
+    workspaceCheck: boolean;
+    expireSessions: boolean;
+    sessionTimeoutMinutes: number;
+    workerTimeoutSeconds: number;
+}
+
 @injectable()
 export class Settings implements ISettings {
     private _env: string;
-    private _settings: any;
+    private _settings: SettingsData;
     private _majorVersion: number;
     private _version: string;
 
