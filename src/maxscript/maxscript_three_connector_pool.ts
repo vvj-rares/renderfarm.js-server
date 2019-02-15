@@ -18,7 +18,7 @@ export class MaxscriptThreeConnectorPool extends SessionPoolBase<IMaxscriptThree
     }
 
     public async Create(session: Session): Promise<IMaxscriptThreeConnector> {
-        return super._create(session, this._maxscriptThreeConnectorFactory.create);
+        return super._create(session, this._maxscriptThreeConnectorFactory.create.bind(this._maxscriptThreeConnectorFactory));
     }
 
     protected async onBeforeItemAdd(session: Session, connector: IMaxscriptThreeConnector): Promise<boolean> {

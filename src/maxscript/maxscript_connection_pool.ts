@@ -24,7 +24,7 @@ export class MaxScriptConnectionPool extends SessionPoolBase<IMaxscriptClient> i
     public id: number;
 
     public Connect(session: Session): Promise<IMaxscriptClient> {
-        return super._create(session, this._maxscriptClientFactory.create);
+        return super._create(session, this._maxscriptClientFactory.create.bind(this._maxscriptClientFactory));
     }
 
     protected async onBeforeItemAdd(session: Session, maxscript: IMaxscriptClient): Promise<boolean> {
