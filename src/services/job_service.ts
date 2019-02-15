@@ -1,6 +1,6 @@
 import { injectable, inject, decorate } from "inversify";
 import { TYPES } from "../types";
-import { ISettings, IDatabase, IMaxscriptClient, IJobService, IFactory } from "../interfaces";
+import { ISettings, IDatabase, IMaxscriptClient, IJobService, IFactory, IMaxscriptConnectionPool } from "../interfaces";
 import { Job } from "../database/model/job";
 
 ///<reference path="./typings/node/node.d.ts" />
@@ -10,24 +10,20 @@ import { EventEmitter } from "events";
 export class JobService extends EventEmitter implements IJobService {
     private _settings: ISettings;
     private _database: IDatabase;
-    private _maxscriptClientFactory: IFactory<IMaxscriptClient>;
-
-    private _clients: {
-        [jobGuid: string]: IMaxscriptClient;
-    } = {};
+    private _maxscriptConnectionPool: IMaxscriptConnectionPool;
 
     private _jobs: Job[] = [];
 
     constructor(
         @inject(TYPES.ISettings) settings: ISettings,
         @inject(TYPES.IDatabase) database: IDatabase,
-        @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IFactory<IMaxscriptClient>,
+        @inject(TYPES.IMaxscriptConnectionPool) maxscriptConnectionPool: IMaxscriptConnectionPool,
     ) {
         super();
 
         this._settings = settings;
         this._database = database;
-        this._maxscriptClientFactory = maxscriptClientFactory;
+        this._maxscriptConnectionPool = maxscriptConnectionPool;
 
         this.id = Math.random();
         console.log(" >> JobService: ", this.id);
@@ -60,24 +56,8 @@ export class JobService extends EventEmitter implements IJobService {
     private async StartJob(sessionGuid: string, job: Job) {
         console.log(" >> StartJob: ", job);
 
-        let client = this._maxscriptClientFactory.create(sessionGuid);
-        this._clients[job.guid] = client;
+        let client = this._maxscriptConnectionPool.Get(sessionGuid);
         this.emit("job:added", job);
-
-        console.log(" >> connecting to: " + `${job.workerRef.ip}:${job.workerRef.port}`);
-        let connected = await client.connect(job.workerRef.ip, job.workerRef.port);
-        console.log(" >> connected: ", connected);
-
-        if (connected) {
-            let updatedJob = await this._database.updateJob(job, { $set: { state: "connected" } } );
-            this.emit("job:updated", updatedJob);
-        } else {
-            let errorMessage = "failed to connect worker maxscript";
-            let failedJob = await this._database.failJob(job, errorMessage);
-            delete this._clients[job.guid];
-            this.emit("job:failed", failedJob);
-            return;
-        }
 
         let renderingJob = await this._database.updateJob(job, { $set: { state: "rendering" } });
         this.emit("job:updated", renderingJob);

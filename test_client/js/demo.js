@@ -28,6 +28,7 @@ function initScene() {
         camera.position.z = 1.671;
         camera.lookAt(0, 0.5, 0);
         camera.updateProjectionMatrix();
+        scene.add(camera);
 
         controls = new THREE.OrbitControls(camera);
         controls.target.set(0, 0.5, 0);

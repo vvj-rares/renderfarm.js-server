@@ -3,6 +3,8 @@ import { IMaxscriptThreeConnector, IMaxscriptClient, IFactory } from "../interfa
 export class MaxscriptThreeConnector implements IMaxscriptThreeConnector {
     private _maxscript: IMaxscriptClient;
 
+    private _sceneJson: any;
+
     constructor(
         maxscript: IMaxscriptClient,
     ) {
@@ -10,6 +12,10 @@ export class MaxscriptThreeConnector implements IMaxscriptThreeConnector {
     }
 
     public async PostScene(sceneJson: any): Promise<any> {
+        this._sceneJson = sceneJson;
+
+        let obj = sceneJson.object;
+
         return true;
     }
 }
