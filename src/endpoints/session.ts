@@ -1,23 +1,27 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, ISettings, ISessionService, IDatabase } from "../interfaces";
+import { IEndpoint, ISettings, ISessionService, IDatabase, IMaxscriptClient, ISessionPool } from "../interfaces";
 import { TYPES } from "../types";
 import { Session } from "../database/model/session";
+import { MaxScriptClientPool } from "../services/maxscript_client_pool";
 
 @injectable()
 class SessionEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
     private _sessionService: ISessionService;
+    private _maxscriptClientPool: ISessionPool<IMaxscriptClient>;
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.ISessionService) sessionService: ISessionService,
+                @inject(TYPES.IMaxscriptClientPool) maxscriptClientPool: ISessionPool<IMaxscriptClient>,
     ) {
 
         this._settings = settings;
         this._sessionService = sessionService;
         this._database = database;
+        this._maxscriptClientPool = maxscriptClientPool;
     }
 
     async validateApiKey(res: any, apiKey: string) {
@@ -112,6 +116,15 @@ class SessionEndpoint implements IEndpoint {
                 console.log(`  FAIL | failed to create session, `, err);
                 res.status(500);
                 res.end(JSON.stringify({ ok: false, message: "failed to create session", error: err.message }, null, 2));
+                return;
+            }
+
+            try {
+                await this._maxscriptClientPool.Get(session);
+            } catch (err) {
+                console.log(`  FAIL | failed to connect to remote maxscript, `, err);
+                res.status(500);
+                res.end(JSON.stringify({ ok: false, message: "failed to connect to remote maxscript", error: err.message }, null, 2));
                 return;
             }
 
