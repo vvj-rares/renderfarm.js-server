@@ -120,7 +120,7 @@ export interface IJobService {
 }
 
 export interface ISessionService {
-    GetSession(sessionGuid: string, allowClosed?: boolean, letTouch?: boolean): Promise<Session>;
+    GetSession(sessionGuid: string, allowClosed?: boolean, letTouch?: boolean, resolveRefs?: boolean): Promise<Session>;
     CreateSession(apiKey: string, workspaceGuid: string, sceneFilename?: string): Promise<Session>;
     KeepSessionAlive(sessionGuid: string): Promise<Session>;
     CloseSession(sessionGuid: string): Promise<Session>;

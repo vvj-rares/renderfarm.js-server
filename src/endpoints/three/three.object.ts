@@ -52,10 +52,12 @@ class ThreeObjectEndpoint implements IEndpoint {
             console.log(`POST on ${req.path} with session: ${sessionGuid}`);
 
             // check that session is actually open
-            let session: Session = await EndpointHelpers.tryGetSession(sessionGuid, this._database, res);
+            let session: Session = await this._sessionService.GetSession(sessionGuid, false, false);
             if (!session) {
                 return;
             }
+
+            console.log(" >> session: ", session);
 
             // check that session has no active job, i.e. it is not being rendered
             if (session.workerRef && session.workerRef.jobRef) {
