@@ -194,26 +194,33 @@ export class Database implements IDatabase {
                 (obj) => new Session(obj));
         }
 
-        session.workerRef = await this.safe<Worker>(this.getOne<Worker>(
+        session.workerRef = await this.getSessionWorker(session);
+
+        if (session.workerRef) {
+            session.workerRef.jobRef = await this.getSessionJob(session);
+        }
+
+        return session;
+    }
+
+    private async getSessionWorker(session: Session): Promise<Worker> {
+        return this.safe<Worker>(this.getOne<Worker>(
             "workers", 
             { 
                 guid: session.workerGuid 
             }, 
             obj => new Worker(obj)
         ));
+    }
 
-        // todo: add unit tests for this
-        if (session.workerRef) {
-            session.workerRef.jobRef = await this.safe<Job>(this.getOne<Job>(
-                "jobs",
-                {
-                    workerGuid: session.workerGuid
-                },
-                obj => new Job(obj)
-            ));
-        }
-
-        return session;
+    private async getSessionJob(session: Session): Promise<Job> {
+        return this.safe<Job>(this.getOne<Job>(
+            "jobs",
+            {
+                workerGuid: session.workerGuid
+            },
+            obj => new Job(obj)
+        ));
     }
 
     public async createSession(apiKey: string, workspaceGuid: string, sceneFilename: string): Promise<Session> {
@@ -261,6 +268,7 @@ export class Database implements IDatabase {
             session.workerGuid = caputuredWorker.guid;
             session.workspaceGuid = workspace.guid;
             session.sceneFilename = sceneFilename;
+            session.ready = false;
 
             let result = await this.insertOne<Session>("sessions", session, obj => new Session(obj));
             result.workerRef = caputuredWorker;

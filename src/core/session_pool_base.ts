@@ -5,18 +5,34 @@ import { Session } from "../database/model/session";
 @injectable()
 export abstract class SessionPoolBase<T> implements ISessionPool<T> {
     private _sessionService: ISessionService;
+    private _itemFactory: (sessionGuid: string) => T;
+
     private _items: { [sessionGuid: string] : T; } = {};
 
     public Get(sessionGuid: string): T {
         return this._items[sessionGuid];
     }
 
-    protected async _create(session: Session, itemFactory: (sessionGuid: string) => T ): Promise<T> {
+    protected constructor(
+        sessionService: ISessionService,
+        itemFactory: (sessionGuid: string) => T,
+    ) {
+        this._sessionService = sessionService;
+        this._itemFactory = itemFactory;
+
+        this._sessionService.on(SessionServiceEvents.Created, this.onSessionCreated.bind(this));
+
+        this._sessionService.on(SessionServiceEvents.Closed, this.onSessionClosed.bind(this));
+        this._sessionService.on(SessionServiceEvents.Expired, this.onSessionClosed.bind(this));
+        this._sessionService.on(SessionServiceEvents.Failed, this.onSessionClosed.bind(this));
+    }
+
+    private async  onSessionCreated(session: Session): Promise<T> {
         if (this._items[session.guid]) {
             throw Error("item already exists");
         }
 
-        let item: T = itemFactory(session.guid);
+        let item: T = this._itemFactory(session.guid);
 
         if (await this.onBeforeItemAdd(session, item)) {
             this._items[session.guid] = item;
@@ -26,17 +42,7 @@ export abstract class SessionPoolBase<T> implements ISessionPool<T> {
         }
     }
 
-    protected constructor(
-        sessionService: ISessionService,
-    ) {
-        this._sessionService = sessionService;
-
-        this._sessionService.on(SessionServiceEvents.Closed, this.onSessionClosed.bind(this));
-        this._sessionService.on(SessionServiceEvents.Expired, this.onSessionClosed.bind(this));
-        this._sessionService.on(SessionServiceEvents.Failed, this.onSessionClosed.bind(this));
-    }
-
-    protected onSessionClosed(session: Session) {
+    private onSessionClosed(session: Session) {
         let item = this._items[session.guid];
         if (item === undefined) {
             return;

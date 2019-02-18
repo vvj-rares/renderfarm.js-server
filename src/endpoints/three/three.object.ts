@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, ISettings, ISessionService, SessionServiceEvents, IThreeConverterPool } from "../../interfaces";
+import { IEndpoint, IDatabase, ISettings, ISessionService, SessionServiceEvents, ISessionPool, IThreeConverter } from "../../interfaces";
 import { TYPES } from "../../types";
 import { Session } from "../../database/model/session";
 import { EndpointHelpers } from "../../utils/endpoint_helpers";
@@ -12,14 +12,14 @@ class ThreeObjectEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
     private _sessionService: ISessionService;
-    private _threeConverterPool: IThreeConverterPool;
+    private _threeConverterPool: ISessionPool<IThreeConverter>;
 
     private _objects: { [sessionGuid: string] : any; } = {};
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.ISessionService) sessionService: ISessionService,
-                @inject(TYPES.IThreeConverterPool) threeConverterPool: IThreeConverterPool,
+                @inject(TYPES.IThreeConverterPool) threeConverterPool: ISessionPool<IThreeConverter>,
     ) {
         this._settings = settings;
         this._database = database;

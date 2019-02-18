@@ -26,6 +26,7 @@ import { WorkerService } from "./services/worker_service";
 import { MaxScriptClientPool } from "./services/maxscript_client_pool";
 import { ThreeConverterFactory } from "./maxscript/three_converter_factory";
 import { ThreeConverterPool } from "./services/three_converter_pool";
+import { IMaxscriptClient, IThreeConverter } from "./interfaces";
 
 const myContainer = new Container();
 
@@ -54,8 +55,8 @@ myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(ThreeMaterialEndpoint
 myContainer.bind<interfaces.IWorkerService>(TYPES.IWorkerService).to(WorkerService).inSingletonScope();
 myContainer.bind<interfaces.IJobService>(TYPES.IJobService).to(JobService).inSingletonScope();
 myContainer.bind<interfaces.ISessionService>(TYPES.ISessionService).to(SessionService).inSingletonScope();
-myContainer.bind<interfaces.IMaxscriptClientPool>(TYPES.IMaxscriptClientPool).to(MaxScriptClientPool).inSingletonScope();
-myContainer.bind<interfaces.IThreeConverterPool>(TYPES.IThreeConverterPool).to(ThreeConverterPool).inSingletonScope();
+myContainer.bind<interfaces.ISessionPool<IMaxscriptClient>>(TYPES.IMaxscriptClientPool).to(MaxScriptClientPool).inSingletonScope();
+myContainer.bind<interfaces.ISessionPool<IThreeConverter>>(TYPES.IThreeConverterPool).to(ThreeConverterPool).inSingletonScope();
 
 
 

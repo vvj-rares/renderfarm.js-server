@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, ISettings, ISessionService, IDatabase, IThreeConverterPool, IMaxscriptClientPool } from "../interfaces";
+import { IEndpoint, ISettings, ISessionService, IDatabase } from "../interfaces";
 import { TYPES } from "../types";
 import { Session } from "../database/model/session";
 
@@ -9,21 +9,15 @@ class SessionEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
     private _sessionService: ISessionService;
-    private _threeConverterPool: IThreeConverterPool;
-    private _maxscrpiptClientPool: IMaxscriptClientPool;
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.ISessionService) sessionService: ISessionService,
-                @inject(TYPES.IMaxscriptClientPool) maxscrpiptClientPool: IMaxscriptClientPool,
-                @inject(TYPES.IThreeConverterPool) threeConverterPool: IThreeConverterPool,
     ) {
 
         this._settings = settings;
         this._sessionService = sessionService;
         this._database = database;
-        this._maxscrpiptClientPool = maxscrpiptClientPool;
-        this._threeConverterPool = threeConverterPool;
     }
 
     async validateApiKey(res: any, apiKey: string) {
@@ -118,38 +112,6 @@ class SessionEndpoint implements IEndpoint {
                 console.log(`  FAIL | failed to create session, `, err);
                 res.status(500);
                 res.end(JSON.stringify({ ok: false, message: "failed to create session", error: err.message }, null, 2));
-                return;
-            }
-
-            try {
-                await this._maxscrpiptClientPool.Connect(session);
-            } catch (err) {
-                console.log(`  FAIL | failed to establish remote maxscript connection, session will close.`, err);
-
-                try {
-                    session = await this._sessionService.CloseSession(session.guid);
-                } catch (sessionErr) {
-                    console.log(`  WARN | failed to close session, `, sessionErr);
-                }
-
-                res.status(500);
-                res.end(JSON.stringify({ ok: false, message: "failed to establish remote maxscript connection", error: err.message }, null, 2));
-                return;
-            }
-
-            try {
-                await this._threeConverterPool.Create(session);
-            } catch (err) {
-                console.log(`  FAIL | failed to initialize maxscript <-> three.js connector, session will close.`, err);
-
-                try {
-                    session = await this._sessionService.CloseSession(session.guid);
-                } catch (sessionErr) {
-                    console.log(`  WARN | failed to close session, `, sessionErr);
-                }
-
-                res.status(500);
-                res.end(JSON.stringify({ ok: false, message: "failed to initialize maxscript <-> three.js connector", error: err.message }, null, 2));
                 return;
             }
 

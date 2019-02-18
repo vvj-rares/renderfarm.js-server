@@ -1,31 +1,24 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../types";
-import { IFactory, IMaxscriptClient, ISessionService, IMaxscriptClientPool } from "../interfaces";
+import { IFactory, IMaxscriptClient, ISessionService } from "../interfaces";
 
 import { Session } from "../database/model/session";
 import { SessionPoolBase } from "../core/session_pool_base";
 
 @injectable()
-export class MaxScriptClientPool extends SessionPoolBase<IMaxscriptClient> implements IMaxscriptClientPool {
-    private _maxscriptClientFactory: IFactory<IMaxscriptClient>;
+export class MaxScriptClientPool extends SessionPoolBase<IMaxscriptClient> {
 
     constructor(
         @inject(TYPES.ISessionService) sessionService: ISessionService,
         @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IFactory<IMaxscriptClient>,
     ) {
-        super(sessionService);
-
-        this._maxscriptClientFactory = maxscriptClientFactory;
+        super(sessionService, maxscriptClientFactory.create.bind(maxscriptClientFactory));
 
         this.id = Math.random();
         console.log(" >> MaxScriptConnectionPool: ", this.id);
     }
 
     public id: number;
-
-    public Connect(session: Session): Promise<IMaxscriptClient> {
-        return super._create(session, this._maxscriptClientFactory.create.bind(this._maxscriptClientFactory));
-    }
 
     protected async onBeforeItemAdd(session: Session, maxscript: IMaxscriptClient): Promise<boolean> {
         // try to connect to worker remote maxscript endpoint
