@@ -37,7 +37,7 @@ describe("Database Session", function() {
         })
 
         it("checks existing session", async function(done) {
-            let session: Session = await database.getSession(helpers.existingSessionGuid);
+            let session: Session = await database.getSession(helpers.existingSessionGuid, { resolveRefs: true });
     
             expect(session).toBeTruthy();
             expect(session.apiKey).toBe(helpers.existingApiKey);
@@ -58,7 +58,7 @@ describe("Database Session", function() {
         it("checks not existing session", async function(done) {
             let result: Session;
             try {
-                result = await database.getSession(helpers.notExistingSessionGuid);
+                result = await database.getSession(helpers.notExistingSessionGuid, { resolveRefs: true });
             } catch (err) {
                 expect(isError(err)).toBeTruthy();
                 expect(err.message).toMatch("nothing was updated in sessions by \{.*?\}");
@@ -77,7 +77,7 @@ describe("Database Session", function() {
                 return;
             }
     
-            let session = await database.getSession(helpers.existingSessionGuid);
+            let session = await database.getSession(helpers.existingSessionGuid, { resolveRefs: true });
             expect(session).toBeTruthy();
             expect(session.guid).toBe(helpers.existingSessionGuid);
             done();

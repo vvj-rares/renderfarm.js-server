@@ -18,6 +18,8 @@ export class ThreeConverter implements IThreeConverter {
 
         let obj = sceneJson.object;
 
+        console.log("TODO: // post scene: ", obj);
+
         return true;
     }
 }
