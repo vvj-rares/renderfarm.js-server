@@ -1,6 +1,8 @@
-import { IMaxscriptThreeConnector, IMaxscriptClient, IFactory } from "../interfaces";
+import { IMaxscriptClient, IThreeConverter } from "../interfaces";
 
-export class MaxscriptThreeConnector implements IMaxscriptThreeConnector {
+// translates three json objects and changes to maxscript commands,
+// to keep scene up to date with latest changes in three.js scene.
+export class ThreeConverter implements IThreeConverter {
     private _maxscript: IMaxscriptClient;
 
     private _sceneJson: any;

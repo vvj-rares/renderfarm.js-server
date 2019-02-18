@@ -100,6 +100,11 @@ export interface IMaxscriptClient {
     renderScene(camera: string, size: number[], filename: string, vraySettings: any): Promise<boolean>;
 }
 
+export interface IMaxscriptClientPool {
+    Get(sessionGuid: string): IMaxscriptClient;
+    Connect(session: Session): Promise<IMaxscriptClient>;
+}
+
 export interface IFactory<T> {
     create(sessionGuid: string): T;
 }
@@ -137,16 +142,11 @@ export enum SessionServiceEvents {
     WatchdogStarted = "session-watchdog:started",
 }
 
-export interface IMaxscriptConnectionPool {
-    Get(sessionGuid: string): IMaxscriptClient;
-    Connect(session: Session): Promise<IMaxscriptClient>;
-}
-
-export interface IMaxscriptThreeConnector {
+export interface IThreeConverter {
     PostScene(sceneJson: any): Promise<any>;
 }
 
-export interface IMaxscriptThreeConnectorPool {
-    Get(sessionGuid: string): IMaxscriptThreeConnector;
-    Create(session: Session): Promise<IMaxscriptThreeConnector>;
+export interface IThreeConverterPool {
+    Get(sessionGuid: string): IThreeConverter;
+    Create(session: Session): Promise<IThreeConverter>;
 }

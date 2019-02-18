@@ -1,12 +1,12 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../types";
-import { IMaxscriptConnectionPool, IFactory, IMaxscriptClient, ISessionService } from "../interfaces";
+import { IFactory, IMaxscriptClient, ISessionService, IMaxscriptClientPool } from "../interfaces";
 
 import { Session } from "../database/model/session";
 import { SessionPoolBase } from "../core/session_pool_base";
 
 @injectable()
-export class MaxScriptConnectionPool extends SessionPoolBase<IMaxscriptClient> implements IMaxscriptConnectionPool {
+export class MaxScriptClientPool extends SessionPoolBase<IMaxscriptClient> implements IMaxscriptClientPool {
     private _maxscriptClientFactory: IFactory<IMaxscriptClient>;
 
     constructor(

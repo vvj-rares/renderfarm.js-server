@@ -1,6 +1,6 @@
 import { injectable, inject, decorate } from "inversify";
 import { TYPES } from "../types";
-import { ISettings, IDatabase, IMaxscriptClient, IJobService, IFactory, IMaxscriptConnectionPool } from "../interfaces";
+import { ISettings, IDatabase, IJobService, IMaxscriptClientPool } from "../interfaces";
 import { Job } from "../database/model/job";
 
 ///<reference path="./typings/node/node.d.ts" />
@@ -10,20 +10,20 @@ import { EventEmitter } from "events";
 export class JobService extends EventEmitter implements IJobService {
     private _settings: ISettings;
     private _database: IDatabase;
-    private _maxscriptConnectionPool: IMaxscriptConnectionPool;
+    private _maxscriptClientPool: IMaxscriptClientPool;
 
     private _jobs: Job[] = [];
 
     constructor(
         @inject(TYPES.ISettings) settings: ISettings,
         @inject(TYPES.IDatabase) database: IDatabase,
-        @inject(TYPES.IMaxscriptConnectionPool) maxscriptConnectionPool: IMaxscriptConnectionPool,
+        @inject(TYPES.IMaxscriptClientPool) maxscriptConnectionPool: IMaxscriptClientPool,
     ) {
         super();
 
         this._settings = settings;
         this._database = database;
-        this._maxscriptConnectionPool = maxscriptConnectionPool;
+        this._maxscriptClientPool = maxscriptConnectionPool;
 
         this.id = Math.random();
         console.log(" >> JobService: ", this.id);
@@ -56,7 +56,7 @@ export class JobService extends EventEmitter implements IJobService {
     private async StartJob(sessionGuid: string, job: Job) {
         console.log(" >> StartJob: ", job);
 
-        let client = this._maxscriptConnectionPool.Get(sessionGuid);
+        let client = this._maxscriptClientPool.Get(sessionGuid);
         this.emit("job:added", job);
 
         let renderingJob = await this._database.updateJob(job, { $set: { state: "rendering" } });

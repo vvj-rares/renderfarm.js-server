@@ -2,6 +2,7 @@ import { IMaxscriptClient } from "../interfaces";
 import { Socket } from "net";
 import { Workspace } from "../database/model/workspace";
 
+// communicates to remote maxscript endpoint
 class MaxscriptClient implements IMaxscriptClient {
 
     private _responseHandler:        (this: MaxscriptClient, data: any) => void;
