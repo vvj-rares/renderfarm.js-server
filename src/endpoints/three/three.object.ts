@@ -79,11 +79,11 @@ class ThreeObjectEndpoint implements IEndpoint {
             }
 
             // cache it now
-            if (this._objects[sessionGuid]) {
-                this._objects[sessionGuid] = sceneJson;
+            if (this._objects[session.guid]) {
+                this._objects[session.guid] = sceneJson;
             }
 
-            let threeConnector = await this._threeConverterPool.Get(sessionGuid);
+            let threeConnector = await this._threeConverterPool.Get(session);
             try {
                 await threeConnector.PostScene(sceneJson.object);
             } catch (err) {

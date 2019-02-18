@@ -194,10 +194,14 @@ export class Database implements IDatabase {
                 (obj) => new Session(obj));
         }
 
-        session.workerRef = await this.getSessionWorker(session);
+        if (options.resolveRefs) {
+            session.workerRef = await this.getSessionWorker(session);
 
-        if (session.workerRef) {
-            session.workerRef.jobRef = await this.getSessionJob(session);
+            if (session.workerRef) {
+                session.workerRef.jobRef = await this.getSessionJob(session);
+            }
+
+            session.workspaceRef = await this.getWorkspace(session.workspaceGuid);
         }
 
         return session;

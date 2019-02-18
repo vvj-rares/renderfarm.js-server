@@ -39,12 +39,13 @@ export class SessionService extends EventEmitter implements ISessionService {
 
     public id: number;
 
-    public GetSession(sessionGuid: string, allowClosed?: boolean, letTouch?: boolean): Promise<Session> {
+    public GetSession(sessionGuid: string, allowClosed?: boolean, letTouch?: boolean, resolveRefs?: boolean): Promise<Session> {
         return this._database.getSession(
             sessionGuid,
             { 
                 allowClosed: allowClosed, 
                 readOnly: !letTouch,
+                resolveRefs: resolveRefs,
             },
         );
     }

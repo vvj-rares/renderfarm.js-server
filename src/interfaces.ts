@@ -8,8 +8,9 @@ import { Worker } from "./database/model/worker";
 import { Job } from "./database/model/job";
 
 export interface IGetSessionOptions {
-    allowClosed: boolean;
-    readOnly: boolean;
+    allowClosed?: boolean;
+    readOnly?: boolean;
+    resolveRefs?: boolean;
 }
 
 export interface IDatabase {

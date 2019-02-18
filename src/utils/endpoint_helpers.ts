@@ -5,7 +5,7 @@ export class EndpointHelpers {
     public static async tryGetSession(sessionGuid: string, database: IDatabase, res: any) {
         let session: Session;
         try {
-            session = await database.getSession(sessionGuid, { allowClosed: true, readOnly: true });
+            session = await database.getSession(sessionGuid, { allowClosed: true, readOnly: true, resolveRefs: true });
             if (!session) {
                 console.log(`  FAIL | session not found: ${sessionGuid}`);
                 res.status(404);
