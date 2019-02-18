@@ -27,6 +27,7 @@ import { MaxScriptClientPool } from "./services/maxscript_client_pool";
 import { IMaxscriptClient, IThreeMaxscriptBridge } from "./interfaces";
 import { ThreeMaxscriptBridgePool } from "./services/three_maxscript_bridge_pool";
 import { ThreeMaxscriptBridgeFactory } from "./maxscript/three_maxscript_bridge_factory";
+import { SceneBinding } from "./maxscript/three_maxscript_bindings/scene_binding";
 
 const myContainer = new Container();
 
@@ -56,6 +57,9 @@ myContainer.bind<interfaces.ISessionPool<IThreeMaxscriptBridge>>(TYPES.IThreeMax
 // factories
 myContainer.bind<interfaces.IFactory<interfaces.IMaxscriptClient>>(TYPES.IMaxscriptClientFactory).to(MaxscriptClientFactory).inSingletonScope();
 myContainer.bind<interfaces.IFactory<interfaces.IThreeMaxscriptBridge>>(TYPES.IThreeMaxscriptBridgeFactory).to(ThreeMaxscriptBridgeFactory).inSingletonScope();
+
+// bindings
+myContainer.bind<interfaces.ISceneObjectBinding>(TYPES.ISceneObjectBinding).to(SceneBinding);
 
 // tip: this is how to export same instance with different interfaces
 // EXAMPLE: myContainer.bind<interfaces.ISessionObserver>(TYPES.ISessionObserver).toService(TYPES.ISessionObserver);

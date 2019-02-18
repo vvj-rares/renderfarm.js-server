@@ -15,6 +15,9 @@ const TYPES = {
     ISessionService: Symbol.for("ISessionService"),
     IMaxscriptClientPool: Symbol.for("ISessionPool<IMaxscriptClient>"),
     IThreeMaxscriptBridgePool: Symbol.for("ISessionPool<IThreeMaxscriptBridge>"),
+
+    // bindings
+    ISceneObjectBinding: Symbol.for("ISceneObjectBinding"),
 };
 
 export { TYPES };

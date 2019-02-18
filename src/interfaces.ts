@@ -141,3 +141,7 @@ export enum SessionServiceEvents {
 export interface IThreeMaxscriptBridge {
     PostScene(sceneJson: any): Promise<any>;
 }
+
+export interface ISceneObjectBinding {
+    PostObject(objectJson: any): Promise<string>;
+}

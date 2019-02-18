@@ -1,18 +1,21 @@
-import { IMaxscriptClient, IThreeMaxscriptBridge } from "../interfaces";
+import { IMaxscriptClient, IThreeMaxscriptBridge, ISceneObjectBinding } from "../interfaces";
 import { isArray } from "util";
+import { multiInject } from "inversify";
 
 // translates three json objects and changes to maxscript commands,
 // to keep scene up to date with latest changes in three.js scene.
 export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
     private _maxscript: IMaxscriptClient;
+    private _sceneObjectBindings: ISceneObjectBinding[];
 
     private _sceneJson: any;
 
     constructor(
-        // @multiInject("IWeapon") weapons: IThreeConverter2[],
         maxscript: IMaxscriptClient,
+        sceneObjectBindings: ISceneObjectBinding[],
     ) {
         this._maxscript = maxscript;
+        this._sceneObjectBindings = sceneObjectBindings;
     }
 
     public async PostScene(sceneJson: any): Promise<any> {
