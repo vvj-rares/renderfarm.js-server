@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, ISettings, ISessionService, SessionServiceEvents, ISessionPool, IThreeConverter } from "../../interfaces";
+import { IEndpoint, IDatabase, ISettings, ISessionService, SessionServiceEvents, ISessionPool, IThreeMaxscriptBridge } from "../../interfaces";
 import { TYPES } from "../../types";
 import { Session } from "../../database/model/session";
 
@@ -11,19 +11,19 @@ class ThreeObjectEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
     private _sessionService: ISessionService;
-    private _threeConverterPool: ISessionPool<IThreeConverter>;
+    private _threeMaxscriptBridgePool: ISessionPool<IThreeMaxscriptBridge>;
 
     private _objects: { [sessionGuid: string] : any; } = {};
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.ISessionService) sessionService: ISessionService,
-                @inject(TYPES.IThreeConverterPool) threeConverterPool: ISessionPool<IThreeConverter>,
+                @inject(TYPES.IThreeMaxscriptBridgePool) threeMaxscriptBridgePool: ISessionPool<IThreeMaxscriptBridge>,
     ) {
         this._settings = settings;
         this._database = database;
         this._sessionService = sessionService;
-        this._threeConverterPool = threeConverterPool;
+        this._threeMaxscriptBridgePool = threeMaxscriptBridgePool;
 
         this._sessionService.on(SessionServiceEvents.Closed, this.onSessionClosed.bind(this));
         this._sessionService.on(SessionServiceEvents.Expired, this.onSessionClosed.bind(this));
@@ -84,7 +84,7 @@ class ThreeObjectEndpoint implements IEndpoint {
                 this._objects[session.guid] = sceneJson;
             }
 
-            let threeConverter = await this._threeConverterPool.Get(session);
+            let threeConverter = await this._threeMaxscriptBridgePool.Get(session);
             try {
                 await threeConverter.PostScene(sceneJson);
             } catch (err) {

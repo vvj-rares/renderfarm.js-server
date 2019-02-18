@@ -138,6 +138,6 @@ export enum SessionServiceEvents {
     WatchdogStarted = "session-watchdog:started",
 }
 
-export interface IThreeConverter {
+export interface IThreeMaxscriptBridge {
     PostScene(sceneJson: any): Promise<any>;
 }

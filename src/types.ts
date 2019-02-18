@@ -7,14 +7,14 @@ const TYPES = {
 
     // factories
     IMaxscriptClientFactory: Symbol.for("IFactory<IMaxscriptClient>"),
-    IThreeConverterFactory: Symbol.for("IFactory<IThreeConverter>"),
+    IThreeMaxscriptBridgeFactory: Symbol.for("IFactory<IThreeMaxscriptBridge>"),
 
     // services
     IWorkerService: Symbol.for("IWorkerService"),
     IJobService: Symbol.for("IJobService"),
     ISessionService: Symbol.for("ISessionService"),
     IMaxscriptClientPool: Symbol.for("ISessionPool<IMaxscriptClient>"),
-    IThreeConverterPool: Symbol.for("ISessionPool<IThreeConverter>"),
+    IThreeMaxscriptBridgePool: Symbol.for("ISessionPool<IThreeMaxscriptBridge>"),
 };
 
 export { TYPES };
