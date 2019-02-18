@@ -130,7 +130,6 @@ export interface ISessionService {
 
 export enum SessionServiceEvents {
     Created = "session:created",
-    Ready = "session:ready",
     Updated = "session:updated",
     Closed = "session:closed",
     Expired = "session:expired",

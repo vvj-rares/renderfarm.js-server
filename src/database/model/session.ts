@@ -10,7 +10,6 @@ export class Session extends IDbEntity {
     public firstSeen: Date;
     public lastSeen: Date;
     public workspaceGuid: string;
-    public ready?: boolean;
     public closed?: boolean;
     public expired?: boolean;
     public closedAt?: Date;
@@ -35,7 +34,6 @@ export class Session extends IDbEntity {
         this.firstSeen      = obj.firstSeen ? new Date(obj.firstSeen) : undefined;
         this.lastSeen       = obj.lastSeen ? new Date(obj.lastSeen) : undefined;
         this.workspaceGuid  = obj.workspaceGuid;
-        this.ready          = obj.ready;
         this.closed         = obj.closed;
         this.expired        = obj.expired;
         this.closedAt       = obj.closedAt ? new Date(obj.closedAt) : undefined;
@@ -52,7 +50,6 @@ export class Session extends IDbEntity {
             firstSeen:      this.firstSeen,
             lastSeen:       this.lastSeen,
             workspaceGuid:  this.workspaceGuid,
-            ready:          this.ready,
             closed:         this.closed,
             expired:        this.expired,
             closedAt:       this.closedAt,

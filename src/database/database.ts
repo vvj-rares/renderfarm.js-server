@@ -268,7 +268,6 @@ export class Database implements IDatabase {
             session.workerGuid = caputuredWorker.guid;
             session.workspaceGuid = workspace.guid;
             session.sceneFilename = sceneFilename;
-            session.ready = false;
 
             let result = await this.insertOne<Session>("sessions", session, obj => new Session(obj));
             result.workerRef = caputuredWorker;
