@@ -172,7 +172,9 @@ setInterval(function(this: FakeWorker) {
             client = dgram.createSocket('udp4');
         }
         
-        // console.log(`to: ${settings.current.host}:${settings.current.heartbeatPort} ${hbstr}`);
+        if (w.hbcount === 2) {
+            console.log(`heartbeat: ${hbstr} to ${settings.current.host}:${settings.current.heartbeatPort}`);
+        }
         client.send(message, settings.current.heartbeatPort, settings.current.host, (err) => {
             if (err) {
                 if (client) {

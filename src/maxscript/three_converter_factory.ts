@@ -2,6 +2,7 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../types";
 import { IFactory, IMaxscriptClient, IThreeConverter, ISessionPool } from "../interfaces";
 import { ThreeConverter } from "./three_converter";
+import { Session } from "../database/model/session";
 
 @injectable()
 export class ThreeConverterFactory implements IFactory<IThreeConverter> {
@@ -13,8 +14,8 @@ export class ThreeConverterFactory implements IFactory<IThreeConverter> {
         this._maxscriptClientPool = maxscriptClientPool;
     }
 
-    public create(sessionGuid: string): IThreeConverter {
-        let maxscript: IMaxscriptClient = this._maxscriptClientPool.Get(sessionGuid);
+    public async Create(session: Session): Promise<IThreeConverter> {
+        let maxscript: IMaxscriptClient = await this._maxscriptClientPool.Get(session);
         return new ThreeConverter(maxscript);
     }
 }

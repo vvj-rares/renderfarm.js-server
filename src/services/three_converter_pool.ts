@@ -6,12 +6,11 @@ import { Session } from "../database/model/session";
 
 @injectable()
 export class ThreeConverterPool extends SessionPoolBase<IThreeConverter> {
-
     constructor (
         @inject(TYPES.ISessionService) sessionService: ISessionService,
         @inject(TYPES.IThreeConverterFactory) threeConverterFactory: IFactory<IThreeConverter>,
     ) {
-        super(sessionService, threeConverterFactory.create.bind(threeConverterFactory));
+        super(sessionService, threeConverterFactory.Create.bind(threeConverterFactory));
     }
 
     protected async onBeforeItemAdd(session: Session, connector: IThreeConverter): Promise<boolean> {

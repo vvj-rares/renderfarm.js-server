@@ -1,10 +1,11 @@
-import { injectable, inject, decorate } from "inversify";
+import { injectable, inject } from "inversify";
 import { TYPES } from "../types";
 import { ISettings, IDatabase, IJobService, ISessionPool, IMaxscriptClient } from "../interfaces";
 import { Job } from "../database/model/job";
 
 ///<reference path="./typings/node/node.d.ts" />
 import { EventEmitter } from "events";
+import { Session } from "../database/model/session";
 
 @injectable()
 export class JobService extends EventEmitter implements IJobService {
@@ -31,10 +32,10 @@ export class JobService extends EventEmitter implements IJobService {
 
     public id: number;
 
-    public Start(sessionGuid: string, job: Job): void {
+    public Start(session: Session, job: Job): void {
         this._jobs.push(job);
 
-        this.StartJob(sessionGuid, job).catch(async function(this: JobService, err) {
+        this.StartJob(session, job).catch(async function(this: JobService, err) {
             console.log(" >> job failed: ", err);
             let jobIdx = this._jobs.findIndex(el => el === job);
             this._jobs.splice(jobIdx, 1);
@@ -53,10 +54,10 @@ export class JobService extends EventEmitter implements IJobService {
         this.emit("job:canceled", canceledJob);
     }
 
-    private async StartJob(sessionGuid: string, job: Job) {
+    private async StartJob(session: Session, job: Job) {
         console.log(" >> StartJob: ", job);
 
-        let client = this._maxscriptClientPool.Get(sessionGuid);
+        let client = await this._maxscriptClientPool.Get(session);
         this.emit("job:added", job);
 
         let renderingJob = await this._database.updateJob(job, { $set: { state: "rendering" } });

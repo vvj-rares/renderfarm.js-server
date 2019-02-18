@@ -12,7 +12,7 @@ export class MaxScriptClientPool extends SessionPoolBase<IMaxscriptClient> {
         @inject(TYPES.ISessionService) sessionService: ISessionService,
         @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IFactory<IMaxscriptClient>,
     ) {
-        super(sessionService, maxscriptClientFactory.create.bind(maxscriptClientFactory));
+        super(sessionService, maxscriptClientFactory.Create.bind(maxscriptClientFactory));
 
         this.id = Math.random();
         console.log(" >> MaxScriptConnectionPool: ", this.id);

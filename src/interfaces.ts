@@ -101,11 +101,11 @@ export interface IMaxscriptClient {
 }
 
 export interface IFactory<T> {
-    create(sessionGuid: string): T;
+    Create(session: Session): Promise<T>;
 }
 
 export interface ISessionPool<T> {
-    Get(sessionGuid: string): T;
+    Get(session: Session): Promise<T>;
 }
 
 export interface IWorkerService {
@@ -113,7 +113,7 @@ export interface IWorkerService {
 }
 
 export interface IJobService {
-    Start(sessionGuid: string, job: Job): void;
+    Start(session: Session, job: Job): void;
     Cancel(job: Job): void;
     on(event: string | symbol, listener: (...args: any[]) => void): this;
 }
