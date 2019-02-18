@@ -6,19 +6,19 @@ import { Session } from "../database/model/session";
 
 @injectable()
 export class ThreeConverterPool extends SessionPoolBase<IThreeConverter> implements IThreeConverterPool {
-    private _maxscriptThreeConnectorFactory: IFactory<IThreeConverter>;
+    private _threeConverterFactory: IFactory<IThreeConverter>;
 
     constructor (
         @inject(TYPES.ISessionService) sessionService: ISessionService,
-        @inject(TYPES.IMaxscriptThreeConnectorFactory) maxscriptThreeConnectorFactory: IFactory<IThreeConverter>,
+        @inject(TYPES.IThreeConverterFactory) threeConverterFactory: IFactory<IThreeConverter>,
     ) {
         super(sessionService);
 
-        this._maxscriptThreeConnectorFactory = maxscriptThreeConnectorFactory;
+        this._threeConverterFactory = threeConverterFactory;
     }
 
     public async Create(session: Session): Promise<IThreeConverter> {
-        return super._create(session, this._maxscriptThreeConnectorFactory.create.bind(this._maxscriptThreeConnectorFactory));
+        return super._create(session, this._threeConverterFactory.create.bind(this._threeConverterFactory));
     }
 
     protected async onBeforeItemAdd(session: Session, connector: IThreeConverter): Promise<boolean> {

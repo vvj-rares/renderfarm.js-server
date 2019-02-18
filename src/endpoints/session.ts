@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, ISettings, ISessionService, IDatabase, IMaxscriptConnectionPool, IMaxscriptThreeConnectorPool } from "../interfaces";
+import { IEndpoint, ISettings, ISessionService, IDatabase, IThreeConverterPool, IMaxscriptClientPool } from "../interfaces";
 import { TYPES } from "../types";
 import { Session } from "../database/model/session";
 
@@ -9,21 +9,21 @@ class SessionEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
     private _sessionService: ISessionService;
-    private _maxscriptConnectionPool: IMaxscriptConnectionPool;
-    private _maxscriptThreeConnectorPool: IMaxscriptThreeConnectorPool;
+    private _threeConverterPool: IThreeConverterPool;
+    private _maxscrpiptClientPool: IMaxscriptClientPool;
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.ISessionService) sessionService: ISessionService,
-                @inject(TYPES.IMaxscriptConnectionPool) maxscriptConnectionPool: IMaxscriptConnectionPool,
-                @inject(TYPES.IMaxscriptThreeConnectorPool) maxscriptThreeConnectorPool: IMaxscriptThreeConnectorPool,
+                @inject(TYPES.IMaxscriptClientPool) maxscrpiptClientPool: IMaxscriptClientPool,
+                @inject(TYPES.IThreeConverterPool) threeConverterPool: IThreeConverterPool,
     ) {
 
         this._settings = settings;
         this._sessionService = sessionService;
         this._database = database;
-        this._maxscriptConnectionPool = maxscriptConnectionPool;
-        this._maxscriptThreeConnectorPool = maxscriptThreeConnectorPool;
+        this._maxscrpiptClientPool = maxscrpiptClientPool;
+        this._threeConverterPool = threeConverterPool;
     }
 
     async validateApiKey(res: any, apiKey: string) {
@@ -122,7 +122,7 @@ class SessionEndpoint implements IEndpoint {
             }
 
             try {
-                await this._maxscriptConnectionPool.Connect(session);
+                await this._maxscrpiptClientPool.Connect(session);
             } catch (err) {
                 console.log(`  FAIL | failed to establish remote maxscript connection, session will close.`, err);
 
@@ -138,7 +138,7 @@ class SessionEndpoint implements IEndpoint {
             }
 
             try {
-                await this._maxscriptThreeConnectorPool.Create(session);
+                await this._threeConverterPool.Create(session);
             } catch (err) {
                 console.log(`  FAIL | failed to initialize maxscript <-> three.js connector, session will close.`, err);
 

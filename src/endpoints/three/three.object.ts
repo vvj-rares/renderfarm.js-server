@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, ISettings, ISessionService, SessionServiceEvents, IFactory, IMaxscriptClient, IMaxscriptThreeConnector, IMaxscriptConnectionPool, IMaxscriptThreeConnectorPool } from "../../interfaces";
+import { IEndpoint, IDatabase, ISettings, ISessionService, SessionServiceEvents, IThreeConverterPool } from "../../interfaces";
 import { TYPES } from "../../types";
 import { Session } from "../../database/model/session";
 import { EndpointHelpers } from "../../utils/endpoint_helpers";
@@ -12,19 +12,19 @@ class ThreeObjectEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
     private _sessionService: ISessionService;
-    private _maxscriptThreeConnectorPool: IMaxscriptThreeConnectorPool;
+    private _threeConverterPool: IThreeConverterPool;
 
     private _objects: { [sessionGuid: string] : any; } = {};
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.ISessionService) sessionService: ISessionService,
-                @inject(TYPES.IMaxscriptThreeConnectorPool) maxscriptThreeConnectorPool: IMaxscriptThreeConnectorPool,
+                @inject(TYPES.IThreeConverterPool) threeConverterPool: IThreeConverterPool,
     ) {
         this._settings = settings;
         this._database = database;
         this._sessionService = sessionService;
-        this._maxscriptThreeConnectorPool = maxscriptThreeConnectorPool;
+        this._threeConverterPool = threeConverterPool;
 
         this._sessionService.on(SessionServiceEvents.Closed, this.onSessionClosed.bind(this));
         this._sessionService.on(SessionServiceEvents.Expired, this.onSessionClosed.bind(this));
@@ -83,7 +83,7 @@ class ThreeObjectEndpoint implements IEndpoint {
                 this._objects[sessionGuid] = sceneJson;
             }
 
-            let maxscriptThreeConnector = this._maxscriptThreeConnectorPool.Get(sessionGuid);
+            let maxscriptThreeConnector = this._threeConverterPool.Get(sessionGuid);
             try {
                 await maxscriptThreeConnector.PostScene(sceneJson.object);
             } catch (err) {

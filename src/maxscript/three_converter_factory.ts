@@ -1,7 +1,7 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../types";
 import { IFactory, IMaxscriptClient, IThreeConverter, IMaxscriptClientPool } from "../interfaces";
-import { ThreeConverter } from "./maxscript_three_connector";
+import { ThreeConverter } from "./three_converter";
 
 @injectable()
 export class ThreeConverterFactory implements IFactory<IThreeConverter> {
