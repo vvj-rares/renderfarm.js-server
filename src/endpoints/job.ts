@@ -1,25 +1,27 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, ISettings, IJobService } from "../interfaces";
+import { IEndpoint, IDatabase, ISettings, IJobService, ISessionService } from "../interfaces";
 import { TYPES } from "../types";
 import { Job } from "../database/model/job";
 import { Session } from "../database/model/session";
-import { EndpointHelpers } from "../utils/endpoint_helpers";
 
 @injectable()
 class JobEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
     private _jobService: IJobService;
+    private _sessionService: ISessionService;
 
     constructor(
         @inject(TYPES.ISettings) settings: ISettings,
         @inject(TYPES.IDatabase) database: IDatabase,
         @inject(TYPES.IJobService) jobService: IJobService,
+        @inject(TYPES.ISessionService) sessionService: ISessionService,
     ) {
         this._settings = settings;
         this._database = database;
         this._jobService = jobService;
+        this._sessionService = sessionService;
     }
 
     bind(express: express.Application) {
@@ -63,11 +65,10 @@ class JobEndpoint implements IEndpoint {
         }.bind(this));
 
         express.post(`/v${this._settings.majorVersion}/job`, async function (this: JobEndpoint, req: express.Request, res: express.Response) {
-            let _this: JobEndpoint = this as JobEndpoint;
             let sessionGuid = req.body.session_guid;
             console.log(`POST on ${req.path} with session: ${sessionGuid}`);
 
-            let session: Session = await EndpointHelpers.tryGetSession(sessionGuid, this._database, res);
+            let session: Session = await this._sessionService.GetSession(sessionGuid, false, false, true);
             if (!session) {
                 return;
             }

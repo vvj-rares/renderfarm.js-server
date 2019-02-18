@@ -16,9 +16,9 @@ export class ThreeConverter implements IThreeConverter {
     public async PostScene(sceneJson: any): Promise<any> {
         this._sceneJson = sceneJson;
 
-        let obj = sceneJson.object;
+        let obj = sceneJson;
 
-        console.log("TODO: // post scene: ", obj);
+        console.log("TODO: // post scene: ", sceneJson);
 
         return true;
     }

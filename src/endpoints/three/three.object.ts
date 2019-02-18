@@ -3,7 +3,6 @@ import * as express from "express";
 import { IEndpoint, IDatabase, ISettings, ISessionService, SessionServiceEvents, ISessionPool, IThreeConverter } from "../../interfaces";
 import { TYPES } from "../../types";
 import { Session } from "../../database/model/session";
-import { EndpointHelpers } from "../../utils/endpoint_helpers";
 
 const LZString = require("lz-string");
 
@@ -87,7 +86,7 @@ class ThreeObjectEndpoint implements IEndpoint {
 
             let threeConverter = await this._threeConverterPool.Get(session);
             try {
-                await threeConverter.PostScene(sceneJson.object);
+                await threeConverter.PostScene(sceneJson);
             } catch (err) {
                 console.log(" >> ", err);
 
