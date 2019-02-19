@@ -29,6 +29,7 @@ function initScene() {
         camera.lookAt(0, 0.5, 0);
         camera.updateProjectionMatrix();
         scene.add(camera);
+        window.demo.camera = camera;
 
         controls = new THREE.OrbitControls(camera);
         controls.target.set(0, 0.5, 0);
@@ -74,7 +75,14 @@ function initScene() {
     cube.castShadow = true;
     cube.receiveShadow = false;
     scene.add(cube);
-// =============
+
+    var cube2 = new THREE.Mesh(geometry, material);
+    cube2.name = "Box02";
+    cube2.applyMatrix(new THREE.Matrix4().makeTranslation(2, 0.5, 1))
+    cube2.castShadow = true;
+    cube2.receiveShadow = false;
+    scene.add(cube2);
+    // =============
 
     var planeGeometry = new THREE.PlaneGeometry( 5, 5, 1 );
         planeGeometry = new THREE.BufferGeometry().fromGeometry(planeGeometry);
@@ -101,7 +109,9 @@ function initScene() {
     animate();
 }
 
-function renderScene(scene) {
+function renderScene(scene, camera) {
+    console.log(camera);
+
     $("#btnRender").attr("disabled", true);
     $("#renderStatus").css("color", "gray");
     $("#renderStatus").text("Opening new session...");
@@ -113,7 +123,7 @@ function renderScene(scene) {
         rfarm.postScene(newSession.guid, scene, function(result) {
             console.log(result);
 
-            return;
+            /* return;
             $("#renderStatus").text("Starting render...");
             rfarm.createJob(newSession.guid, function(job) {
 
@@ -132,17 +142,18 @@ function renderScene(scene) {
 
                             clearInterval(jobTimer);
                             console.log(updatedJob.urls);
-                            $("#vray").attr("src", updatedJob.urls[0]);
+                            $("#vray").attr("src", updatedJob.urls[0]); */
 
                             rfarm.closeSession(newSession.guid, function(closedSession) {
                                 $("#renderStatus").text(`Session closed.`);
                                 $("#btnRender").attr("disabled", false);
                                 console.log("closedSession: ", closedSession);
                             });
-                        }
+
+                        /* }
                     });
                 }, 1000);
-            });
+            }); */
 
         });
 
