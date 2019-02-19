@@ -184,7 +184,7 @@ class MaxscriptClient implements IMaxscriptClient {
                         + `rotate aSceneRoot (eulerangles -90 0 0);\r\n` // undo YZ flip
 
                         + `aFreeCamera.parent = $${cameraJson.parentName};\r\n`
-                        + `aFreeCamera.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}]));\r\n`
+                        + `aFreeCamera.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}]);\r\n`
 
                         + `rotate aSceneRoot (eulerangles 90 0 0);\r\n`; // redo YZ flip
 
