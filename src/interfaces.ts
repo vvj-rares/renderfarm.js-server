@@ -144,13 +144,13 @@ export interface IThreeMaxscriptBridge {
 
 export interface ISceneObjectBinding {
     Get(): Promise<any>;
-    Post(): Promise<any>;
-    Put(): Promise<any>;
+    Post(objectJson: any, parent: any): Promise<any>;
+    Put(objectJson: any): Promise<any>;
     Delete(): Promise<any>;
 }
 
 export interface ISceneObjectBindingFactory {
     readonly SrcType: string;
     readonly DstType: string;
-    Create(maxscriptClient: IMaxscriptClient, objectJson: any): ISceneObjectBinding;
+    Create(maxscriptClient: IMaxscriptClient): ISceneObjectBinding;
 }

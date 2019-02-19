@@ -167,11 +167,11 @@ class MaxscriptClient implements IMaxscriptClient {
     createTargetCamera(cameraJson: any): Promise<boolean> {
         let m = cameraJson.matrix;
         // now run command
-        let maxscript = `aFreeCamera = FreeCamera fov:${cameraJson.fov} nearclip:1 farclip:1000 nearrange:0 farrange:1000 ` 
-                        + ` mpassEnabled:off mpassRenderPerPass:off ` 
-                        + ` isSelected:on name:"${cameraJson.name}" ; ` 
-                        + ` aFreeCamera.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}]) ; `
-                        + ` aFreeCamera.parent = threejsSceneRoot; `;
+        let maxscript = `aFreeCamera = FreeCamera fov:${cameraJson.fov} nearclip:1 farclip:1000 nearrange:0 farrange:1000 `
+                        + ` mpassEnabled:off mpassRenderPerPass:off `
+                        + ` isSelected:on name:"${cameraJson.name}" ;\r\n`
+                        + ` aFreeCamera.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}]) ;\r\n`
+                        // + ` aFreeCamera.parent = threejsSceneRoot ;\r\n`;
 
         console.log(" >> CAMERA: ", maxscript);
 

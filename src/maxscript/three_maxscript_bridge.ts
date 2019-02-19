@@ -35,7 +35,7 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
         return true;
     }
 
-    private _traverse(startFrom: any, callback: (o: any) => void) {
+    private _traverse(startFrom: any, callback: (obj: any, parent: any) => void) {
         let queue: any[] = [ {
             object: startFrom,
             parent: null,
@@ -45,7 +45,7 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
         while (queue.length > 0) {
             let el: any = queue.shift();
 
-            this._createObjectBinding(el.object);
+            callback(el.object, el.parent);
 
             let obj = el.object;
             if (isArray(obj.children)) {
@@ -60,15 +60,15 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
         }
     }
 
-    private _createObjectBinding(obj: any): void {
+    private _createObjectBinding(obj: any, parent: any): void {
         if (!this._bindingFactories[obj.type]) {
             console.warn(`object type not supported: ${obj.type}`);
             return;
         }
 
-        let binding = this._bindingFactories[obj.type].Create(this._maxscript, obj);
+        let binding = this._bindingFactories[obj.type].Create(this._maxscript);
         this._bindings[obj.uuid] = binding;
 
-        binding.Post();
+        binding.Post(obj, parent);
     }
 }
