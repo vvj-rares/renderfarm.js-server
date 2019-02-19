@@ -22,13 +22,14 @@ export class PerspectiveCameraBinding extends SceneObjectBindingBase {
     }
 
     public async Post(objectJson: any, parentJson: any): Promise<string> {
-        this._maxName = super.getObjectName("Camera", objectJson.uuid);
-        this._maxParentName = parentJson.uuid ? super.getObjectName("Camera", parentJson.uuid) : null;
+        this._maxName = super.getObjectName(objectJson);
+        this._maxParentName = parentJson ? super.getObjectName(parentJson) : undefined;
 
         let camera = {
-            name: this._maxName,
-            matrix: objectJson.matrix,
-            fov: objectJson.fov * objectJson.aspect
+            name:       this._maxName,
+            parentName: this._maxParentName,
+            matrix:     objectJson.matrix,
+            fov:        objectJson.fov * objectJson.aspect
         };
 
         let res = await this._maxscriptClient.createTargetCamera(camera);

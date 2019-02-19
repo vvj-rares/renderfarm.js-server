@@ -113,6 +113,7 @@ function renderScene(scene) {
         rfarm.postScene(newSession.guid, scene, function(result) {
             console.log(result);
 
+            return;
             $("#renderStatus").text("Starting render...");
             rfarm.createJob(newSession.guid, function(job) {
 

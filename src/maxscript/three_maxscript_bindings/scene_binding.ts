@@ -17,14 +17,16 @@ export class SceneBinding extends SceneObjectBindingBase {
     public static SrcType: string = "Scene";
     public static DstType: string = "Dummy";
 
-    // implemenation of ISceneObjectBinding
     public async Get(): Promise<any> {
         throw new Error("Method not implemented.");
     }
 
     public async Post(objectJson: any, parentJson: any): Promise<string> {
-        console.log(" >> SceneBinding takes json, and sends it to remote maxscript");
-        return JSON.stringify(this._objectJson);
+        this._maxName = super.getObjectName(objectJson);
+        this._maxParentName = undefined;
+
+        let res = await this._maxscriptClient.createSceneRoot(this._maxName);
+        return this._maxName;
     }
 
     public async Put(objectJson: any): Promise<any> {
