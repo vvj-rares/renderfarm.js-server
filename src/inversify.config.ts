@@ -27,7 +27,11 @@ import { MaxScriptClientPool } from "./services/maxscript_client_pool";
 import { IMaxscriptClient, IThreeMaxscriptBridge } from "./interfaces";
 import { ThreeMaxscriptBridgePool } from "./services/three_maxscript_bridge_pool";
 import { ThreeMaxscriptBridgeFactory } from "./maxscript/three_maxscript_bridge_factory";
-import { SceneBinding } from "./maxscript/three_maxscript_bindings/scene_binding";
+import { SceneBinding, SceneBindingFactory } from "./maxscript/three_maxscript_bindings/scene_binding";
+import { SpotLightBindingFactory } from "./maxscript/three_maxscript_bindings/spotlight_binding";
+import { PerspectiveCameraBindingFactory } from "./maxscript/three_maxscript_bindings/perspective_camera_binding";
+import { MeshBindingFactory } from "./maxscript/three_maxscript_bindings/mesh_binding";
+import { LineSegmentsBindingFactory } from "./maxscript/three_maxscript_bindings/line_segments_binding";
 
 const myContainer = new Container();
 
@@ -58,8 +62,11 @@ myContainer.bind<interfaces.ISessionPool<IThreeMaxscriptBridge>>(TYPES.IThreeMax
 myContainer.bind<interfaces.IFactory<interfaces.IMaxscriptClient>>(TYPES.IMaxscriptClientFactory).to(MaxscriptClientFactory).inSingletonScope();
 myContainer.bind<interfaces.IFactory<interfaces.IThreeMaxscriptBridge>>(TYPES.IThreeMaxscriptBridgeFactory).to(ThreeMaxscriptBridgeFactory).inSingletonScope();
 
-// bindings
-myContainer.bind<interfaces.ISceneObjectBinding>(TYPES.ISceneObjectBinding).to(SceneBinding);
+myContainer.bind<interfaces.ISceneObjectBindingFactory>(TYPES.ISceneObjectBindingFactory).to(SceneBindingFactory).inSingletonScope();
+myContainer.bind<interfaces.ISceneObjectBindingFactory>(TYPES.ISceneObjectBindingFactory).to(SpotLightBindingFactory).inSingletonScope();
+myContainer.bind<interfaces.ISceneObjectBindingFactory>(TYPES.ISceneObjectBindingFactory).to(PerspectiveCameraBindingFactory).inSingletonScope();
+myContainer.bind<interfaces.ISceneObjectBindingFactory>(TYPES.ISceneObjectBindingFactory).to(MeshBindingFactory).inSingletonScope();
+myContainer.bind<interfaces.ISceneObjectBindingFactory>(TYPES.ISceneObjectBindingFactory).to(LineSegmentsBindingFactory).inSingletonScope();
 
 // tip: this is how to export same instance with different interfaces
 // EXAMPLE: myContainer.bind<interfaces.ISessionObserver>(TYPES.ISessionObserver).toService(TYPES.ISessionObserver);

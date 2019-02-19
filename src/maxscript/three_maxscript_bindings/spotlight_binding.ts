@@ -1,23 +1,23 @@
 import { injectable } from "inversify";
-import { ISceneObjectBinding, IMaxscriptClient, ISceneObjectBindingFactory } from "../../interfaces";
+import { IMaxscriptClient, ISceneObjectBinding, ISceneObjectBindingFactory } from "../../interfaces";
 
 @injectable()
-export class SceneBindingFactory implements ISceneObjectBindingFactory {
-    public get SrcType(): string { return SceneBinding.SrcType }
-    public get DstType(): string { return SceneBinding.DstType }
+export class SpotLightBindingFactory implements ISceneObjectBindingFactory {
+    public get SrcType(): string { return SpotLightBinding.SrcType }
+    public get DstType(): string { return SpotLightBinding.DstType }
 
     public Create(maxscriptClient: IMaxscriptClient, objectJson: any): ISceneObjectBinding
     {
-        return new SceneBinding(objectJson, maxscriptClient);
+        return new SpotLightBinding(objectJson, maxscriptClient);
     }
 }
 
-export class SceneBinding implements ISceneObjectBinding {
+export class SpotLightBinding implements ISceneObjectBinding {
     private _objectJson: any;
     private _maxName: string;
 
-    public static SrcType: string = "Scene";
-    public static DstType: string = "Dummy";
+    public static SrcType: string = "SpotLight";
+    public static DstType: string = "FreeSpot";
 
     public constructor(objectJson: any, maxscriptClient: IMaxscriptClient) {
         this._objectJson = objectJson;
@@ -29,7 +29,7 @@ export class SceneBinding implements ISceneObjectBinding {
     }
 
     public async Post(): Promise<string> {
-        console.log(" >> SceneBinding takes json, and sends it to remote maxscript");
+        console.log(" >> SpotLightBinding takes json, and sends it to remote maxscript");
         return JSON.stringify(this._objectJson);
     }
 
