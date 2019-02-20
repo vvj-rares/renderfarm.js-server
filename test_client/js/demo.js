@@ -23,9 +23,9 @@ function initScene() {
     { // init camera
         camera = new THREE.PerspectiveCamera(54, 640 / 480, 0.1, 1000);
 
-        camera.position.x = -3.54*3;
-        camera.position.y = 4.594*3;
-        camera.position.z = 1.671*3;
+        camera.position.x = 2.55*3;
+        camera.position.y = 1.95*3;
+        camera.position.z = 3.15*3;
         camera.lookAt(0, 0.5, 0);
         camera.updateProjectionMatrix();
         scene.add(camera);
@@ -40,7 +40,7 @@ function initScene() {
     spotLight.name = "SpotLight1";
     spotLight.position.set( 10, 40, 10 );
     spotLight.target.position.set( 0, 0, 0 );
-    spotLight.angle = Math.PI / 25;
+    spotLight.angle = Math.PI / 20;
 
     spotLight.castShadow = true;
     spotLight.shadow.bias = 1e-6;
@@ -48,9 +48,8 @@ function initScene() {
     spotLight.shadow.mapSize.height = 512;
 
     spotLight.shadow.camera.near = 15;
-    spotLight.shadow.camera.far = 45;
-    spotLight.shadow.camera.fov = Math.PI / 25;
-    spotLight.shadow.camera.updateProjectionMatrix();
+    spotLight.shadow.camera.far = 55;
+    spotLight.shadow.camera.fov = 360 * spotLight.angle / Math.PI;
 
     scene.add(spotLight);
 
@@ -96,27 +95,27 @@ function initScene() {
 
     var cubex = new THREE.Mesh(geometry, materialRed);
     cubex.name = "BoxX";
-    cubex.applyMatrix(new THREE.Matrix4().makeTranslation(3, 0.5, 0));
+    cubex.applyMatrix(new THREE.Matrix4().makeTranslation(3, 0, 0));
     cubex.castShadow = true;
     cubex.receiveShadow = false;
-    scene.add(cubex);
+    cube.add(cubex);
 
     var cubey = new THREE.Mesh(geometry, materialGreen);
     cubey.name = "BoxY";
-    cubey.applyMatrix(new THREE.Matrix4().makeTranslation(0, 3.5, 0));
+    cubey.applyMatrix(new THREE.Matrix4().makeTranslation(-3, 3, 0));
     cubey.castShadow = true;
     cubey.receiveShadow = false;
-    scene.add(cubey);
+    cubex.add(cubey);
 
     var cubez = new THREE.Mesh(geometry, materialBlue);
     cubez.name = "BoxZ";
-    cubez.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.5, 3));
+    cubez.applyMatrix(new THREE.Matrix4().makeTranslation(0, -3, 3));
     cubez.castShadow = true;
     cubez.receiveShadow = false;
-    scene.add(cubez);
+    cubey.add(cubez);
     // =============
 
-    var planeGeometry = new THREE.PlaneGeometry( 7.5, 7.5, 1 );
+    var planeGeometry = new THREE.PlaneGeometry( 15, 15, 1 );
         planeGeometry = new THREE.BufferGeometry().fromGeometry(planeGeometry);
     var material = new THREE.MeshPhongMaterial({
         color: 0xf0ffff, 
