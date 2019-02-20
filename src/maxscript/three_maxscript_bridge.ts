@@ -1,11 +1,10 @@
 import { IMaxscriptClient, IThreeMaxscriptBridge, ISceneObjectBinding, ISceneObjectBindingFactory } from "../interfaces";
 import { isArray } from "util";
+import { Session } from "../database/model/session";
 
 // translates three json objects and changes to maxscript commands,
 // to keep scene up to date with latest changes in three.js scene.
 export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
-    private _maxscript: IMaxscriptClient;
-
     private _bindingFactories: {
         [srcType: string]: ISceneObjectBindingFactory;
     } = {};
@@ -18,7 +17,6 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
         maxscript: IMaxscriptClient,
         bindingFactories: ISceneObjectBindingFactory[],
     ) {
-        this._maxscript = maxscript;
         this._bindingFactories = {};
 
         for (let i in bindingFactories) {
@@ -27,15 +25,15 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
         }
     }
 
-    public async PostScene(sceneJson: any): Promise<any> {
+    public async PostScene(session: Session, sceneJson: any): Promise<any> {
         console.log("TODO: // post scene: ", sceneJson);
 
-        this._traverse(sceneJson.object, this._createObjectBinding.bind(this));
+        this._traverse(session, sceneJson.object, this._createObjectBinding.bind(this));
 
         return true;
     }
 
-    private _traverse(startFrom: any, callback: (obj: any, parent: any) => void) {
+    private async _traverse(session: Session, startFrom: any, callback: (session: Session, obj: any, parent: any) => Promise<any>) {
         let queue: any[] = [ {
             object: startFrom,
             parent: null,
@@ -45,7 +43,7 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
         while (queue.length > 0) {
             let el: any = queue.shift();
 
-            callback(el.object, el.parent);
+            await callback(session, el.object, el.parent);
 
             let obj = el.object;
             if (isArray(obj.children)) {
@@ -60,13 +58,13 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
         }
     }
 
-    private _createObjectBinding(obj: any, parent: any): void {
+    private async _createObjectBinding(session: Session, obj: any, parent: any) {
         if (!this._bindingFactories[obj.type]) {
             console.warn(`object type not supported: ${obj.type}`);
             return;
         }
 
-        let binding = this._bindingFactories[obj.type].Create(this._maxscript);
+        let binding = await this._bindingFactories[obj.type].Create(session);
         this._bindings[obj.uuid] = binding;
 
         binding.Post(obj, parent);

@@ -17,6 +17,27 @@ export abstract class SessionPoolBase<T> implements ISessionPool<T> {
         }
     }
 
+    public FindOne(lookup: (obj: T) => boolean): T {
+        for (let s in this._items) {
+            let item = this._items[s];
+            if (lookup(item)) {
+                return item;
+            }
+        }
+        return undefined;
+    }
+
+    public FindAll(lookup: (obj: T) => boolean): T[] {
+        let all: T[] = [];
+        for (let s in this._items) {
+            let item = this._items[s];
+            if (lookup(item)) {
+                all.push(item);
+            }
+        }
+        return all;
+    }
+
     protected constructor(
         sessionService: ISessionService,
         itemFactory: (session: Session) => Promise<T>,

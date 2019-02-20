@@ -1,27 +1,28 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, ISettings, IFactory, IMaxscriptClient } from "../../interfaces";
+import { IEndpoint, IDatabase, ISettings, IFactory, IMaxscriptClient, IGeometryCache, ISessionPool, ISessionService, IGeometryBinding } from "../../interfaces";
 import { TYPES } from "../../types";
 import { isArray } from "util";
+import { Session } from "../../database/model/session";
 
 const LZString = require("lz-string");
 
 @injectable()
 class ThreeGeometryEndpoint implements IEndpoint {
     private _settings: ISettings;
-    private _database: IDatabase;
-    private _maxscriptClientFactory: IFactory<IMaxscriptClient>;
-
-    // private _geometriesJson: { [sessionGuid: string] : any; } = {};
-    private _geometryCache: any = {};
+    private _sessionService: ISessionService;
+    private _geometryBindingFactory: IFactory<IGeometryBinding>;
+    private _geometryCachePool: ISessionPool<IGeometryCache>;
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
-                @inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IFactory<IMaxscriptClient>) 
-    {
+                @inject(TYPES.ISessionService) sessionService: ISessionService,
+                @inject(TYPES.IGeometryBindingFactory) geometryBindingFactory: IFactory<IGeometryBinding>,
+                @inject(TYPES.IGeometryCachePool) geometryCachePool: ISessionPool<IGeometryCache>,
+    ) {
         this._settings = settings;
-        this._database = database;
-        this._maxscriptClientFactory = maxscriptClientFactory;
+        this._sessionService = sessionService;
+        this._geometryBindingFactory = geometryBindingFactory;
+        this._geometryCachePool = geometryCachePool;
     }
 
     bind(express: express.Application) {
@@ -32,7 +33,11 @@ class ThreeGeometryEndpoint implements IEndpoint {
             let uuid = req.params.uuid;
             console.log(`todo: // retrieve geometry ${uuid}`);
 
-            let geometryJson = this._geometryCache[uuid];
+            let geometryCache = this._geometryCachePool.FindOne(obj => {
+                return Object.keys(obj.Geometries).indexOf(uuid) !== -1;
+            });
+
+            let geometryJson = geometryCache[uuid];
             if (!geometryJson) {
                 res.status(404);
                 res.end(JSON.stringify({ ok: false, message: "geometry not found", error: null }, null, 2));
@@ -47,7 +52,20 @@ class ThreeGeometryEndpoint implements IEndpoint {
             let sessionGuid = req.body.session_guid;
             console.log(`POST on ${req.path} with session: ${sessionGuid}`);
 
-            let compressedJson = req.body.compressed_json;
+            // check that session is actually open
+            let session: Session = await this._sessionService.GetSession(sessionGuid, false, false);
+            if (!session) {
+                return;
+            }
+
+            // check that session has no active job, i.e. it is not being rendered
+            if (session.workerRef && session.workerRef.jobRef) {
+                res.status(403);
+                res.end(JSON.stringify({ ok: false, message: "changes forbidden, session is being rendered", error: null }, null, 2));
+                return;
+            }
+
+            let compressedJson = req.body.compressed_json; // this is to create scene or add new obejcts to scene
             if (!compressedJson) {
                 res.status(400);
                 res.end(JSON.stringify({ ok: false, message: "missing compressed_json", error: null }, null, 2));
@@ -61,11 +79,14 @@ class ThreeGeometryEndpoint implements IEndpoint {
                 return `https://${this._settings.current.host}:${this._settings.current.port}/v${this._settings.majorVersion}/three/geometry/${geometryJson.uuid}`;
             }.bind(this);
 
+            let geometryCache = await this._geometryCachePool.Get(session);
+
             if (isArray(geometryJson)) {
                 let data = [];
                 for (let i in geometryJson) {
-                    console.log("i: ", i);
-                    this._geometryCache[geometryJson[i].uuid] = geometryJson[i];
+                    let newGeomBinding = await this._geometryBindingFactory.Create(session);
+                    geometryCache.Geometries[geometryJson[i].uuid] = newGeomBinding;
+                    geometryCache.Geometries[geometryJson[i].uuid].Post(geometryJson[i]);
                     let downloadUrl = makeDownloadUrl(geometryJson[i]);
                     data.push(downloadUrl);
                 }
@@ -73,7 +94,9 @@ class ThreeGeometryEndpoint implements IEndpoint {
                 res.status(201);
                 res.end(JSON.stringify({ ok: true, type: "url", data: data }));
             } else {
-                this._geometryCache[geometryJson.uuid] = geometryJson;
+                let newGeomBinding = await this._geometryBindingFactory.Create(session);
+                geometryCache.Geometries[geometryJson.uuid] = newGeomBinding;
+                geometryCache.Geometries[geometryJson.uuid].Post(geometryJson);
                 let downloadUrl = makeDownloadUrl(geometryJson);
     
                 res.status(201);

@@ -1,8 +1,9 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, ISettings, IFactory, IMaxscriptClient } from "../../interfaces";
+import { IEndpoint, IDatabase, ISettings, IFactory, IMaxscriptClient, IMaterialCache, ISessionPool, ISessionService } from "../../interfaces";
 import { TYPES } from "../../types";
 import { isArray } from "util";
+import { Session } from "../../database/model/session";
 
 const LZString = require("lz-string");
 
@@ -10,18 +11,21 @@ const LZString = require("lz-string");
 class ThreeMaterialEndpoint implements IEndpoint {
     private _settings: ISettings;
     private _database: IDatabase;
+    private _sessionService: ISessionService;
     private _maxscriptClientFactory: IFactory<IMaxscriptClient>;
-
-    // private _materialsJson: { [sessionGuid: string] : any; } = {};
-    private _materialCache: any = {};
+    private _materialCachePool: ISessionPool<IMaterialCache>;
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.IDatabase) database: IDatabase,
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IFactory<IMaxscriptClient>) 
-    {
+                @inject(TYPES.ISessionService) sessionService: ISessionService,
+                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IFactory<IMaxscriptClient>,
+                @inject(TYPES.IMaterialCachePool) materialCachePool: ISessionPool<IMaterialCache>,
+    ) {
         this._settings = settings;
         this._database = database;
+        this._sessionService = sessionService;
         this._maxscriptClientFactory = maxscriptClientFactory;
+        this._materialCachePool = materialCachePool;
     }
 
     bind(express: express.Application) {
@@ -32,7 +36,11 @@ class ThreeMaterialEndpoint implements IEndpoint {
             let uuid = req.params.uuid;
             console.log(`todo: // retrieve material ${uuid}`);
 
-            let materialJson = this._materialCache[uuid];
+            let materialCache = this._materialCachePool.FindOne(obj => {
+                return Object.keys(obj.Materials).indexOf(uuid) !== -1;
+            });
+
+            let materialJson = materialCache[uuid];
             if (!materialJson) {
                 res.status(404);
                 res.end(JSON.stringify({ ok: false, message: "material not found", error: null }, null, 2));
@@ -47,7 +55,20 @@ class ThreeMaterialEndpoint implements IEndpoint {
             let sessionGuid = req.body.session_guid;
             console.log(`POST on ${req.path} with session: ${sessionGuid}`);
 
-            let compressedJson = req.body.compressed_json;
+            // check that session is actually open
+            let session: Session = await this._sessionService.GetSession(sessionGuid, false, false);
+            if (!session) {
+                return;
+            }
+
+            // check that session has no active job, i.e. it is not being rendered
+            if (session.workerRef && session.workerRef.jobRef) {
+                res.status(403);
+                res.end(JSON.stringify({ ok: false, message: "changes forbidden, session is being rendered", error: null }, null, 2));
+                return;
+            }
+
+            let compressedJson = req.body.compressed_json; // this is to create scene or add new obejcts to scene
             if (!compressedJson) {
                 res.status(400);
                 res.end(JSON.stringify({ ok: false, message: "missing compressed_json", error: null }, null, 2));
@@ -61,11 +82,13 @@ class ThreeMaterialEndpoint implements IEndpoint {
                 return `https://${this._settings.current.host}:${this._settings.current.port}/v${this._settings.majorVersion}/three/material/${materialJson.uuid}`;
             }.bind(this);
 
+            let materialCache = this._materialCachePool.Get(session);
+
             if (isArray(materialJson)) {
                 let data = [];
                 for (let i in materialJson) {
                     console.log("i: ", i);
-                    this._materialCache[materialJson[i].uuid] = materialJson[i];
+                    materialCache[materialJson[i].uuid] = materialJson[i];
                     let downloadUrl = makeDownloadUrl(materialJson[i]);
                     data.push(downloadUrl);
                 }
@@ -73,7 +96,7 @@ class ThreeMaterialEndpoint implements IEndpoint {
                 res.status(201);
                 res.end(JSON.stringify({ ok: true, type: "url", data: data }));
             } else {
-                this._materialCache[materialJson.uuid] = materialJson;
+                materialCache[materialJson.uuid] = materialJson;
                 let downloadUrl = makeDownloadUrl(materialJson);
     
                 res.status(201);

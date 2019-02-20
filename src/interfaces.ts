@@ -109,6 +109,8 @@ export interface IFactory<T> {
 
 export interface ISessionPool<T> {
     Get(session: Session): Promise<T>;
+    FindOne(lookup: (obj: T) => boolean): T;
+    FindAll(lookup: (obj: T) => boolean): T[];
 }
 
 export interface IWorkerService {
@@ -141,7 +143,7 @@ export enum SessionServiceEvents {
 }
 
 export interface IThreeMaxscriptBridge {
-    PostScene(sceneJson: any): Promise<any>;
+    PostScene(session: Session, sceneJson: any): Promise<any>;
 }
 
 export interface ISceneObjectBinding {
@@ -151,8 +153,50 @@ export interface ISceneObjectBinding {
     Delete(): Promise<any>;
 }
 
-export interface ISceneObjectBindingFactory {
+export interface ISceneObjectBindingFactory extends IFactory<ISceneObjectBinding> {
     readonly SrcType: string;
     readonly DstType: string;
-    Create(maxscriptClient: IMaxscriptClient): ISceneObjectBinding;
 }
+
+export interface IGeometryBinding {
+    Get(): Promise<any>;
+    Post(geometryJson: any): Promise<any>;
+    Put(geometryJson: any): Promise<any>;
+    Delete(): Promise<any>;
+}
+
+export interface ISessionGeometryBindingFactory {
+    Create(maxscriptClient: IMaxscriptClient): IGeometryBinding;
+}
+
+export interface IGeometryCache {
+    readonly Geometries: {
+        [uuid: string]: IGeometryBinding;
+    }
+}
+
+export interface IGeometryCacheFactory {
+    Create(maxscriptClient: IMaxscriptClient): IGeometryCache;
+}
+
+export interface IMaterialBinding {
+    Get(): Promise<any>;
+    Post(materialJson: any): Promise<any>;
+    Put(materialJson: any): Promise<any>;
+    Delete(): Promise<any>;
+}
+
+export interface IMaterialBindingFactory {
+    Create(maxscriptClient: IMaxscriptClient): IMaterialBinding;
+}
+
+export interface IMaterialCache {
+    readonly Materials: {
+        [uuid: string]: IMaterialBinding;
+    }
+}
+
+export interface IMaterialCacheFactory {
+    Create(maxscriptClient: IMaxscriptClient): IMaterialCache;
+}
+

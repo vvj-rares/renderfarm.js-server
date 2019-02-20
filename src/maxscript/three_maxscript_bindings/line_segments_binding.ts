@@ -1,17 +1,4 @@
-import { injectable } from "inversify";
-import { ISceneObjectBinding, IMaxscriptClient, ISceneObjectBindingFactory } from "../../interfaces";
 import { SceneObjectBindingBase } from "./scene_object_binding_base";
-
-@injectable()
-export class LineSegmentsBindingFactory implements ISceneObjectBindingFactory {
-    public get SrcType(): string { return LineSegmentsBinding.SrcType }
-    public get DstType(): string { return LineSegmentsBinding.DstType }
-
-    public Create(maxscriptClient: IMaxscriptClient): ISceneObjectBinding
-    {
-        return new LineSegmentsBinding(maxscriptClient);
-    }
-}
 
 export class LineSegmentsBinding extends SceneObjectBindingBase {
     public static SrcType: string = "LineSegments";

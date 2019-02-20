@@ -1,17 +1,4 @@
-import { injectable } from "inversify";
-import { IMaxscriptClient, ISceneObjectBinding, ISceneObjectBindingFactory } from "../../interfaces";
 import { SceneObjectBindingBase } from "./scene_object_binding_base";
-
-@injectable()
-export class SpotLightBindingFactory implements ISceneObjectBindingFactory {
-    public get SrcType(): string { return SpotLightBinding.SrcType }
-    public get DstType(): string { return SpotLightBinding.DstType }
-
-    public Create(maxscriptClient: IMaxscriptClient): ISceneObjectBinding
-    {
-        return new SpotLightBinding(maxscriptClient);
-    }
-}
 
 export class SpotLightBinding extends SceneObjectBindingBase {
     public static SrcType: string = "SpotLight";

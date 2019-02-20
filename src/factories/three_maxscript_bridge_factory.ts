@@ -2,7 +2,7 @@ import { injectable, inject, multiInject } from "inversify";
 import { TYPES } from "../types";
 import { IFactory, IMaxscriptClient, ISessionPool, IThreeMaxscriptBridge, ISceneObjectBindingFactory } from "../interfaces";
 import { Session } from "../database/model/session";
-import { ThreeMaxscriptBridge } from "./three_maxscript_bridge";
+import { ThreeMaxscriptBridge } from "../maxscript/three_maxscript_bridge";
 
 @injectable()
 export class ThreeMaxscriptBridgeFactory implements IFactory<IThreeMaxscriptBridge> {

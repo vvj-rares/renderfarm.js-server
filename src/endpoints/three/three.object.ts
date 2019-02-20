@@ -86,7 +86,7 @@ class ThreeObjectEndpoint implements IEndpoint {
 
             let threeConverter = await this._threeMaxscriptBridgePool.Get(session);
             try {
-                await threeConverter.PostScene(sceneJson);
+                await threeConverter.PostScene(session, sceneJson);
             } catch (err) {
                 console.log(" >> ", err);
 
