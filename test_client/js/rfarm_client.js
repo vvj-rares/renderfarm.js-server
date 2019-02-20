@@ -345,8 +345,8 @@ rfarm.postScene = function(sessionGuid, sceneJson, onComplete) {
 
 }.bind(rfarm);
 
-rfarm.postGeometry = function(sessionGuid, geometryJson, onComplete) {
-    console.log("Posting geometry: " + geometryJson.uuid);
+rfarm.postGeometries = function(sessionGuid, geometryJson, onComplete) {
+    console.log("Posting geometries: " + geometryJson);
 
     var geometryText = JSON.stringify(geometryJson);
     var compressedGeometryData = LZString.compressToBase64(geometryText);
@@ -360,10 +360,6 @@ rfarm.postGeometry = function(sessionGuid, geometryJson, onComplete) {
         type: 'POST',
         success: function(result) {
             console.log(result);
-
-            // let editableMeshNodeName = result.id;
-            // this.geometries[ geometry.uuid ] = new rfarm._rfarmNode(geometry, editableMeshNodeName);
-
             if (onComplete) onComplete();
         }.bind(this),
         error: function(err) {
@@ -373,27 +369,22 @@ rfarm.postGeometry = function(sessionGuid, geometryJson, onComplete) {
 
 }.bind(rfarm);
 
-rfarm._postMaterial = function(material, onComplete) {
-    console.log("Creating new material...");
+rfarm.postMaterials = function(sessionGuid, materialJson, onComplete) {
+    console.log("Posting materials: " + materialJson);
 
-    var materialJson = material.toJSON();
     var materialText = JSON.stringify(materialJson);
-    var compressedMaterialData = LZString144.compressToBase64(materialText);
+    var compressedMaterialData = LZString.compressToBase64(materialText);
 
     $.ajax({
-        url: this.baseUrl  + "/scene/0/material",
+        url: this.baseUrl  + "/v1/three/material",
         data: {
-            session: this.sessionId,
-            material: compressedMaterialData,
+            session_guid: sessionGuid,
+            compressed_json: compressedMaterialData,
         },
         type: 'POST',
         success: function(result) {
             console.log(result);
-
-            let maxMaterialName = result.id;
-            this.materials[ material.uuid ] = new rfarm._rfarmNode(material, maxMaterialName);
-
-            if (onComplete) onComplete(result.id);
+            if (onComplete) onComplete();
         }.bind(this),
         error: function(err) {
             console.error(err);

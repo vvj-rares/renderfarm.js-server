@@ -163,7 +163,12 @@ function renderScene(scene, camera) {
     
         // rfarm.postGeometry(scene.)
         console.log(geometriesJson);
-        rfarm.postGeometry(newSession.guid, geometriesJson, function(result) {
+        rfarm.postGeometries(newSession.guid, geometriesJson, function(result) {
+            console.log(result);
+        });
+
+        console.log(materialsJson);
+        rfarm.postMaterials(newSession.guid, materialsJson, function(result) {
             console.log(result);
         });
 
