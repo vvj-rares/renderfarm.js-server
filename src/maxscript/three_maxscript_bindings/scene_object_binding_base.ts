@@ -1,15 +1,23 @@
-import { ISceneObjectBinding, IMaxscriptClient } from "../../interfaces";
+import { ISceneObjectBinding, IMaxscriptClient, IGeometryCache, IMaterialCache } from "../../interfaces";
 
 export abstract class SceneObjectBindingBase implements ISceneObjectBinding {
     protected _maxscriptClient: IMaxscriptClient;
+    protected _geometryCache: IGeometryCache;
+    protected _materialCache: IMaterialCache;
 
     protected _objectJson: any;
 
     protected _maxName: string;
     protected _maxParentName: string;
 
-    public constructor(maxscriptClient: IMaxscriptClient) {
+    public constructor(
+        maxscriptClient: IMaxscriptClient,
+        geometryCache: IGeometryCache,
+        materialCache: IMaterialCache,
+    ) {
         this._maxscriptClient = maxscriptClient;
+        this._geometryCache = geometryCache;
+        this._materialCache = materialCache;
     }
 
     public abstract Get(): Promise<any>;

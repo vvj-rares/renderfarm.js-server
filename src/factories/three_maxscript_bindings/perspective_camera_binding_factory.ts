@@ -20,6 +20,6 @@ export class PerspectiveCameraBindingFactory implements ISceneObjectBindingFacto
     public async Create(session: Session): Promise<ISceneObjectBinding>
     {
         let maxscript: IMaxscriptClient = await this._maxscriptClientPool.Get(session);
-        return new PerspectiveCameraBinding(maxscript);
+        return new PerspectiveCameraBinding(maxscript, null, null);
     }
 }

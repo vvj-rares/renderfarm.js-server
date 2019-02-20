@@ -7,5 +7,5 @@ export { MeshBindingFactory } from "./three_maxscript_bindings/mesh_binding_fact
 export { LineSegmentsBindingFactory } from "./three_maxscript_bindings/line_segments_binding_factory";
 export { GeometryBindingFactory } from "./three_maxscript_bindings/geometry_binding_factory";
 export { MaterialBindingFactory } from "./three_maxscript_bindings/material_binding_factory";
-export { GeometryCacheFactory } from "./three_maxscript_bindings/geometry_cache_factory";
-export { MaterialCacheFactory } from "./three_maxscript_bindings/material_cache_factory";
+export { GeometryCacheFactory } from "./geometry_cache_factory";
+export { MaterialCacheFactory } from "./material_cache_factory";

@@ -1,4 +1,4 @@
-import { IMaterialCache, IMaterialBinding } from "../../interfaces";
+import { IMaterialCache, IMaterialBinding } from "../interfaces";
 
 export class MaterialCache implements IMaterialCache {
     public constructor() {

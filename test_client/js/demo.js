@@ -160,54 +160,55 @@ function renderScene(scene, camera) {
         if (sceneJson.geometries) {
             delete sceneJson.geometries;
         }
-    
+
         // rfarm.postGeometry(scene.)
         console.log(geometriesJson);
         rfarm.postGeometries(newSession.guid, geometriesJson, function(result) {
             console.log(result);
-        });
 
-        console.log(materialsJson);
-        rfarm.postMaterials(newSession.guid, materialsJson, function(result) {
-            console.log(result);
-        });
+            console.log(materialsJson);
+            rfarm.postMaterials(newSession.guid, materialsJson, function(result) {
+                console.log(result);
 
-        console.log("Uploading scene...");
-        rfarm.postScene(newSession.guid, sceneJson, function(result) {
-            console.log(result);
+                console.log("Uploading scene...");
+                rfarm.postScene(newSession.guid, sceneJson, function(result) {
+                    console.log(result);
 
-            /* return;
-            $("#renderStatus").text("Starting render...");
-            rfarm.createJob(newSession.guid, function(job) {
+                    /* return;
+                    $("#renderStatus").text("Starting render...");
+                    rfarm.createJob(newSession.guid, function(job) {
 
-                $("#renderStatus").text(`Rendering...`);
+                        $("#renderStatus").text(`Rendering...`);
 
-                let t0 = new Date();
+                        let t0 = new Date();
 
-                let jobTimer = setInterval(function() {
-                    let t1 = new Date();
+                        let jobTimer = setInterval(function() {
+                            let t1 = new Date();
+        
+                            rfarm.getJob (job.guid, function(updatedJob) {
+                                $("#renderStatus").text(`Rendering... ${ ((t1 - t0) / 1000).toFixed(0) } sec.`);
+        
+                                if (updatedJob.closed) {
+                                    $("#renderStatus").text(`Render complete, downloading image...`);
+        
+                                    clearInterval(jobTimer);
+                                    console.log(updatedJob.urls);
+                                    $("#vray").attr("src", updatedJob.urls[0]); */
+        
+                                    rfarm.closeSession(newSession.guid, function(closedSession) {
+                                        $("#renderStatus").text(`Session closed.`);
+                                        $("#btnRender").attr("disabled", false);
+                                        console.log("closedSession: ", closedSession);
+                                    });
 
-                    rfarm.getJob (job.guid, function(updatedJob) {
-                        $("#renderStatus").text(`Rendering... ${ ((t1 - t0) / 1000).toFixed(0) } sec.`);
-
-                        if (updatedJob.closed) {
-                            $("#renderStatus").text(`Render complete, downloading image...`);
-
-                            clearInterval(jobTimer);
-                            console.log(updatedJob.urls);
-                            $("#vray").attr("src", updatedJob.urls[0]); */
-
-                            rfarm.closeSession(newSession.guid, function(closedSession) {
-                                $("#renderStatus").text(`Session closed.`);
-                                $("#btnRender").attr("disabled", false);
-                                console.log("closedSession: ", closedSession);
+                                /* }
                             });
+                        }, 1000);
+                    }); */
 
-                        /* }
-                    });
-                }, 1000);
-            }); */
+                });
 
+            });
         });
 
     }, function(sessionError) {

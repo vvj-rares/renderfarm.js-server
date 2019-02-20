@@ -20,6 +20,6 @@ export class SceneBindingFactory implements ISceneObjectBindingFactory {
     public async Create(session: Session): Promise<ISceneObjectBinding>
     {
         let maxscript: IMaxscriptClient = await this._maxscriptClientPool.Get(session);
-        return new SceneBinding(maxscript);
+        return new SceneBinding(maxscript, null, null);
     }
 }

@@ -7,7 +7,7 @@ import { Session } from "../../database/model/session";
 @injectable()
 export class GeometryBindingFactory implements IFactory<IGeometryBinding> {
     private _maxscriptClientPool: ISessionPool<IMaxscriptClient>;
-    
+
     public constructor(
         @inject(TYPES.IMaxscriptClientPool) maxscriptClientPool: ISessionPool<IMaxscriptClient>,
     ) {

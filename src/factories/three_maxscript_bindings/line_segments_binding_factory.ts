@@ -20,6 +20,6 @@ export class LineSegmentsBindingFactory implements ISceneObjectBindingFactory {
     public async Create(session: Session): Promise<ISceneObjectBinding>
     {
         let maxscript: IMaxscriptClient = await this._maxscriptClientPool.Get(session);
-        return new LineSegmentsBinding(maxscript);
+        return new LineSegmentsBinding(maxscript, null, null);
     }
 }

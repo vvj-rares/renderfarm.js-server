@@ -9,7 +9,7 @@ export class MeshBinding extends SceneObjectBindingBase {
     }
 
     public async Post(objectJson: any, parentJson: any): Promise<string> {
-        console.log(" >> MeshBinding takes json, and sends it to remote maxscript");
+        console.log(" >> MeshBinding: ", objectJson, "\r\n");
         return JSON.stringify(this._objectJson);
     }
 
