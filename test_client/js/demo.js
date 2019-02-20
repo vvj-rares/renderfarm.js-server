@@ -23,9 +23,9 @@ function initScene() {
     { // init camera
         camera = new THREE.PerspectiveCamera(54, 640 / 480, 0.1, 1000);
 
-        camera.position.x = -3.54;
-        camera.position.y = 4.594;
-        camera.position.z = 1.671;
+        camera.position.x = -3.54*3;
+        camera.position.y = 4.594*3;
+        camera.position.z = 1.671*3;
         camera.lookAt(0, 0.5, 0);
         camera.updateProjectionMatrix();
         scene.add(camera);
@@ -36,11 +36,11 @@ function initScene() {
         window.demo.controls = controls;
     }
 
-    var spotLight = new THREE.SpotLight( 0xffa0c0 );
+    var spotLight = new THREE.SpotLight( 0xffffff );
     spotLight.name = "SpotLight1";
     spotLight.position.set( 10, 40, 10 );
     spotLight.target.position.set( 0, 0, 0 );
-    spotLight.angle = Math.PI / 30;
+    spotLight.angle = Math.PI / 25;
 
     spotLight.castShadow = true;
     spotLight.shadow.bias = 1e-6;
@@ -48,8 +48,8 @@ function initScene() {
     spotLight.shadow.mapSize.height = 512;
 
     spotLight.shadow.camera.near = 15;
-    spotLight.shadow.camera.far = 43;
-    spotLight.shadow.camera.fov = Math.PI / 30;
+    spotLight.shadow.camera.far = 45;
+    spotLight.shadow.camera.fov = Math.PI / 25;
     spotLight.shadow.camera.updateProjectionMatrix();
 
     scene.add(spotLight);
@@ -63,35 +63,67 @@ function initScene() {
     var geometry = new THREE.BoxGeometry(1, 1, 1);
         geometry = new THREE.BufferGeometry().fromGeometry(geometry);
 
-    var material = new THREE.MeshPhongMaterial({
-        color: 0x40e040,
+    var materialWhite = new THREE.MeshPhongMaterial({ 
+        color: 0xffffff,
         transparent: false,
         opacity: 0.95
     });
 
-    var cube = new THREE.Mesh(geometry, material);
-    cube.name = "Box01";
-    cube.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.5, 0))
+    var materialRed = new THREE.MeshPhongMaterial({ 
+        color: 0xff0000,
+        transparent: false,
+        opacity: 0.95
+    });
+
+    var materialGreen = new THREE.MeshPhongMaterial({ 
+        color: 0x00ff00,
+        transparent: false,
+        opacity: 0.95
+    });
+
+    var materialBlue = new THREE.MeshPhongMaterial({ 
+        color: 0x0000ff,
+        transparent: false,
+        opacity: 0.95
+    });
+
+    var cube = new THREE.Mesh(geometry, materialWhite);
+    cube.name = "Box0";
+    cube.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
     cube.castShadow = true;
     cube.receiveShadow = false;
     scene.add(cube);
 
-    var cube2 = new THREE.Mesh(geometry, material);
-    cube2.name = "Box02";
-    cube2.applyMatrix(new THREE.Matrix4().makeTranslation(2, 0.5, 1))
-    cube2.castShadow = true;
-    cube2.receiveShadow = false;
-    scene.add(cube2);
+    var cubex = new THREE.Mesh(geometry, materialRed);
+    cubex.name = "BoxX";
+    cubex.applyMatrix(new THREE.Matrix4().makeTranslation(3, 0.5, 0));
+    cubex.castShadow = true;
+    cubex.receiveShadow = false;
+    scene.add(cubex);
+
+    var cubey = new THREE.Mesh(geometry, materialGreen);
+    cubey.name = "BoxY";
+    cubey.applyMatrix(new THREE.Matrix4().makeTranslation(0, 3.5, 0));
+    cubey.castShadow = true;
+    cubey.receiveShadow = false;
+    scene.add(cubey);
+
+    var cubez = new THREE.Mesh(geometry, materialBlue);
+    cubez.name = "BoxZ";
+    cubez.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.5, 3));
+    cubez.castShadow = true;
+    cubez.receiveShadow = false;
+    scene.add(cubez);
     // =============
 
-    var planeGeometry = new THREE.PlaneGeometry( 5, 5, 1 );
+    var planeGeometry = new THREE.PlaneGeometry( 7.5, 7.5, 1 );
         planeGeometry = new THREE.BufferGeometry().fromGeometry(planeGeometry);
-    var material = new THREE.MeshPhongMaterial( {
+    var material = new THREE.MeshPhongMaterial({
         color: 0xf0ffff, 
         transparent: true,
         opacity: 0.5,
         side: THREE.DoubleSide
-    } );
+    });
 
     var plane = new THREE.Mesh( planeGeometry, material );
     plane.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
@@ -119,8 +151,25 @@ function renderScene(scene, camera) {
     rfarm.createSession(function(newSession) {
         console.log("newSession: ", newSession);
 
+        var sceneJson = scene.toJSON();
+        var geometriesJson = sceneJson.geometries;
+        var materialsJson = sceneJson.materials;
+
+        if (sceneJson.materials) {
+            delete sceneJson.materials;
+        }
+        if (sceneJson.geometries) {
+            delete sceneJson.geometries;
+        }
+    
+        // rfarm.postGeometry(scene.)
+        console.log(geometriesJson);
+        rfarm.postGeometry(newSession.guid, geometriesJson, function(result) {
+            console.log(result);
+        });
+
         console.log("Uploading scene...");
-        rfarm.postScene(newSession.guid, scene, function(result) {
+        rfarm.postScene(newSession.guid, sceneJson, function(result) {
             console.log(result);
 
             /* return;

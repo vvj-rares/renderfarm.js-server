@@ -7,7 +7,8 @@ function pad(num, size) {
 var rfarm = {
     apiKey: "75f5-4d53-b0f4",
     workspace: "55a0bd33-9f15-4bc0-a482-17899eb67af3",
-    baseUrl: "https://acc.renderfarmjs.com",
+    // baseUrl: "https://acc.renderfarmjs.com",
+    baseUrl: "https://localhost:8000",
 
     geometries: {},  // here we map scene geometry uuid <==> backend geometry resource
     materials: {},   // here we map scene material uuid <==> backend material resource
@@ -323,16 +324,7 @@ rfarm.cancelRender = function(jobGuid, onCanceled) {
     });
 }.bind(rfarm);
 
-rfarm.postScene = function(sessionGuid, scene, onComplete) {
-    var sceneJson = scene.toJSON();
-
-    if (sceneJson.materials) {
-        delete sceneJson.materials;
-    }
-    if (sceneJson.geometries) {
-        delete sceneJson.geometries;
-    }
-
+rfarm.postScene = function(sessionGuid, sceneJson, onComplete) {
     var sceneText = JSON.stringify(sceneJson);
     var compressedSceneData = LZString.compressToBase64(sceneText);
 
@@ -353,27 +345,26 @@ rfarm.postScene = function(sessionGuid, scene, onComplete) {
 
 }.bind(rfarm);
 
-//=== private =
-rfarm._postGeometry = function(geometry, onComplete) {
-    console.log("Importing geometry...");
+rfarm.postGeometry = function(sessionGuid, geometryJson, onComplete) {
+    console.log("Posting geometry: " + geometryJson.uuid);
 
-    var geometryText = JSON.stringify(geometry.toJSON());
-    var compressedGeometryData = LZString144.compressToBase64(geometryText);
+    var geometryText = JSON.stringify(geometryJson);
+    var compressedGeometryData = LZString.compressToBase64(geometryText);
 
     $.ajax({
-        url: this.baseUrl  + "/scene/0/geometry",
+        url: this.baseUrl  + "/v1/three/geometry",
         data: { 
-            session: this.sessionId,
-            geometry: compressedGeometryData
+            session_guid: sessionGuid,
+            compressed_json: compressedGeometryData
         },
         type: 'POST',
         success: function(result) {
             console.log(result);
 
-            let editableMeshNodeName = result.id;
-            this.geometries[ geometry.uuid ] = new rfarm._rfarmNode(geometry, editableMeshNodeName);
+            // let editableMeshNodeName = result.id;
+            // this.geometries[ geometry.uuid ] = new rfarm._rfarmNode(geometry, editableMeshNodeName);
 
-            if (onComplete) onComplete(result.id);
+            if (onComplete) onComplete();
         }.bind(this),
         error: function(err) {
             console.error(err);
