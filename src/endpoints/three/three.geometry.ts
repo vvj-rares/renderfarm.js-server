@@ -86,7 +86,7 @@ class ThreeGeometryEndpoint implements IEndpoint {
                 for (let i in geometryJson) {
                     let newGeomBinding = await this._geometryBindingFactory.Create(session);
                     geometryCache.Geometries[geometryJson[i].uuid] = newGeomBinding;
-                    geometryCache.Geometries[geometryJson[i].uuid].Post(geometryJson[i]);
+                    await geometryCache.Geometries[geometryJson[i].uuid].Post(geometryJson[i]);
                     let downloadUrl = makeDownloadUrl(geometryJson[i]);
                     data.push(downloadUrl);
                 }

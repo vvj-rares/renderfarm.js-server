@@ -9,79 +9,55 @@ decorate(injectable(), EventEmitter);
 
 import { Database } from "./database/database";
 import { App } from "./app";
-import { SessionEndpoint } from "./endpoints/session";
-import { JobEndpoint } from "./endpoints/job";
-import { WorkerEndpoint } from "./endpoints/worker";
-import { MaxscriptClientFactory } from "./factories/maxscript_client_factory";
-import { WorkspaceFileEndpoint } from "./endpoints/workspace.file";
-import { RenderOutputEndpoint } from "./endpoints/renderoutput";
 import { Settings } from "./settings";
-import { ThreeObjectEndpoint } from "./endpoints/three/three.object";
-import { ThreeGeometryEndpoint } from "./endpoints/three/three.geometry";
-import { ThreeMaterialEndpoint } from "./endpoints/three/three.material";
-import { SessionService } from "./services/session_service";
-import { JobService } from "./services/job_service";
-import { WorkerService } from "./services/worker_service";
-import { MaxScriptClientPool } from "./services/pools/maxscript_client_pool";
-import { IMaxscriptClient, IThreeMaxscriptBridge, IGeometryCache, ISessionPool, IMaterialCache, IDatabase, IApp, IEndpoint, IWorkerService, IJobService, ISessionService, IFactory, ISceneObjectBindingFactory, IGeometryBinding, IMaterialBinding, ISettings } from "./interfaces";
-import { ThreeMaxscriptBridgePool } from "./services/pools/three_maxscript_bridge_pool";
-import { ThreeMaxscriptBridgeFactory } from "./factories/three_maxscript_bridge_factory";
-import { GeometryCachePool } from "./services/pools/geometry_cache_pool";
-import { MaterialCachePool } from "./services/pools/material_cache_pool";
-import { SceneBindingFactory } from "./factories/three_maxscript_bindings/scene_binding_factory";
-import { SpotLightBindingFactory } from "./factories/three_maxscript_bindings/spotlight_binding_factory";
-import { PerspectiveCameraBindingFactory } from "./factories/three_maxscript_bindings/perspective_camera_binding_factory";
-import { MeshBindingFactory } from "./factories/three_maxscript_bindings/mesh_binding_factory";
-import { LineSegmentsBindingFactory } from "./factories/three_maxscript_bindings/line_segments_binding_factory";
-import { GeometryBindingFactory } from "./factories/three_maxscript_bindings/geometry_binding_factory";
-import { MaterialBindingFactory } from "./factories/three_maxscript_bindings/material_binding_factory";
-import { GeometryCacheFactory } from "./factories/three_maxscript_bindings/geometry_cache_factory";
-import { MaterialCacheFactory } from "./factories/three_maxscript_bindings/material_cache_factory";
+
+import * as factories from "./factories/index";
+import * as endpoints from "./endpoints/index";
+import * as services from "./services/index"
+import * as interfaces from "./interfaces";
 
 const myContainer = new Container();
 
 // core
-myContainer.bind<IDatabase>(TYPES.IDatabase).to(Database).inSingletonScope();
-myContainer.bind<IApp>(TYPES.IApp).to(App).inSingletonScope();
+myContainer.bind<interfaces.IDatabase>(TYPES.IDatabase).to(Database).inSingletonScope();
+myContainer.bind<interfaces.IApp>(TYPES.IApp).to(App).inSingletonScope();
 
 // endpoints
-myContainer.bind<IEndpoint>(TYPES.IEndpoint).to(SessionEndpoint).inSingletonScope();
-myContainer.bind<IEndpoint>(TYPES.IEndpoint).to(JobEndpoint).inSingletonScope();
-myContainer.bind<IEndpoint>(TYPES.IEndpoint).to(WorkerEndpoint).inSingletonScope();
-myContainer.bind<IEndpoint>(TYPES.IEndpoint).to(WorkspaceFileEndpoint).inSingletonScope();
-myContainer.bind<IEndpoint>(TYPES.IEndpoint).to(RenderOutputEndpoint).inSingletonScope();
-myContainer.bind<IEndpoint>(TYPES.IEndpoint).to(ThreeObjectEndpoint).inSingletonScope();
-myContainer.bind<IEndpoint>(TYPES.IEndpoint).to(ThreeGeometryEndpoint).inSingletonScope();
-myContainer.bind<IEndpoint>(TYPES.IEndpoint).to(ThreeMaterialEndpoint).inSingletonScope();
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(endpoints.SessionEndpoint).inSingletonScope();
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(endpoints.JobEndpoint).inSingletonScope();
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(endpoints.WorkerEndpoint).inSingletonScope();
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(endpoints.WorkspaceFileEndpoint).inSingletonScope();
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(endpoints.RenderOutputEndpoint).inSingletonScope();
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(endpoints.ThreeObjectEndpoint).inSingletonScope();
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(endpoints.ThreeGeometryEndpoint).inSingletonScope();
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(endpoints.ThreeMaterialEndpoint).inSingletonScope();
 
 // services
-myContainer.bind<IWorkerService>(TYPES.IWorkerService).to(WorkerService).inSingletonScope();
-myContainer.bind<IJobService>(TYPES.IJobService).to(JobService).inSingletonScope();
-myContainer.bind<ISessionService>(TYPES.ISessionService).to(SessionService).inSingletonScope();
+myContainer.bind<interfaces.IWorkerService>(TYPES.IWorkerService).to(services.WorkerService).inSingletonScope();
+myContainer.bind<interfaces.IJobService>(TYPES.IJobService).to(services.JobService).inSingletonScope();
+myContainer.bind<interfaces.ISessionService>(TYPES.ISessionService).to(services.SessionService).inSingletonScope();
 
 // pools
-myContainer.bind<ISessionPool<IMaxscriptClient>>(TYPES.IMaxscriptClientPool).to(MaxScriptClientPool).inSingletonScope();
-myContainer.bind<ISessionPool<IThreeMaxscriptBridge>>(TYPES.IThreeMaxscriptBridgePool).to(ThreeMaxscriptBridgePool).inSingletonScope();
-myContainer.bind<ISessionPool<IGeometryCache>>(TYPES.IGeometryCachePool).to(GeometryCachePool).inSingletonScope();
-myContainer.bind<ISessionPool<IMaterialCache>>(TYPES.IMaterialCachePool).to(MaterialCachePool).inSingletonScope();
+myContainer.bind<interfaces.ISessionPool<interfaces.IMaxscriptClient>>(TYPES.IMaxscriptClientPool).to(services.MaxScriptClientPool).inSingletonScope();
+myContainer.bind<interfaces.ISessionPool<interfaces.IThreeMaxscriptBridge>>(TYPES.IThreeMaxscriptBridgePool).to(services.ThreeMaxscriptBridgePool).inSingletonScope();
+myContainer.bind<interfaces.ISessionPool<interfaces.IGeometryCache>>(TYPES.IGeometryCachePool).to(services.GeometryCachePool).inSingletonScope();
+myContainer.bind<interfaces.ISessionPool<interfaces.IMaterialCache>>(TYPES.IMaterialCachePool).to(services.MaterialCachePool).inSingletonScope();
 
 // factories
-myContainer.bind<IFactory<IMaxscriptClient>>(TYPES.IMaxscriptClientFactory).to(MaxscriptClientFactory).inSingletonScope();
-myContainer.bind<IFactory<IThreeMaxscriptBridge>>(TYPES.IThreeMaxscriptBridgeFactory).to(ThreeMaxscriptBridgeFactory).inSingletonScope();
+myContainer.bind<interfaces.IFactory<interfaces.IMaxscriptClient>>(TYPES.IMaxscriptClientFactory).to(factories.MaxscriptClientFactory).inSingletonScope();
+myContainer.bind<interfaces.IFactory<interfaces.IThreeMaxscriptBridge>>(TYPES.IThreeMaxscriptBridgeFactory).to(factories.ThreeMaxscriptBridgeFactory).inSingletonScope();
 
-myContainer.bind<ISceneObjectBindingFactory>(TYPES.ISceneObjectBindingFactory).to(SceneBindingFactory).inSingletonScope();
-myContainer.bind<ISceneObjectBindingFactory>(TYPES.ISceneObjectBindingFactory).to(SpotLightBindingFactory).inSingletonScope();
-myContainer.bind<ISceneObjectBindingFactory>(TYPES.ISceneObjectBindingFactory).to(PerspectiveCameraBindingFactory).inSingletonScope();
-myContainer.bind<ISceneObjectBindingFactory>(TYPES.ISceneObjectBindingFactory).to(MeshBindingFactory).inSingletonScope();
-myContainer.bind<ISceneObjectBindingFactory>(TYPES.ISceneObjectBindingFactory).to(LineSegmentsBindingFactory).inSingletonScope();
+myContainer.bind<interfaces.ISceneObjectBindingFactory>(TYPES.ISceneObjectBindingFactory).to(factories.SceneBindingFactory).inSingletonScope();
+myContainer.bind<interfaces.ISceneObjectBindingFactory>(TYPES.ISceneObjectBindingFactory).to(factories.SpotLightBindingFactory).inSingletonScope();
+myContainer.bind<interfaces.ISceneObjectBindingFactory>(TYPES.ISceneObjectBindingFactory).to(factories.PerspectiveCameraBindingFactory).inSingletonScope();
+myContainer.bind<interfaces.ISceneObjectBindingFactory>(TYPES.ISceneObjectBindingFactory).to(factories.MeshBindingFactory).inSingletonScope();
+myContainer.bind<interfaces.ISceneObjectBindingFactory>(TYPES.ISceneObjectBindingFactory).to(factories.LineSegmentsBindingFactory).inSingletonScope();
 
-myContainer.bind<IFactory<IGeometryCache>>(TYPES.IGeometryCacheFactory).to(GeometryCacheFactory).inSingletonScope();
-myContainer.bind<IFactory<IMaterialCache>>(TYPES.IMaterialCacheFactory).to(MaterialCacheFactory).inSingletonScope();
+myContainer.bind<interfaces.IFactory<interfaces.IGeometryCache>>(TYPES.IGeometryCacheFactory).to(factories.GeometryCacheFactory).inSingletonScope();
+myContainer.bind<interfaces.IFactory<interfaces.IMaterialCache>>(TYPES.IMaterialCacheFactory).to(factories.MaterialCacheFactory).inSingletonScope();
 
-myContainer.bind<IFactory<IGeometryBinding>>(TYPES.IGeometryBindingFactory).to(GeometryBindingFactory).inSingletonScope();
-myContainer.bind<IFactory<IMaterialBinding>>(TYPES.IMaterialBindingFactory).to(MaterialBindingFactory).inSingletonScope();
-
-
+myContainer.bind<interfaces.IFactory<interfaces.IGeometryBinding>>(TYPES.IGeometryBindingFactory).to(factories.GeometryBindingFactory).inSingletonScope();
+myContainer.bind<interfaces.IFactory<interfaces.IMaterialBinding>>(TYPES.IMaterialBindingFactory).to(factories.MaterialBindingFactory).inSingletonScope();
 
 // tip: this is how to export same instance with different interfaces
 // EXAMPLE: myContainer.bind<ISessionObserver>(TYPES.ISessionObserver).toService(TYPES.ISessionObserver);
@@ -95,6 +71,6 @@ try {
     env = "dev";
 }
 console.log("Current Environment: ", env);
-myContainer.bind<ISettings>(TYPES.ISettings).toConstantValue(new Settings(env));
+myContainer.bind<interfaces.ISettings>(TYPES.ISettings).toConstantValue(new Settings(env));
 
 export { myContainer };

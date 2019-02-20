@@ -25,12 +25,15 @@
         "name": "Debug TypeScript in Node.js",
         "preLaunchTask": "tsc: build - tsconfig.json",
         "program": "${workspaceFolder}/src/index.ts",
-        "args": ["env=dev"],
+        "args": ["env=acc"],
         "cwd": "${workspaceFolder}",
         "protocol": "inspector",
         "outFiles": [
           "${workspaceFolder}/dist/**/*.js"
-        ]
+        ],
+        "skipFiles": [
+          "<node_internals>/**"
+        ],
       }
     ]
   }
