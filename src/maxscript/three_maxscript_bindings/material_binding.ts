@@ -9,6 +9,10 @@ export class MaterialBinding implements IMaterialBinding {
         this._maxscriptClient = maxscriptClient;
     }
 
+    public get ThreeJson(): any {
+        return this._materialJson;
+    }
+
     public async Get(): Promise<any> {
         throw new Error("Method not implemented.");
     }

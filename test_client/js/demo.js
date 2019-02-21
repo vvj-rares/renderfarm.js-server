@@ -195,12 +195,14 @@ function renderScene(scene, camera) {
                                     console.log(updatedJob.urls);
                                     $("#vray").attr("src", updatedJob.urls[0]); */
         
-                                    rfarm.closeSession(newSession.guid, function(closedSession) {
-                                        $("#renderStatus").text(`Session closed.`);
-                                        $("#btnRender").attr("disabled", false);
-                                        console.log("closedSession: ", closedSession);
-                                    });
+                                    setTimeout(function() {
+                                        rfarm.closeSession(newSession.guid, function(closedSession) {
+                                            $("#renderStatus").text(`Session closed.`);
+                                            $("#btnRender").attr("disabled", false);
+                                            console.log("closedSession: ", closedSession);
+                                        });
 
+                                    }, 30000);
                                 /* }
                             });
                         }, 1000);

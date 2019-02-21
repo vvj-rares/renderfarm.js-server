@@ -37,15 +37,15 @@ class ThreeMaterialEndpoint implements IEndpoint {
                 return Object.keys(obj.Materials).indexOf(uuid) !== -1;
             });
 
-            let materialJson = materialCache[uuid];
-            if (!materialJson) {
+            let materialBinding = materialCache.Materials[uuid];
+            if (!materialBinding) {
                 res.status(404);
                 res.end(JSON.stringify({ ok: false, message: "material not found", error: null }, null, 2));
                 return;
             }
 
             res.status(200);
-            res.end(JSON.stringify(materialJson));
+            res.end(JSON.stringify(materialBinding.ThreeJson));
         }.bind(this));
 
         express.post(`/v${this._settings.majorVersion}/three/material`, async function (this: ThreeMaterialEndpoint, req, res) {

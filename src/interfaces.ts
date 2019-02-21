@@ -159,6 +159,7 @@ export interface ISceneObjectBindingFactory extends IFactory<ISceneObjectBinding
 }
 
 export interface IGeometryBinding {
+    readonly ThreeJson: any;
     Get(): Promise<any>;
     Post(maxName: string): Promise<any>;
     Put(geometryJson: any): Promise<any>;
@@ -176,6 +177,7 @@ export interface IGeometryCacheFactory {
 }
 
 export interface IMaterialBinding {
+    readonly ThreeJson: any;
     Get(): Promise<any>;
     Post(materialJson: any): Promise<any>;
     Put(materialJson: any): Promise<any>;

@@ -37,15 +37,15 @@ class ThreeGeometryEndpoint implements IEndpoint {
                 return Object.keys(obj.Geometries).indexOf(uuid) !== -1;
             });
 
-            let geometryJson = geometryCache[uuid];
-            if (!geometryJson) {
+            let geometryBinding = geometryCache.Geometries[uuid];
+            if (!geometryBinding) {
                 res.status(404);
                 res.end(JSON.stringify({ ok: false, message: "geometry not found", error: null }, null, 2));
                 return;
             }
 
             res.status(200);
-            res.end(JSON.stringify(geometryJson));
+            res.end(JSON.stringify(geometryBinding.ThreeJson));
         }.bind(this));
 
         express.post(`/v${this._settings.majorVersion}/three/geometry`, async function (this: ThreeGeometryEndpoint, req, res) {
@@ -76,7 +76,7 @@ class ThreeGeometryEndpoint implements IEndpoint {
             let geometryJson: any = JSON.parse(geometryJsonText);
 
             let makeDownloadUrl = function(this: ThreeGeometryEndpoint, geometryJson: any) {
-                return `https://${this._settings.current.host}:${this._settings.current.port}/v${this._settings.majorVersion}/three/geometry/${geometryJson.uuid}`;
+                return `https://${this._settings.current.publicUrl}/v${this._settings.majorVersion}/three/geometry/${geometryJson.uuid}`;
             }.bind(this);
 
             let geometryCache = await this._geometryCachePool.Get(session);
