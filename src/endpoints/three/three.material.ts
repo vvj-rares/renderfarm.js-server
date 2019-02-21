@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, ISettings, IFactory, IMaxscriptClient, IMaterialCache, ISessionPool, ISessionService } from "../../interfaces";
+import { IEndpoint, IDatabase, ISettings, IFactory, IMaxscriptClient, IMaterialCache, ISessionPool, ISessionService, IMaterialBinding } from "../../interfaces";
 import { TYPES } from "../../types";
 import { isArray } from "util";
 import { Session } from "../../database/model/session";
@@ -10,21 +10,18 @@ const LZString = require("lz-string");
 @injectable()
 class ThreeMaterialEndpoint implements IEndpoint {
     private _settings: ISettings;
-    private _database: IDatabase;
     private _sessionService: ISessionService;
-    private _maxscriptClientFactory: IFactory<IMaxscriptClient>;
+    private _materialBindingFactory: IFactory<IMaterialBinding>;
     private _materialCachePool: ISessionPool<IMaterialCache>;
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
-                @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.ISessionService) sessionService: ISessionService,
-                @inject(TYPES.IMaxscriptClientFactory) maxscriptClientFactory: IFactory<IMaxscriptClient>,
+                @inject(TYPES.IMaterialBindingFactory) materialBindingFactory: IFactory<IMaterialBinding>,
                 @inject(TYPES.IMaterialCachePool) materialCachePool: ISessionPool<IMaterialCache>,
     ) {
         this._settings = settings;
-        this._database = database;
         this._sessionService = sessionService;
-        this._maxscriptClientFactory = maxscriptClientFactory;
+        this._materialBindingFactory = materialBindingFactory;
         this._materialCachePool = materialCachePool;
     }
 
@@ -82,13 +79,13 @@ class ThreeMaterialEndpoint implements IEndpoint {
                 return `https://${this._settings.current.host}:${this._settings.current.port}/v${this._settings.majorVersion}/three/material/${materialJson.uuid}`;
             }.bind(this);
 
-            let materialCache = this._materialCachePool.Get(session);
+            let materialCache = await this._materialCachePool.Get(session);
 
             if (isArray(materialJson)) {
                 let data = [];
                 for (let i in materialJson) {
-                    console.log("i: ", i);
-                    materialCache[materialJson[i].uuid] = materialJson[i];
+                    let newMaterialBinding = await this._materialBindingFactory.Create(session);
+                    materialCache.Materials[materialJson[i].uuid] = newMaterialBinding;
                     let downloadUrl = makeDownloadUrl(materialJson[i]);
                     data.push(downloadUrl);
                 }
@@ -96,7 +93,8 @@ class ThreeMaterialEndpoint implements IEndpoint {
                 res.status(201);
                 res.end(JSON.stringify({ ok: true, type: "url", data: data }));
             } else {
-                materialCache[materialJson.uuid] = materialJson;
+                let newMaterialBinding = await this._materialBindingFactory.Create(session);
+                materialCache.Materials[materialJson.uuid] = newMaterialBinding;
                 let downloadUrl = makeDownloadUrl(materialJson);
     
                 res.status(201);

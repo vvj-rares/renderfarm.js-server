@@ -104,7 +104,7 @@ export interface IMaxscriptClient {
 }
 
 export interface IFactory<T> {
-    Create(session: Session): Promise<T>;
+    Create(session: Session, ...args: any[]): Promise<T>;
 }
 
 export interface ISessionPool<T> {
@@ -160,13 +160,9 @@ export interface ISceneObjectBindingFactory extends IFactory<ISceneObjectBinding
 
 export interface IGeometryBinding {
     Get(): Promise<any>;
-    Post(geometryJson: any): Promise<any>;
+    Post(maxName: string): Promise<any>;
     Put(geometryJson: any): Promise<any>;
     Delete(): Promise<any>;
-}
-
-export interface ISessionGeometryBindingFactory {
-    Create(maxscriptClient: IMaxscriptClient): IGeometryBinding;
 }
 
 export interface IGeometryCache {
@@ -184,10 +180,6 @@ export interface IMaterialBinding {
     Post(materialJson: any): Promise<any>;
     Put(materialJson: any): Promise<any>;
     Delete(): Promise<any>;
-}
-
-export interface IMaterialBindingFactory {
-    Create(maxscriptClient: IMaxscriptClient): IMaterialBinding;
 }
 
 export interface IMaterialCache {

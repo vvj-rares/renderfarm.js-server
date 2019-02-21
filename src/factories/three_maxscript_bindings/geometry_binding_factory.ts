@@ -14,9 +14,11 @@ export class GeometryBindingFactory implements IFactory<IGeometryBinding> {
         this._maxscriptClientPool = maxscriptClientPool;
     }
 
-    public async Create(session: Session): Promise<IGeometryBinding> 
+    public async Create(session: Session, ...args: any[]): Promise<IGeometryBinding> 
     {
         let maxscript: IMaxscriptClient = await this._maxscriptClientPool.Get(session);
-        return new GeometryBinding(maxscript);
+        let geometryJson = args[0];
+
+        return new GeometryBinding(maxscript, geometryJson);
     }
 }

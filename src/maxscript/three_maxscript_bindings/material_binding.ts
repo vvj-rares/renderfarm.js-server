@@ -3,7 +3,7 @@ import { IMaterialBinding, IMaxscriptClient } from "../../interfaces";
 export class MaterialBinding implements IMaterialBinding {
     private _maxscriptClient: IMaxscriptClient;
     private _materialJson: any;
-    private _maxName: string;
+    private _maxMaterialName: string;
 
     public constructor(maxscriptClient: IMaxscriptClient) {
         this._maxscriptClient = maxscriptClient;

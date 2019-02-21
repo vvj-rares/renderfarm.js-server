@@ -10,6 +10,13 @@ export class MeshBinding extends SceneObjectBindingBase {
 
     public async Post(objectJson: any, parentJson: any): Promise<string> {
         console.log(" >> MeshBinding: ", objectJson, "\r\n");
+        let geometry = this._geometryCache.Geometries[objectJson.geometry];
+        let material = this._materialCache.Materials[objectJson.material];
+
+        let meshName = this.getObjectName(objectJson);
+        geometry.Post(meshName);
+
+        console.log(" >> resolved geometry and material for mesh: \r\n", geometry, "\r\n", material);
         return JSON.stringify(this._objectJson);
     }
 
