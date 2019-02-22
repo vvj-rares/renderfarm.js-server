@@ -19,7 +19,7 @@ describe(`REST API /three/geometry endpoint`, function() {
 
     beforeEach(function() {
         settings = new Settings("dev");
-        baseUrl = `https://${settings.current.host}:${settings.current.port}`;
+        baseUrl = `${settings.current.protocol}://${settings.current.host}:${settings.current.port}`;
 
         console.log("baseUrl: ", baseUrl);
 
@@ -36,7 +36,7 @@ describe(`REST API /three/geometry endpoint`, function() {
 
     //request:  /POST https://dev1.renderfarmjs.com:8000/v1/three/object
     //response: TODO
-    it("should accept POST on /three/object with some scene", async function(done) {
+    it("should accept POST on /three with some scene", async function(done) {
 
         let sceneJsonText = fs.readFileSync("./testdata/scene1.json").toString();
         let compressedJson = LZString.compressToBase64(sceneJsonText);
@@ -59,9 +59,10 @@ describe(`REST API /three/geometry endpoint`, function() {
 
         let res: any;
         try {
-            await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/three`, data, config);
-        } catch (err) {
-            console.log(err.message);
+            res = await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/three`, data, config);
+        } catch (exc) {
+            console.log(exc.error);
+            console.log(exc.message);
 
             // try to be nice and release worker
             try {
