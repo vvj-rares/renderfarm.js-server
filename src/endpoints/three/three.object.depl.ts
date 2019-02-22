@@ -34,7 +34,7 @@ describe(`REST API /three/geometry endpoint`, function() {
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000;
     })
 
-    //request:  /POST https://dev1.renderfarmjs.com:8000/v1/three/object
+    //request:  POST on https://dev1.renderfarmjs.com:8000/v1/three
     //response: TODO
     it("should accept POST on /three with some scene", async function(done) {
 
@@ -59,7 +59,8 @@ describe(`REST API /three/geometry endpoint`, function() {
 
         let res: any;
         try {
-            res = await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/three`, data, config);
+            let postUrl = `${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/three`;
+            res = await axios.post(postUrl, data, config);
         } catch (exc) {
             console.log(exc.error);
             console.log(exc.message);
@@ -77,6 +78,33 @@ describe(`REST API /three/geometry endpoint`, function() {
         }
 
         JasmineDeplHelpers.checkResponse(res, 201, "three");
+
+        let sceneJsonUuid = res.data.data.uuid;
+        console.log("sceneJsonUuid: ", sceneJsonUuid);
+
+        // now try to get same json back
+        try {
+            let getUrl = `${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/three/${sceneJsonUuid}`;
+            res = await axios.get(getUrl, config);
+        } catch (exc) {
+            console.log(exc.error);
+            console.log(exc.message);
+
+            // try to be nice and release worker
+            try {
+                await JasmineDeplHelpers.closeSession(sessionGuid, settings);
+                console.log("OK | closed session with sessionGuid: ", sessionGuid, "\r\n");
+            } catch {
+                // ignore
+            }
+
+            fail();
+            return;
+        }
+
+        JasmineDeplHelpers.checkResponse(res, 200, "three");
+
+        // todo: // add more checks here
 
         await JasmineDeplHelpers.closeSession(sessionGuid, settings);
         console.log("OK | closed session with sessionGuid: ", sessionGuid, "\r\n");

@@ -36,14 +36,20 @@ class ThreeObjectEndpoint implements IEndpoint {
 
     bind(express: express.Application) {
         express.get(`/v${this._settings.majorVersion}/three/:uuid`, async function (this: ThreeObjectEndpoint, req, res) {
-            let sessionGuid = req.body.session_guid;
-            console.log(`GET on ${req.path} with session: ${sessionGuid}`);
+            console.log(`GET on ${req.path}`);
 
             let uuid = req.params.uuid;
-            console.log(`todo: // retrieve object ${uuid}`);
+            for (let i in this._objects) {
+                let sceneJson = this._objects[i];
+                if (sceneJson.object.uuid === uuid) {
+                    res.status(200);
+                    res.end(JSON.stringify(sceneJson));
+                    return;
+                }
+            }
 
-            res.status(200);
-            res.end(JSON.stringify({}));
+            res.status(404);
+            res.end(JSON.stringify({ ok: false, message: "no scene with given uuid found", error: null }, null, 2));
         }.bind(this));
 
         express.post(`/v${this._settings.majorVersion}/three`, async function (this: ThreeObjectEndpoint, req, res) {
