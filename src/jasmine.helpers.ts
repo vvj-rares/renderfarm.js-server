@@ -143,7 +143,7 @@ export class JasmineDeplHelpers {
         let res: any
         try {
             res = await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session`, data, config);
-            console.log(res);
+            console.log("axios.post returned: \r\n", res.data);
         } catch (exc) {
             // this is not ok, because we expected more workers to be available
             console.log(exc.error);

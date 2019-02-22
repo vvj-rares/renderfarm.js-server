@@ -86,7 +86,7 @@ class ThreeObjectEndpoint implements IEndpoint {
             }
 
             // cache it now
-            if (this._objects[session.guid]) {
+            if (!this._objects[session.guid]) {
                 this._objects[session.guid] = sceneJson;
             }
 
