@@ -83,8 +83,8 @@ describe(`REST API /three/geometry endpoint`, function() {
         console.log("sceneJsonUuid: ", sceneJsonUuid);
 
         // now try to get same json back
+        let getUrl = `${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/three/${sceneJsonUuid}`;
         try {
-            let getUrl = `${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/three/${sceneJsonUuid}`;
             res = await axios.get(getUrl, config);
         } catch (exc) {
             console.log(exc.error);
@@ -102,12 +102,21 @@ describe(`REST API /three/geometry endpoint`, function() {
             return;
         }
 
-        JasmineDeplHelpers.checkResponse(res, 200, "three");
-
-        // todo: // add more checks here
+        let parsedScene = JSON.parse(res.data);
+        expect(parsedScene.object.uuid).toBe("D6E91AF3-A992-4B23-AC38-2588516DE2BD");
 
         await JasmineDeplHelpers.closeSession(sessionGuid, settings);
         console.log("OK | closed session with sessionGuid: ", sessionGuid, "\r\n");
+
+        // todo: try to get scene again and see if it was removed on session close
+        try {
+            res = await axios.get(getUrl, config);
+            console.log("Second GET request on /three should result in 404 error, because session was closed");
+            fail();
+        } catch(exc) {
+            console.log(" >> see how to check this error");
+            console.log(exc);
+        }
 
         done();
     });
