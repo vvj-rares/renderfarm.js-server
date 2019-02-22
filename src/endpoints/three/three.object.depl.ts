@@ -59,10 +59,18 @@ describe(`REST API /three/geometry endpoint`, function() {
 
         let res: any;
         try {
-            await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/three/object`, data, config);
+            await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/three`, data, config);
         } catch (err) {
-            console.log(err);
-            res = err.response;
+            console.log(err.message);
+
+            // try to be nice and release worker
+            try {
+                await JasmineDeplHelpers.closeSession(sessionGuid, settings);
+                console.log("OK | closed session with sessionGuid: ", sessionGuid, "\r\n");
+            } catch {
+                // ignore
+            }
+
             fail();
             return;
         }
