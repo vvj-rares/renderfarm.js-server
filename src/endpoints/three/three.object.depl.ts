@@ -12,7 +12,7 @@ require("../../jasmine.config")();
 // it("should return {what} on {HttpMethod} {path}")
 // it("should reject {HttpMethod} on {path} when {what is wrong}")
 
-describe(`REST API /three/geometry endpoint`, function() {
+describe(`REST API /three endpoint`, function() {
     var settings: Settings;
 
     var baseUrl: string;

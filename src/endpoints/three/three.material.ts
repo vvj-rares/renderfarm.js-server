@@ -76,7 +76,7 @@ class ThreeMaterialEndpoint implements IEndpoint {
             let materialJson: any = JSON.parse(materialJsonText);
 
             let makeDownloadUrl = function(this: ThreeMaterialEndpoint, materialJson: any) {
-                return `https://${this._settings.current.host}:${this._settings.current.port}/v${this._settings.majorVersion}/three/material/${materialJson.uuid}`;
+                return `${this._settings.current.host}:${this._settings.current.port}/v${this._settings.majorVersion}/three/material/${materialJson.uuid}`;
             }.bind(this);
 
             let materialCache = await this._materialCachePool.Get(session);
