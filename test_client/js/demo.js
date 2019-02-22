@@ -219,3 +219,15 @@ function renderScene(scene, camera) {
         $("#btnRender").attr("disabled", false);
     })
 }
+
+function save(scene, filename) {
+}
+
+function saveJson(jsonObj, filename) {
+                var sceneText = JSON.stringify(jsonObj);
+
+                var blob = new Blob([sceneText], {
+                    type: "text/plain;charset=utf-8"
+                });
+                saveAs(blob, filename);
+            }

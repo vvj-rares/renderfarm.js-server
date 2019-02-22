@@ -39,7 +39,17 @@ describe(`REST API /three/geometry endpoint`, function() {
     it("should accept POST on /three with some scene", async function(done) {
 
         let sceneJsonText = fs.readFileSync("./testdata/scene1.json").toString();
-        let compressedJson = LZString.compressToBase64(sceneJsonText);
+        let sceneJson = JSON.parse(sceneJsonText);
+
+        let geometries = sceneJson.geometries;
+        let materials = sceneJson.materials;
+
+        delete sceneJson.geometries;
+        delete sceneJson.materials;
+
+        let compressedGeometries = LZString.compressToBase64(JSON.stringify(geometries));
+        let compressedMaterials = LZString.compressToBase64(JSON.stringify(materials));
+        let compressedSceneJson = LZString.compressToBase64(JSON.stringify(sceneJson));
 
         let sessionGuid = await JasmineDeplHelpers.openSession(
             JasmineDeplHelpers.existingApiKey,
@@ -51,9 +61,76 @@ describe(`REST API /three/geometry endpoint`, function() {
 
         console.log("OK | opened session with sessionGuid: ", sessionGuid, "\r\n");
 
+        { // post threejs geometries
+            let data: any = {
+                session_guid: sessionGuid,
+                compressed_json: compressedGeometries,
+            };
+            let config: AxiosRequestConfig = {};
+
+            let res: any;
+            try {
+                let postUrl = `${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/three/geometry`;
+                res = await axios.post(postUrl, data, config);
+            } catch (exc) {
+                console.log(exc.error);
+                console.log(exc.message);
+
+                // try to be nice and release worker
+                try {
+                    await JasmineDeplHelpers.closeSession(sessionGuid, settings);
+                    console.log("OK | closed session with sessionGuid: ", sessionGuid, "\r\n");
+                } catch {
+                    // ignore
+                }
+
+                fail();
+                return;
+            }
+
+            JasmineDeplHelpers.checkResponse(res, 201, "url");
+
+            let sceneJsonUuid = res.data.data.uuid;
+            console.log("sceneJsonUuid: ", sceneJsonUuid);
+        }
+
+        { // post threejs materials
+            let data: any = {
+                session_guid: sessionGuid,
+                compressed_json: compressedMaterials,
+            };
+            let config: AxiosRequestConfig = {};
+
+            let res: any;
+            try {
+                let postUrl = `${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/three/material`;
+                res = await axios.post(postUrl, data, config);
+            } catch (exc) {
+                console.log(exc.error);
+                console.log(exc.message);
+
+                // try to be nice and release worker
+                try {
+                    await JasmineDeplHelpers.closeSession(sessionGuid, settings);
+                    console.log("OK | closed session with sessionGuid: ", sessionGuid, "\r\n");
+                } catch {
+                    // ignore
+                }
+
+                fail();
+                return;
+            }
+
+            JasmineDeplHelpers.checkResponse(res, 201, "url");
+
+            let sceneJsonUuid = res.data.data.uuid;
+            console.log("sceneJsonUuid: ", sceneJsonUuid);
+        }
+
+        // post threejs scene
         let data: any = {
             session_guid: sessionGuid,
-            compressed_json: compressedJson,
+            compressed_json: compressedSceneJson,
         };
         let config: AxiosRequestConfig = {};
 
@@ -102,8 +179,8 @@ describe(`REST API /three/geometry endpoint`, function() {
             return;
         }
 
-        let parsedScene = JSON.parse(res.data);
-        expect(parsedScene.object.uuid).toBe("D6E91AF3-A992-4B23-AC38-2588516DE2BD");
+        let parsedScene = res.data;
+        expect(parsedScene.object.uuid).toBe("EA03FB20-B8C7-4925-80FF-51E71F29C20B");
 
         await JasmineDeplHelpers.closeSession(sessionGuid, settings);
         console.log("OK | closed session with sessionGuid: ", sessionGuid, "\r\n");
@@ -114,8 +191,9 @@ describe(`REST API /three/geometry endpoint`, function() {
             console.log("Second GET request on /three should result in 404 error, because session was closed");
             fail();
         } catch(exc) {
-            console.log(" >> see how to check this error");
-            console.log(exc);
+            // console.log(" >> exc: ", exc);
+            expect(exc.response.status).toBe(404);
+            expect(exc.response.data.message).toBe("no scene with given uuid found");
         }
 
         done();

@@ -13,6 +13,14 @@ export class MeshBinding extends SceneObjectBindingBase {
         let geometry = this._geometryCache.Geometries[objectJson.geometry];
         let material = this._materialCache.Materials[objectJson.material];
 
+        if (!geometry) {
+            throw Error(`geometry not cached: ${objectJson.geometry}`);
+        }
+
+        if (!material) {
+            throw Error(`material not cached: ${objectJson.material}`);
+        }
+
         let meshName = this.getObjectName(objectJson);
         await geometry.Post(meshName);
 

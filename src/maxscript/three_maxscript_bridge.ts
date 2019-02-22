@@ -26,16 +26,9 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
     }
 
     public async PostScene(session: Session, sceneJson: any): Promise<any> {
-        console.log("TODO: // post scene: ", sceneJson);
 
-        this._traverse(session, sceneJson.object, this._createObjectBinding.bind(this));
-
-        return true;
-    }
-
-    private async _traverse(session: Session, startFrom: any, callback: (session: Session, obj: any, parent: any) => Promise<any>) {
         let queue: any[] = [ {
-            object: startFrom,
+            object: sceneJson.object,
             parent: null,
             level: 0
         } ];
@@ -43,7 +36,7 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
         while (queue.length > 0) {
             let el: any = queue.shift();
 
-            await callback(session, el.object, el.parent);
+            await this._createObjectBinding(session, el.object, el.parent);
 
             let obj = el.object;
             if (isArray(obj.children)) {
@@ -56,6 +49,7 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
                 }
             }
         }
+
     }
 
     private async _createObjectBinding(session: Session, obj: any, parent: any) {
@@ -67,6 +61,6 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
         let binding = await this._bindingFactories[obj.type].Create(session);
         this._bindings[obj.uuid] = binding;
 
-        binding.Post(obj, parent);
+        return binding.Post(obj, parent);
     }
 }

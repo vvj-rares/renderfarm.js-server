@@ -31,7 +31,6 @@
         <link href="css/main.css" rel="stylesheet" type="text/css" />
 
         <script src="js/rfarm_client.js"></script>
-        <script src="js/demo.js"></script>
     </head>
     <body onload="initScene()">
         <div class="canvas-wrapper">
@@ -44,6 +43,12 @@
         <div class="twentytwenty-container" style="width: 640px;">
             <canvas id="viewport"></canvas>
             <img id="vray" src="img/vray.png" />
+        </div>
+
+        <div class="canvas-wrapper">
+            <div class="toolbar">
+                <button id="btnSaveJson" onclick="saveJson(demo.scene, 'scene.json')">save JSON</button>
+            </div>
         </div>
           
         <script>
@@ -65,5 +70,7 @@
         </script>
         <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/eligrey/FileSaver.js@cf70d125b048349fb084d8c8395ee790b83c685c/src/FileSaver.js"></script>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+
+        <script src="js/demo.js"></script>
     </body>
 </html>

@@ -94,7 +94,7 @@ class ThreeObjectEndpoint implements IEndpoint {
             try {
                 await bridge.PostScene(session, sceneJson);
             } catch (err) {
-                console.log(" >> ", err);
+                console.log(" >> bridge.PostScene failed: ", err);
 
                 res.status(500);
                 res.end(JSON.stringify({ ok: false, message: "failed to post scene to 3ds max", error: err.message }, null, 2));
