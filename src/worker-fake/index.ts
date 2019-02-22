@@ -96,7 +96,7 @@ for (let i=0; i<simulateWorkersCount; i++) {
                     console.log(`configured worker:\r\n`, w);
                 }
 
-                socket.write(JSON.stringify({result: true, worker: w}));
+                socket.write(JSON.stringify({ result: true }));
 
             } else {
                 console.log(JSON.stringify({ maxscript: request }));
@@ -136,7 +136,6 @@ for (let i=0; i<simulateWorkersCount; i++) {
     }.bind(worker));
 
     server.listen(worker.port, '0.0.0.0');
-    // worker.server = server;
 
     console.log(JSON.stringify({ status: `Worker [${i}] is listening on port: ${worker.port}`}));
 
