@@ -76,7 +76,7 @@ describe(`REST API /three/geometry endpoint`, function() {
             return;
         }
 
-        JasmineDeplHelpers.checkResponse(res, 201, "url");
+        JasmineDeplHelpers.checkResponse(res, 201, "three");
 
         await JasmineDeplHelpers.closeSession(sessionGuid, settings);
         console.log("OK | closed session with sessionGuid: ", sessionGuid, "\r\n");

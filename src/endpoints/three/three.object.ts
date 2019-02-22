@@ -96,7 +96,7 @@ class ThreeObjectEndpoint implements IEndpoint {
             }
 
             res.status(201);
-            res.end(JSON.stringify({}));
+            res.end(JSON.stringify({ ok: true, type: "three", data: { uuid: sceneJson.object.uuid } }));
         }.bind(this));
 
         express.put(`/v${this._settings.majorVersion}/three/:uuid`, async function (this: ThreeObjectEndpoint, req, res) {
