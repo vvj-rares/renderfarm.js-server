@@ -1,0 +1,199 @@
+{
+  "metadata": {
+    "version": 4.5,
+    "type": "Object",
+    "generator": "Object3D.toJSON"
+  },
+  "object": {
+    "uuid": "D6E91AF3-A992-4B23-AC38-2588516DE2BD",
+    "type": "Scene",
+    "matrix": [
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    "children": [
+      {
+        "uuid": "DE8CD758-39D1-4EB4-89A1-8712F1F9655F",
+        "type": "SpotLight",
+        "name": "SpotLight1",
+        "castShadow": true,
+        "matrix": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          10,
+          40,
+          10,
+          1
+        ],
+        "color": 16752832,
+        "intensity": 1,
+        "distance": 0,
+        "angle": 0.10471975511965977,
+        "decay": 1,
+        "penumbra": 0,
+        "shadow": {
+          "bias": 0.000001,
+          "camera": {
+            "uuid": "33D11EBF-B44C-4587-8F85-FC12F299B692",
+            "type": "PerspectiveCamera",
+            "fov": 12,
+            "zoom": 1,
+            "near": 15,
+            "far": 43,
+            "focus": 10,
+            "aspect": 1,
+            "filmGauge": 35,
+            "filmOffset": 0
+          }
+        }
+      },
+      {
+        "uuid": "C7C2AD7C-3FBA-4621-A1DA-91DB3BE36C1C",
+        "type": "LineSegments",
+        "matrix": [
+          0.7071067811865476,
+          -5.551115123125783e-17,
+          -0.7071067811865475,
+          0,
+          -0.6666666666666667,
+          0.33333333333333326,
+          -0.6666666666666667,
+          0,
+          0.23570226039551578,
+          0.9428090415820634,
+          0.23570226039551578,
+          0,
+          10,
+          40,
+          10,
+          1
+        ],
+        "geometry": "07D9B315-DE16-4337-846A-5624770987B3",
+        "material": "831007D2-3875-42C5-A10A-3CE15D460939"
+      },
+      {
+        "uuid": "9A28111A-990E-4622-8686-6FCB865A79E9",
+        "type": "LineSegments",
+        "matrix": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "geometry": "5029C8B2-06CA-4DB1-902F-A5FAE82CC8BA",
+        "material": "7E8B8580-BCFF-4FE9-B1CF-6CDEDE3EC9C7"
+      },
+      {
+        "uuid": "5308B651-05A8-4E95-B6BB-FFAD8D022A62",
+        "type": "LineSegments",
+        "matrix": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "geometry": "2CC538BC-7CA3-4594-ABD9-96BF35872E0B",
+        "material": "7E8F8D8B-E6CF-4EB0-AFBF-65C891115FBD"
+      },
+      {
+        "uuid": "478FEDE8-9618-4C3E-B9CB-B9192D49E892",
+        "type": "Mesh",
+        "name": "Box01",
+        "castShadow": true,
+        "matrix": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0.5,
+          0,
+          1
+        ],
+        "geometry": "B40285E0-440E-458C-A87A-559FFFA64991",
+        "material": "114F9C4B-4606-481C-92B0-BE9DAFEBB9DD"
+      },
+      {
+        "uuid": "8E06BAB3-324D-4230-BD9A-A8A8DF417C8A",
+        "type": "Mesh",
+        "receiveShadow": true,
+        "matrix": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          2.220446049250313e-16,
+          -1,
+          0,
+          0,
+          1,
+          2.220446049250313e-16,
+          0,
+          0.15,
+          0,
+          0.25,
+          1
+        ],
+        "geometry": "6A7C85C8-2325-458B-AE38-5B9611057D99",
+        "material": "22B77495-81BB-473B-B45E-92E308C3A32D"
+      }
+    ]
+  }
+}

@@ -2,6 +2,8 @@ import { Worker } from "./database/model/worker";
 import { Workspace } from "./database/model/workspace";
 import { Database } from "./database/database";
 import { Settings } from "./settings";
+import axios, { AxiosRequestConfig } from "axios";
+import { ISettings } from "./interfaces";
 
 const uuidv4 = require('uuid/v4');
 
@@ -127,5 +129,40 @@ export class JasmineDeplHelpers {
         if (expectedError !== undefined) {
             expect(res.data.error).toBe(expectedError);
         }
+    }
+
+    public static async openSession(apiKey: string, workspaceGuid: string, maxSceneFilename: string, settings: ISettings, fail: Function, done: Function): Promise<string> {
+        console.log(`Opening session apiKey: ${apiKey}, workspaceGuid: ${workspaceGuid}, maxSceneFilename: ${maxSceneFilename}`);
+
+        let data: any = {
+            api_key: apiKey,
+            workspace_guid: workspaceGuid,
+            scene_filename: maxSceneFilename
+        };
+        let config: AxiosRequestConfig = {};
+        let res: any
+        try {
+            res = await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session`, data, config);
+        } catch (err) {
+            // this is not ok, because we expected more workers to be available
+            console.log(err.message);
+            fail();
+            done();
+            return;
+        }
+
+        JasmineDeplHelpers.checkResponse(res, 201, "session");
+
+        let json = res.data;
+        let sessionGuid = json.data.guid;
+
+        return sessionGuid;
+    }
+
+    public static async closeSession(guid: string, settings: ISettings) {
+        console.log(`Closing session ${guid}`);
+
+        let res: any = await axios.delete(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session/${guid}`);
+        JasmineDeplHelpers.checkResponse(res, 200, "session");
     }
 }

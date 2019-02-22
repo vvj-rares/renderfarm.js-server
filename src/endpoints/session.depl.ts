@@ -496,33 +496,6 @@ describe(`REST API /session endpoint`, function() {
         }
     }
 
-    async function openSession(apiKey, workspaceGuid, maxSceneFilename, fail, done): Promise<string> {
-        let data: any = {
-            api_key: apiKey,
-            workspace_guid: workspaceGuid,
-            scene_filename: maxSceneFilename
-        };
-        let config: AxiosRequestConfig = {};
-        let res: any
-        try {
-            res = await axios.post(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session`, data, config);
-        } catch (err) {
-            // this is not ok, because we expected more workers to be available
-            JasmineDeplHelpers.checkErrorResponse(err.response, 500, "failed to create session", "all workers busy");
-            console.log(err.message);
-            fail();
-            done();
-            return;
-        }
-
-        JasmineDeplHelpers.checkResponse(res, 201, "session");
-
-        let json = res.data;
-        let sessionGuid = json.data.guid;
-
-        return sessionGuid;
-    }
-
     async function getSessionWorker(sessionGuid: string): Promise<Worker> {
         console.log("retrieve worker that was assigned to the session");
 
@@ -546,13 +519,6 @@ describe(`REST API /session endpoint`, function() {
 
         // let workerPort = .port;
         return new Worker(getWorkerResponse.data.data);
-    }
-
-    // helper to close sessions
-    async function closeSession(guid) {
-        console.log(`Closing session ${guid}`);
-        let res: any = await axios.delete(`${settings.current.protocol}://${settings.current.host}:${settings.current.port}/v${settings.majorVersion}/session/${guid}`);
-        JasmineDeplHelpers.checkResponse(res, 200, "session");
     }
 
     async function getMaxscriptFromFakeWorker(logUrl: string): Promise<string[]> {
@@ -603,10 +569,11 @@ describe(`REST API /session endpoint`, function() {
 
         console.log("open session");
 
-        let sessionGuid = await openSession(
+        let sessionGuid = await JasmineDeplHelpers.openSession(
             JasmineDeplHelpers.existingApiKey,
             JasmineDeplHelpers.existingWorkspaceGuid,
             null, // maxSceneFilename = null, i.e. just create empty scene
+            settings,
             fail,
             done);
         
@@ -615,7 +582,7 @@ describe(`REST API /session endpoint`, function() {
         let sessionWorker = await getSessionWorker(sessionGuid);
 
         console.log("we're done, can close session");
-        await closeSession(sessionGuid);
+        await JasmineDeplHelpers.closeSession(sessionGuid, settings);
 
         console.log("tell worker to stop writing logs");
         await configureFakeWorkerLogs(null, null, null, fail, done);
@@ -648,10 +615,11 @@ describe(`REST API /session endpoint`, function() {
 
         let sceneFilename = "scene_" + (9999 * Math.random()).toFixed(0) + ".max";
 
-        let sessionGuid = await openSession(
+        let sessionGuid = await JasmineDeplHelpers.openSession(
             JasmineDeplHelpers.existingApiKey,
             JasmineDeplHelpers.existingWorkspaceGuid,
             sceneFilename,
+            settings,
             fail,
             done);
         
@@ -660,7 +628,7 @@ describe(`REST API /session endpoint`, function() {
         let sessionWorker = await getSessionWorker(sessionGuid);
 
         console.log("we're done, can close session");
-        await closeSession(sessionGuid);
+        await JasmineDeplHelpers.closeSession(sessionGuid, settings);
 
         console.log("tell worker to stop writing logs");
         await configureFakeWorkerLogs(null, null, null, fail, done);
@@ -754,10 +722,11 @@ describe(`REST API /session endpoint`, function() {
     it("should close session with reason defined, if worker that was assigned to session is reported dead", async function (done) {
         console.log("open session");
 
-        let sessionGuid = await openSession(
+        let sessionGuid = await JasmineDeplHelpers.openSession(
             JasmineDeplHelpers.existingApiKey,
             JasmineDeplHelpers.existingWorkspaceGuid,
             null, // maxSceneFilename = null, i.e. just create empty scene
+            settings,
             fail,
             done);
         
