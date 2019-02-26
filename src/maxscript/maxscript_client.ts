@@ -279,12 +279,12 @@ class MaxscriptClient implements IMaxscriptClient {
     }
 
     downloadJson(url: string, path: string): Promise<boolean> {
-        // console.log(" >> Downloading json from:\n" + url);
+        console.log(" >> Downloading json from:\n" + url);
 
         const curlPath = "C:\\\\bin\\\\curl";
         let maxscript = `cmdexRun "${curlPath} -k -s -H \\\"Accept: application/json\\\" \\\"${url}\\\" -o \\\"${path}\\\" "`;
 
-        // console.log(" >> maxscript: " + maxscript);
+        console.log(" >> maxscript: " + maxscript);
 
         return this.execMaxscript(maxscript, "downloadJson");
     }

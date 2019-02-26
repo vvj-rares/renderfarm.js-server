@@ -29,6 +29,9 @@ export class GeometryBinding implements IGeometryBinding {
         if (this._maxInstances.length === 0) {
             console.log(` >> todo: // upload BufferGeometry as ${maxName}`);
             let downloadUrl = `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/three/geometry/${this._geometryJson.uuid}`;
+            let filename = `${this._geometryJson.uuid}.json`;
+            let resd = await this._maxscriptClient.downloadJson(downloadUrl, `C:\\\\Temp\\\\${filename}`);
+            console.log(resd);
             console.log(` >> tell 3dsmax to download from ${downloadUrl} into ${maxName}`);
         } else {
             console.log(` >> todo: // instantiate BufferGeometr as ${maxName} from existing 3dsmax node ${this._maxInstances[0]}`);
