@@ -290,6 +290,7 @@ class MaxscriptClient implements IMaxscriptClient {
     }
 
     importMesh(path: string, nodeName: string): Promise<boolean> {
+        console.log(" >> importing mesh from ", path);
         let maxscript = `threejsImportBufferGeometry \"${path}\" \"${nodeName}\"`;
         return this.execMaxscript(maxscript, "importMesh");
     }
