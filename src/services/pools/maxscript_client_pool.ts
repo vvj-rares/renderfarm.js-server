@@ -53,12 +53,21 @@ export class MaxScriptClientPool extends SessionPoolBase<IMaxscriptClient> {
         //try to open scene if defined
         if (session.sceneFilename) {
             try {
-                await maxscript.openScene("root", session.sceneFilename, session.workspaceRef);
+                await maxscript.openScene(session.sceneFilename, session.workspaceRef);
                 console.log(`    OK | scene open: ${session.sceneFilename}`);
             } catch (err) {
                 maxscript.disconnect();
                 console.log(`  FAIL | failed to open scene, `, err);
                 throw new Error("failed to open scene");
+            }
+        } else {
+            try {
+                await maxscript.resetScene();
+                console.log(`    OK | scene reset`);
+            } catch (err) {
+                maxscript.disconnect();
+                console.log(`  FAIL | failed to reset scene, `, err);
+                throw new Error("failed to rest scene");
             }
         }
 

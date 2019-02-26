@@ -98,30 +98,13 @@ class MaxscriptClient implements IMaxscriptClient {
         return this.execMaxscript(maxscript, "resetScene");
     }
 
-    createScene(sceneName): Promise<boolean> {
-        let maxscript = `resetMaxFile #noPrompt ; ` 
-                        + ` threejsSceneRoot = Dummy name:"${sceneName}" ; `
-                        + ` callbacks.removeScripts id:#flipYZ ; `
-                        + ` callbacks.removeScripts id:#unflipYZ ; `
-                        + ` callbacks.addScript #preRender    "rayysFlipYZ($${sceneName})" id:#flipYZ   persistent:false ; `
-                        + ` callbacks.addScript #postRender "rayysUnflipYZ($${sceneName})" id:#unflipYZ persistent:false ; `;
-
-        return this.execMaxscript(maxscript, "createScene");
-    }
-
-    openScene(sceneName: string, maxSceneFilename: string, workspace: Workspace): Promise<boolean> {
-        let w = workspace;
-
-        let maxscript = `resetMaxFile #noPrompt \r\n`
-                        + ` sceneFilename = "${w.homeDir}\\\\api-keys\\\\${w.apiKey}\\\\workspaces\\\\${w.guid}\\\\scenes\\\\${maxSceneFilename}" \r\n`
-                        + ` if existFile sceneFilename then ( \r\n`
-                        + `     sceneLoaded = loadMaxFile sceneFilename useFileUnits:true quiet:true \r\n`
+    openScene(maxSceneFilename: string, workspace: Workspace): Promise<boolean> {
+        let maxscript = `resetMaxFile #noPrompt ; \r\n`
+                        + `sceneFilename = "${workspace.homeDir}\\\\api-keys\\\\${workspace.apiKey}\\\\workspaces\\\\${workspace.guid}\\\\scenes\\\\${maxSceneFilename}" ; \r\n`
+                        + `if existFile sceneFilename then ( \r\n`
+                        + `     sceneLoaded = loadMaxFile sceneFilename useFileUnits:true quiet:true ; \r\n`
                         + `     if sceneLoaded then ( \r\n`
-                        + `         threejsSceneRoot = Dummy name:"${sceneName}" \r\n`
-                        + `         callbacks.removeScripts id:#flipYZ \r\n`
-                        + `         callbacks.removeScripts id:#unflipYZ \r\n`
-                        + `         callbacks.addScript #preRender    "rayysFlipYZ($${sceneName})" id:#flipYZ   persistent:false \r\n`
-                        + `         callbacks.addScript #postRender "rayysUnflipYZ($${sceneName})" id:#unflipYZ persistent:false \r\n`
+                        + `         print "OK | scene open" \r\n`            
                         + `     ) else ( \r\n`
                         + `         print "FAIL | failed to load scene" \r\n`
                         + `     ) \r\n`
@@ -170,7 +153,6 @@ class MaxscriptClient implements IMaxscriptClient {
 
     createSceneRoot(maxName: string): Promise<boolean> {
         let maxscript = `aSceneRoot = Dummy();\r\n`
-                        + `rotate aSceneRoot (eulerangles 90 0 0);\r\n`
                         + `aSceneRoot.name = \"${maxName}\";\r\n`;
 
         console.log(" >> SCENE ROOT: ", maxscript);
