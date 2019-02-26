@@ -135,11 +135,15 @@ class MaxscriptClient implements IMaxscriptClient {
     setObjectWorldMatrix(nodeName, matrixWorldArray): Promise<boolean> {
         let m = matrixWorldArray;
         let maxscript = `in coordsys world $${nodeName}.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}])`;
+        console.log(" >> setObjectWorldMatrix: ");
+        console.log(" >> maxscript: \r\n", maxscript);
         return this.execMaxscript(maxscript, "setObjectWorldMatrix");
     }
 
     linkToParent(nodeName: string, parentName: string): Promise<boolean> {
         let maxscript = `$${nodeName}.parent = $${parentName}`;
+        console.log(" >> linkToParent: ");
+        console.log(" >> maxscript: \r\n", maxscript);
         return this.execMaxscript(maxscript, "linkToParent");
     }
 

@@ -37,6 +37,7 @@ export class GeometryBinding implements IGeometryBinding {
             console.log(` >> tell 3dsmax to download from ${downloadUrl} into ${maxName}`);
         } else {
             console.log(` >> todo: // instantiate BufferGeometr as ${maxName} from existing 3dsmax node ${this._maxInstances[0]}`);
+            let resc = await this._maxscriptClient.cloneInstance(this._maxInstances[0], maxName);
         }
         this._maxInstances.push(maxName);
     }
