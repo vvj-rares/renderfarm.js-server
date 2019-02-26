@@ -26,7 +26,7 @@ export class MeshBinding extends SceneObjectBindingBase {
 
         let parentName = this.getObjectName(parentJson);
 
-        await this._maxscriptClient.linkToParent(meshName, this.getObjectName(parentJson));
+        await this._maxscriptClient.linkToParent(meshName, parentName);
         await this._maxscriptClient.setObjectMatrix(meshName, objectJson.matrix);
 
         console.log(" >> resolved geometry and material for mesh: \r\n", geometry, "\r\n", material);
