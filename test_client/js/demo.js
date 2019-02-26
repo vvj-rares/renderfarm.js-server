@@ -23,9 +23,9 @@ function initScene() {
     { // init camera
         camera = new THREE.PerspectiveCamera(54, 640 / 480, 0.1, 1000);
 
-        camera.position.x = 2.55*3;
-        camera.position.y = 1.95*3;
-        camera.position.z = 3.15*3;
+        camera.position.x = 7.65;
+        camera.position.y = 5.85;
+        camera.position.z = 9.45;
         camera.lookAt(0, 0.5, 0);
         camera.updateProjectionMatrix();
         scene.add(camera);
@@ -125,8 +125,9 @@ function initScene() {
     });
 
     var plane = new THREE.Mesh( planeGeometry, material );
+    plane.name = "Plane0";
     plane.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
-    plane.applyMatrix(new THREE.Matrix4().makeTranslation(0.15,0,0.25));
+    plane.applyMatrix(new THREE.Matrix4().makeTranslation(0,0,0));
     plane.castShadow = false;
     plane.receiveShadow = true;
     scene.add(plane);
