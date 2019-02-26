@@ -78,6 +78,7 @@ export interface IMaxscriptClient {
     openScene(maxSceneFilename: string, workspace: Workspace);
 
     setObjectWorldMatrix(nodeName, matrixWorldArray): Promise<boolean>;
+    setObjectMatrix(nodeName, parentNode, matrixArray): Promise<boolean>;
     linkToParent(nodeName: string, parentName: string): Promise<boolean>;
     renameObject(nodeName: string, newName: string): Promise<boolean>;
 
