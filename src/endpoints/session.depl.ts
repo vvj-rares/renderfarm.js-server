@@ -592,12 +592,13 @@ describe(`REST API /session endpoint`, function() {
             let logUrl = getWorkerLogDownloadUrl(currentVersion, testName, testRun, sessionWorker.port);
             let requests = await getMaxscriptFromFakeWorker(logUrl);
 
-            expect(requests.length).toBe(5);
+            expect(requests.length).toBe(6);
             expect(requests[0]).toBe(`SessionGuid = "${sessionGuid}"`);
             expect(requests[1]).toBe(`for i=1 to pathConfig.mapPaths.count() do ( pathConfig.mapPaths.delete 1 )`);
             expect(requests[2]).toBe(`for i=1 to pathConfig.xrefPaths.count() do ( pathConfig.xrefPaths.delete 1 )`);
             expect(requests[3]).toBe(`pathConfig.mapPaths.add "C:\\\\Temp\\\\api-keys\\\\${JasmineDeplHelpers.existingApiKey}\\\\workspaces\\\\${JasmineDeplHelpers.existingWorkspaceGuid}\\\\maps"`);
             expect(requests[4]).toBe(`pathConfig.xrefPaths.add "C:\\\\Temp\\\\api-keys\\\\${JasmineDeplHelpers.existingApiKey}\\\\workspaces\\\\${JasmineDeplHelpers.existingWorkspaceGuid}\\\\xrefs"`);
+            expect(requests[5]).toBe(`resetMaxFile #noPrompt`);
         }
 
         done();
@@ -638,7 +639,7 @@ describe(`REST API /session endpoint`, function() {
             let logUrl = getWorkerLogDownloadUrl(currentVersion, testName, testRun, sessionWorker.port);
             let requests = await getMaxscriptFromFakeWorker(logUrl);
 
-            expect(requests.length).toBe(21);
+            expect(requests.length).toBe(17);
             expect(requests[0]).toBe(`SessionGuid = "${sessionGuid}"`);
 
 /*
@@ -650,18 +651,14 @@ describe(`REST API /session endpoint`, function() {
     resetMaxFile #noPrompt
     sceneFilename = "C:\\Temp\\api-keys\\75f5-4d53-b0f4\\workspaces\\cfc3754f-0bf1-4b15-86a5-66e1d077c850\\scenes\\scene_200.max"
     if existFile sceneFilename then (
-    sceneLoaded = loadMaxFile useFileUnits:true quiet:true
-    if sceneLoaded then (
-    threejsSceneRoot = Dummy name:"root"
-    callbacks.removeScripts id:#flipYZ
-    callbacks.removeScripts id:#unflipYZ
-    callbacks.addScript #preRender    "rayysFlipYZ($root)" id:#flipYZ   persistent:false
-    callbacks.addScript #postRender "rayysUnflipYZ($root)" id:#unflipYZ persistent:false
+        sceneLoaded = loadMaxFile useFileUnits:true quiet:true
+        if sceneLoaded then (
+            print "OK | scene open" 
+        ) else (
+            print "FAIL | failed to load scene"
+        )
     ) else (
-    print "FAIL | failed to load scene"
-    )
-    ) else (
-    print "FAIL | scene file not found"
+        print "FAIL | scene file not found"
     )
 */
         }
