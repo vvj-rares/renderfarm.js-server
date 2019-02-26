@@ -9,7 +9,7 @@ export class MeshBinding extends SceneObjectBindingBase {
     }
 
     public async Post(objectJson: any, parentJson: any): Promise<string> {
-        console.log(" >> MeshBinding: ", objectJson, "\r\n");
+        console.log(" >> MeshBinding:\r\nobjectJson=", objectJson, "\r\nparentJson=", parentJson, "\r\n");
         let geometry = this._geometryCache.Geometries[objectJson.geometry];
         let material = this._materialCache.Materials[objectJson.material];
 
@@ -26,7 +26,7 @@ export class MeshBinding extends SceneObjectBindingBase {
 
         await this._maxscriptClient.setObjectWorldMatrix(meshName, objectJson.matrix);
 
-        await this._maxscriptClient.linkToParent(meshName, this.getObjectName(parentJson.uuid));
+        await this._maxscriptClient.linkToParent(meshName, this.getObjectName(parentJson));
 
         console.log(" >> resolved geometry and material for mesh: \r\n", geometry, "\r\n", material);
         return JSON.stringify(this._objectJson);
