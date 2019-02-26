@@ -81,6 +81,8 @@ class JobEndpoint implements IEndpoint {
                 return;
             }
 
+            // let cameraUuid = req.body.camera_uuid; // todo proceed here
+
             let job = await this._database.createJob(session.apiKey, session.workerGuid);
 
             this._jobService.Start(session, job);
