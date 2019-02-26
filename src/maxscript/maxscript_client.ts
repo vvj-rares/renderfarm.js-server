@@ -123,10 +123,10 @@ class MaxscriptClient implements IMaxscriptClient {
         return this.execMaxscript(maxscript, "setObjectWorldMatrix");
     }
 
-    setObjectMatrix(nodeName, parentNode, matrixArray): Promise<boolean> {
+    setObjectMatrix(nodeName, matrixArray): Promise<boolean> {
         let m = matrixArray;
-        let maxscript = `in coordsys $${parentNode} $${nodeName}.transform = (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}])`;
-        console.log(" >> setObjectWorldMatrix: ");
+        let maxscript = `$${nodeName}.transform = $${nodeName}.parent.transform * (matrix3 [${m[0]},${m[1]},${m[2]}] [${m[4]},${m[5]},${m[6]}] [${m[8]},${m[9]},${m[10]}] [${m[12]},${m[13]},${m[14]}])`;
+        console.log(" >> setObjectMatrix: ");
         console.log(" >> maxscript: \r\n", maxscript);
         return this.execMaxscript(maxscript, "setObjectWorldMatrix");
     }
