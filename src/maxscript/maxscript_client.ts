@@ -199,7 +199,10 @@ class MaxscriptClient implements IMaxscriptClient {
     }
 
     cloneInstance(nodeName: string, cloneName: string): Promise<boolean> {
-        let maxscript = `instance $${nodeName} name:"${cloneName}" transform: (matrix3 [1,0,0] [0,1,0] [0,0,1] [0,0,0])`;
+        let maxscript = `aClone = instance $${nodeName} name:"${cloneName}" ; \r\n`
+                      + `aClone.parent = null ; \r\n`
+                      + `aClone.transform = (matrix3 [1,0,0] [0,1,0] [0,0,1] [0,0,0])`;
+
         return this.execMaxscript(maxscript, "cloneInstance");
     }
 
