@@ -221,9 +221,6 @@ function renderScene(scene, camera) {
     })
 }
 
-function save(scene, filename) {
-}
-
 function saveJson(jsonObj, filename) {
                 var sceneText = JSON.stringify(jsonObj);
 
