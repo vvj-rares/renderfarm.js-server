@@ -160,8 +160,9 @@ class MaxscriptClient implements IMaxscriptClient {
     }
 
     createSceneRoot(maxName: string): Promise<boolean> {
-        let maxscript = `aSceneRoot = Dummy();\r\n`
-                        + `aSceneRoot.name = \"${maxName}\";\r\n`;
+        let maxscript = `aSceneRoot = Dummy() ; \r\n`
+                        + ` aSceneRoot.name = \"${maxName}\" ; \r\n`
+                        + ` rotate aSceneRoot (eulerangles 90 0 0)`;
 
         console.log(" >> SCENE ROOT: ", maxscript);
 
@@ -174,7 +175,7 @@ class MaxscriptClient implements IMaxscriptClient {
         let maxscript = `aFreeCamera = FreeCamera fov:${fov} `
                         + ` nearclip:1 farclip:1000 nearrange:0 farrange:1000 `
                         + ` mpassEnabled:off mpassRenderPerPass:off `
-                        + ` isSelected:on name:"${cameraName}"`;
+                        + ` isSelected:on name:\"${cameraName}\"`;
 
         console.log(" >> createTargetCamera: ");
         console.log(" >> maxscript: \r\n", maxscript);
