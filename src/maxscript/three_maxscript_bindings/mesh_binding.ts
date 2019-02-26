@@ -22,15 +22,17 @@ export class MeshBinding extends SceneObjectBindingBase {
         }
 
         let meshName = this.getObjectName(objectJson);
-        await geometry.Post(meshName);
-
         let parentName = this.getObjectName(parentJson);
+
+        await geometry.Post(meshName);
 
         await this._maxscriptClient.linkToParent(meshName, parentName);
         await this._maxscriptClient.setObjectMatrix(meshName, objectJson.matrix);
 
-        console.log(" >> resolved geometry and material for mesh: \r\n", geometry, "\r\n", material);
-        return JSON.stringify(this._objectJson);
+        this._maxName = meshName;
+        this._maxParentName = parentName;
+
+        return meshName;
     }
 
     public async Put(objectJson: any): Promise<any> {
