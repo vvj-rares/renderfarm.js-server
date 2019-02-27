@@ -82,7 +82,7 @@ class JobEndpoint implements IEndpoint {
                 return;
             }
 
-            let renderHeight = req.body.camera_name;
+            let renderHeight = req.body.render_height;
             if (!renderHeight) {
                 res.status(400);
                 res.end(JSON.stringify({ ok: false, message: "missing render_height", error: null }, null, 2));
