@@ -88,7 +88,8 @@ export interface IMaxscriptClient {
     createSceneRoot(maxName: string): Promise<boolean>;
 
     createTargetCamera(cameraName, cameraJson): Promise<boolean>;
-    updateTargetCamera(cameraJson: any): Promise<boolean>;
+    updateTargetCamera(cameraName, cameraJson: any): Promise<boolean>;
+
     deleteObjects(mask: string): Promise<boolean>;
     cloneInstance(nodeName: string, cloneName: string): Promise<boolean>;
 

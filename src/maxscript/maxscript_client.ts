@@ -186,17 +186,13 @@ class MaxscriptClient implements IMaxscriptClient {
         return this.execMaxscript(maxscript, "createTargetCamera");
     }
 
-    updateTargetCamera(cameraJson: any): Promise<boolean> {
+    updateTargetCamera(cameraName: string, cameraJson: any): Promise<boolean> {
+        let maxscript = `aFreeCamera = $${cameraName} ; \r\n`
+                        + ` aFreeCamera.fovType = 2 ; \r\n`
+                        + ` aFreeCamera.curFOV = ${cameraJson.fov}`;
 
-        let maxscript = "";
-        if (cameraJson.fov !== undefined)      
-            maxscript = maxscript + ` $${cameraJson.name}.fov = ${cameraJson.fov}; `;
-
-        if (cameraJson.position !== undefined) 
-            maxscript = maxscript + ` $${cameraJson.name}.pos = [${cameraJson.position[0]},${cameraJson.position[2]},${cameraJson.position[1]}]; `;
-
-        if (cameraJson.target !== undefined)   
-            maxscript = maxscript + ` $${cameraJson.name}.target.pos = [${cameraJson.target[0]},${cameraJson.target[2]},${cameraJson.target[1]}]; `;
+        console.log(" >> updateTargetCamera: ");
+        console.log(" >> maxscript: \r\n", maxscript);
 
         return this.execMaxscript(maxscript, "updateTargetCamera");
     }

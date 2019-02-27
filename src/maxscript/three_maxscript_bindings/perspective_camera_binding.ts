@@ -24,7 +24,10 @@ export class PerspectiveCameraBinding extends SceneObjectBindingBase {
     }
 
     public async Put(objectJson: any): Promise<any> {
-        throw new Error("Method not implemented.");
+        await this._maxscriptClient.updateTargetCamera(this._maxName, objectJson);
+        await this._maxscriptClient.setObjectMatrix(this._maxName, objectJson.matrix);
+
+        return this._maxName;
     }
 
     public async Delete(): Promise<any> {
