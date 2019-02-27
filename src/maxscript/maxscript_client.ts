@@ -70,7 +70,7 @@ class MaxscriptClient implements IMaxscriptClient {
                         reject(Error(`Unexpected maxscript response: ${maxscriptResp}`));
                     }
                 } else {
-                    if (maxscriptResp.indexOf("FAIL") === -1) {
+                    if (maxscriptResp.indexOf("FAIL") === -1 && maxscriptResp.indexOf("Exception") === -1) {
                         resolve();
                     } else {
                         reject(Error(`Unexpected maxscript response: ${maxscriptResp}`));
