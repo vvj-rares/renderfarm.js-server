@@ -224,7 +224,10 @@ rfarm.createJob = function(sessionGuid, onStarted) {
     $.ajax({
         url: rfarm.baseUrl  + "/v1/job",
         data: { 
-            session_guid: sessionGuid
+            session_guid: sessionGuid,
+            camera_name: "Camera001",
+            render_width: 640,
+            render_height: 480,
         },
         type: 'POST',
         success: function(result) {

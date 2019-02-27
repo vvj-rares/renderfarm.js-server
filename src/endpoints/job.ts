@@ -68,6 +68,27 @@ class JobEndpoint implements IEndpoint {
             let sessionGuid = req.body.session_guid;
             console.log(`POST on ${req.path} with session: ${sessionGuid}`);
 
+            let cameraName = req.body.camera_name;
+            if (!cameraName) {
+                res.status(400);
+                res.end(JSON.stringify({ ok: false, message: "missing camera_name", error: null }, null, 2));
+                return;
+            }
+
+            let renderWidth = req.body.render_width;
+            if (!renderWidth) {
+                res.status(400);
+                res.end(JSON.stringify({ ok: false, message: "missing render_width", error: null }, null, 2));
+                return;
+            }
+
+            let renderHeight = req.body.camera_name;
+            if (!renderHeight) {
+                res.status(400);
+                res.end(JSON.stringify({ ok: false, message: "missing render_height", error: null }, null, 2));
+                return;
+            }
+
             let session: Session = await this._sessionService.GetSession(sessionGuid, false, false, true);
             if (!session) {
                 return;
@@ -81,9 +102,7 @@ class JobEndpoint implements IEndpoint {
                 return;
             }
 
-            // let cameraUuid = req.body.camera_uuid; // todo proceed here
-
-            let job = await this._database.createJob(session.apiKey, session.workerGuid);
+            let job = await this._database.createJob(session.apiKey, session.workerGuid, cameraName, renderWidth, renderHeight);
 
             this._jobService.Start(session, job);
 

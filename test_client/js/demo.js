@@ -22,6 +22,7 @@ function initScene() {
 
     { // init camera
         camera = new THREE.PerspectiveCamera(54, 640 / 480, 0.1, 1000);
+        camera.name = "Camera001";
 
         camera.position.x = 7.65;
         camera.position.y = 5.85;
@@ -175,7 +176,6 @@ function renderScene(scene, camera) {
                 rfarm.postScene(newSession.guid, sceneJson, function(result) {
                     console.log(result);
 
-                    /* return;
                     $("#renderStatus").text("Starting render...");
                     rfarm.createJob(newSession.guid, function(job) {
 
@@ -194,7 +194,7 @@ function renderScene(scene, camera) {
         
                                     clearInterval(jobTimer);
                                     console.log(updatedJob.urls);
-                                    $("#vray").attr("src", updatedJob.urls[0]); */
+                                    $("#vray").attr("src", updatedJob.urls[0]);
         
                                     setTimeout(function() {
                                         rfarm.closeSession(newSession.guid, function(closedSession) {
@@ -204,10 +204,10 @@ function renderScene(scene, camera) {
                                         });
 
                                     }, 30000);
-                                /* }
+                                }
                             });
                         }, 1000);
-                    }); */
+                    });
 
                 });
 

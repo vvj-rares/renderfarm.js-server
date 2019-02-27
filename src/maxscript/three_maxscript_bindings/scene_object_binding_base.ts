@@ -25,7 +25,11 @@ export abstract class SceneObjectBindingBase implements ISceneObjectBinding {
     public abstract Put(objectJson: any): Promise<any>;
     public abstract Delete(): Promise<any>;
 
-    protected getObjectName(obj: any) {
+    protected getObjectName(obj: any): string {
+        if (obj.name) {
+            return obj.name;
+        }
+
         let parts = obj.uuid.split("-");
         return `${obj.type}_${parts[0]}`;
     }

@@ -65,9 +65,9 @@ export class JobService extends EventEmitter implements IJobService {
 
         let filename = job.guid + ".png";
         // todo: don't hardcode worker local temp directory, workers must report it by heartbeat
-        client.renderScene("Camera001", [640, 480], "C:\\Temp\\" + filename, {})
+        client.renderScene(job.cameraName, [job.renderWidth, job.renderHeight], "C:\\Temp\\" + filename, {})
             .then(async function(this: JobService, result) {
-                console.log(" >> completeJob");
+                console.log(" >> completeJob, ", result);
                 let completedJob = await this._database.completeJob(job, [ `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/renderoutput/${filename}` ]);
                 this.emit("job:completed", completedJob);
             }.bind(this))

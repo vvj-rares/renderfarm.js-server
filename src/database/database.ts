@@ -527,7 +527,7 @@ export class Database implements IDatabase {
         return jobs;
     }
 
-    public async createJob(apiKey: string, workerGuid: string): Promise<Job> {
+    public async createJob(apiKey: string, workerGuid: string, cameraName: string, renderWidth: number, renderHeight: number): Promise<Job> {
         let job = new Job(null);
 
         job.apiKey = apiKey;
@@ -536,6 +536,10 @@ export class Database implements IDatabase {
         job.updatedAt = new Date();
         job.workerGuid = workerGuid;
         job.state = "pending";
+
+        job.cameraName = cameraName;
+        job.renderWidth = renderWidth;
+        job.renderHeight = renderHeight;
 
         let result = await this.insertOne<Job>("jobs", job, obj => new Job(obj));
         result.workerRef = await this.getOne<Worker>("workers", { guid: result.workerGuid }, obj => new Worker(obj));

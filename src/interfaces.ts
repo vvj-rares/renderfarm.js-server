@@ -46,7 +46,7 @@ export interface IDatabase {
     //jobs
     getJob(jobGuid: string): Promise<Job>;
     getActiveJobs(workgroup: string): Promise<Job[]>;
-    createJob(apiKey: string, workerGuid: string): Promise<Job>;
+    createJob(apiKey: string, workerGuid: string, cameraName: string, renderWidth: number, renderHeight: number): Promise<Job>;
     updateJob(job: Job, setter: any): Promise<Job>;
     completeJob(job: Job, urls: string[]): Promise<Job>;
     cancelJob(job: Job): Promise<Job>;

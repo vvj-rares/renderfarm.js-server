@@ -5,6 +5,11 @@ import { Worker } from "./worker";
 export class Job extends IDbEntity {
     public guid: string;
     public apiKey: string;
+
+    public cameraName: string;
+    public renderWidth: number;
+    public renderHeight: number;
+
     public createdAt: Date;
     public updatedAt: Date;
     public closedAt: Date;
@@ -30,6 +35,11 @@ export class Job extends IDbEntity {
     public parse(obj: any) {
         this.guid       = obj.guid;
         this.apiKey     = obj.apiKey;
+
+        this.cameraName = obj.cameraName;
+        this.renderWidth = obj.renderWidth;
+        this.renderHeight = obj.renderHeight;
+
         this.createdAt  = obj.createdAt ? new Date(obj.createdAt) : undefined;
         this.updatedAt  = obj.updatedAt ? new Date(obj.updatedAt) : undefined;
         this.closedAt   = obj.closedAt ? new Date(obj.closedAt) : undefined;
@@ -46,6 +56,11 @@ export class Job extends IDbEntity {
         let result: any = {
             guid:       this.guid,
             apiKey:     this.apiKey,
+
+            cameraName:   this.cameraName,
+            renderWidth:  this.renderWidth,
+            renderHeight: this.renderHeight,
+
             createdAt:  this.createdAt,
             updatedAt:  this.updatedAt,
             closedAt:   this.closedAt,

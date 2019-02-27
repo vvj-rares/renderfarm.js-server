@@ -105,7 +105,7 @@ describe("Database Job", function() {
         })
 
         async function createSomeJob() {
-            let jobAdded = await database.createJob(helpers.existingApiKey, helpers.existingWorkerGuid);
+            let jobAdded = await database.createJob(helpers.existingApiKey, helpers.existingWorkerGuid, "someCameraName", 100, 200);
             expect(jobAdded).toBeTruthy();
 
             return jobAdded;
@@ -123,6 +123,10 @@ describe("Database Job", function() {
             expect(job.state).toBe("pending");
             expect(Date.now() - job.createdAt.getTime()).toBeLessThan(3000);
             expect(job.updatedAt.getTime()).toBeGreaterThanOrEqual(newJob.createdAt.getTime());
+
+            expect(job.cameraName).toBe("someCameraName");
+            expect(job.renderWidth).toBe(100);
+            expect(job.renderHeight).toBe(200);
 
             done();
         })
