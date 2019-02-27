@@ -175,7 +175,7 @@ class MaxscriptClient implements IMaxscriptClient {
     createTargetCamera(cameraName: string, cameraJson: any): Promise<boolean> {
         let fov = cameraJson.fov * cameraJson.aspect;
 
-        let maxscript = `aFreeCamera = FreeCamera fov:${fov} `
+        let maxscript = `aFreeCamera = FreeCamera fov:${fov} fovType: 2 `
                         + ` nearclip:1 farclip:1000 nearrange:0 farrange:1000 `
                         + ` mpassEnabled:off mpassRenderPerPass:off `
                         + ` isSelected:on name:\"${cameraName}\"`;
