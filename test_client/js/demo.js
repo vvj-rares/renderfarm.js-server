@@ -203,7 +203,7 @@ function renderScene(scene, camera) {
                                             console.log("closedSession: ", closedSession);
                                         });
 
-                                    }, 30000);
+                                    }, 150);
                                 }
                             });
                         }, 1000);
