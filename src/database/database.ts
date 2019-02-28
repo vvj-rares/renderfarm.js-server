@@ -207,6 +207,22 @@ export class Database implements IDatabase {
         return session;
     }
 
+    public touchSession(sessionGuid: string): Promise<any> {
+        return this.findOneAndUpdate<Session>(
+            "sessions",
+            {
+                guid: sessionGuid,
+                closedAt: { $exists: false }
+            },
+            {
+                $set: {
+                    lastSeen: new Date()
+                }
+            },
+            null // no ctor
+        );
+    }
+
     private async getSessionWorker(session: Session): Promise<Worker> {
         return this.safe<Worker>(this.getOne<Worker>(
             "workers", 
@@ -513,6 +529,8 @@ export class Database implements IDatabase {
             (obj) => new Worker(obj)
         );
 
+        await this.touchSession(job.workerRef.sessionGuid);
+
         return job;
     }
 
@@ -661,7 +679,7 @@ export class Database implements IDatabase {
 
             let callback: MongoCallback<FindAndModifyWriteOpResultObject> = function (error: MongoError, res: FindAndModifyWriteOpResultObject) {
                 if (res && res.ok === 1 && res.value) {
-                    resolve(ctor(res.value));
+                    resolve(ctor ? ctor(res.value) : undefined);
                 } else if (error) { 
                     reject(Error(error.message));
                 } else {
@@ -695,7 +713,7 @@ export class Database implements IDatabase {
             let opt: CollectionInsertOneOptions = { w: "majority", j: true };
             let callback: MongoCallback<InsertOneWriteOpResult> = function (error: MongoError, res: InsertOneWriteOpResult) {
                 if (res && res.result.ok === 1 && res.insertedCount === 1) {
-                    resolve(ctor(res.ops[0]));
+                    resolve(ctor ? ctor(res.ops[0]) : undefined);
                 } else if (error) {
                     console.error(error);
                     reject(Error(error.message));
@@ -844,7 +862,7 @@ export class Database implements IDatabase {
                 } else if (res && res.matchedCount > 0 && res.modifiedCount > 0) {
                     // query updated documents with given transaction
                     let findResult = await db.collection(this.envCollectionName(collection)).find({ _trans: trans }).toArray();
-                    resolve( findResult.map(e => ctor(e)) );
+                    resolve( findResult.map(e => ctor ? ctor(e) : undefined));
                 } else if (error) {
                     console.error(error);
                     reject(Error(error.message));
@@ -876,7 +894,7 @@ export class Database implements IDatabase {
     
             let callback: MongoCallback<FindAndModifyWriteOpResultObject> = function (error: MongoError, res: FindAndModifyWriteOpResultObject) {
                 if (res && res.ok === 1 && res.value) {
-                    resolve(ctor(res.value));
+                    resolve(ctor ? ctor(res.value) : undefined);
                 } else if (error) { 
                     reject(Error(error.message));
                 } else {

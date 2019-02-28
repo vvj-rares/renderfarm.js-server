@@ -25,6 +25,7 @@ export interface IDatabase {
 
     //sessions
     getSession(sessionGuid: string, options?: any): Promise<Session>;
+    touchSession(sessionGuid: string): Promise<any>;
     createSession(apiKey: string, workspace: string, sceneFilename?: string): Promise<Session>;
     expireSessions(olderThanMinutes: number): Promise<Session[]>;
     closeSession(sessionGuid: string): Promise<Session>;
@@ -145,6 +146,7 @@ export enum SessionServiceEvents {
 
 export interface IThreeMaxscriptBridge {
     PostScene(session: Session, sceneJson: any): Promise<any>;
+    PutObject(objectJson: any): Promise<any>;
 }
 
 export interface ISceneObjectBinding {

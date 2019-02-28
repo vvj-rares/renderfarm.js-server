@@ -19,6 +19,6 @@ export class ThreeMaxscriptBridgeFactory implements IFactory<IThreeMaxscriptBrid
 
     public async Create(session: Session): Promise<IThreeMaxscriptBridge> {
         let maxscript: IMaxscriptClient = await this._maxscriptClientPool.Get(session);
-        return new ThreeMaxscriptBridge(maxscript, this._bindingFactories);
+        return new ThreeMaxscriptBridge(this._bindingFactories);
     }
 }

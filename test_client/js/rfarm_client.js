@@ -348,6 +348,27 @@ rfarm.postScene = function(sessionGuid, sceneJson, onComplete) {
 
 }.bind(rfarm);
 
+rfarm.putCamera = function(sessionGuid, cameraJson, onComplete) {
+    var cameraText = JSON.stringify(cameraJson);
+    var compressedCameraData = LZString.compressToBase64(cameraText);
+
+    $.ajax({
+        url: this.baseUrl  + "/v1/three/" + cameraJson.object.uuid,
+        data: { 
+            session_guid: sessionGuid,
+            compressed_json: compressedCameraData
+        },
+        type: 'PUT',
+        success: function(result) {
+            onComplete(result);
+        },
+        error: function(err) {
+            console.error(err);
+        }
+    });
+
+}.bind(rfarm);
+
 rfarm.postGeometries = function(sessionGuid, geometryJson, onComplete) {
     console.log("Posting geometries: " + geometryJson);
 

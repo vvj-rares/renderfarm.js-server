@@ -60,6 +60,8 @@ class JobEndpoint implements IEndpoint {
                 return;
             }
 
+            await this._database.touchSession(job.workerRef.sessionGuid);
+
             res.status(200);
             res.end(JSON.stringify({ ok: true, type: "jobs", data: job.toJSON() }, null, 2));
         }.bind(this));

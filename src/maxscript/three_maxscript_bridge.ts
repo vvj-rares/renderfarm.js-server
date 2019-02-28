@@ -1,4 +1,4 @@
-import { IMaxscriptClient, IThreeMaxscriptBridge, ISceneObjectBinding, ISceneObjectBindingFactory } from "../interfaces";
+import { IThreeMaxscriptBridge, ISceneObjectBinding, ISceneObjectBindingFactory } from "../interfaces";
 import { isArray } from "util";
 import { Session } from "../database/model/session";
 
@@ -14,7 +14,6 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
     } = {};
 
     constructor(
-        maxscript: IMaxscriptClient,
         bindingFactories: ISceneObjectBindingFactory[],
     ) {
         this._bindingFactories = {};
@@ -26,7 +25,6 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
     }
 
     public async PostScene(session: Session, sceneJson: any): Promise<any> {
-
         let queue: any[] = [ {
             object: sceneJson.object,
             parent: null,
@@ -49,7 +47,15 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
                 }
             }
         }
+    }
 
+    public async PutObject(objectJson: any): Promise<any> {
+        let binding = this._bindings[ objectJson.object.uuid ];
+        if (binding) {
+            return await binding.Put(objectJson);
+        } else {
+            throw Error("can't find object binding");
+        }
     }
 
     private async _createObjectBinding(session: Session, obj: any, parent: any) {
