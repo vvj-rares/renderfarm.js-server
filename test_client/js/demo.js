@@ -156,6 +156,8 @@ function renderScene(scene, camera) {
         var geometriesJson = sceneJson.geometries;
         var materialsJson = sceneJson.materials;
 
+        var cameraJson = camera.toJSON();
+
         if (sceneJson.materials) {
             delete sceneJson.materials;
         }
@@ -176,7 +178,11 @@ function renderScene(scene, camera) {
                 rfarm.postScene(newSession.guid, sceneJson, function(result) {
                     console.log(result);
 
-                    $("#renderStatus").text("Starting render...");
+                    rfarm.putCamera(newSession.guid, cameraJson, function(result) {
+                        console.log(result);
+                    });
+
+                    /* $("#renderStatus").text("Starting render...");
                     rfarm.createJob(newSession.guid, function(job) {
 
                         $("#renderStatus").text(`Rendering...`);
@@ -194,7 +200,7 @@ function renderScene(scene, camera) {
         
                                     clearInterval(jobTimer);
                                     console.log(updatedJob.urls);
-                                    $("#vray").attr("src", updatedJob.urls[0]);
+                                    $("#vray").attr("src", updatedJob.urls[0]); */
         
                                     setTimeout(function() {
                                         rfarm.closeSession(newSession.guid, function(closedSession) {
@@ -203,11 +209,11 @@ function renderScene(scene, camera) {
                                             console.log("closedSession: ", closedSession);
                                         });
 
-                                    }, 150);
+                                    }, 2500); /*
                                 }
                             });
                         }, 1000);
-                    });
+                    }); */
 
                 });
 
