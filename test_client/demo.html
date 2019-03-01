@@ -32,10 +32,11 @@
 
         <script src="js/rfarm_client.js"></script>
     </head>
-    <body onload="initScene()">
+    <body onload="initScene()" onbeforeunload="closeSession(demo.sessionGuid)" >
         <div class="canvas-wrapper">
             <div class="toolbar">
-                <button id="btnRender" onclick="renderScene(demo.scene, demo.camera)">render</button>
+                <button id="btnRender" onclick="renderScene(demo.scene, demo.camera)">Render</button>
+                <button id="btnUpdateCam" onclick="updateCamera(demo.camera)">Update Camera</button>
                 <div id="renderStatus" class="status"></div>
             </div>
         </div>
@@ -48,7 +49,6 @@
         <div class="canvas-wrapper">
             <div class="toolbar">
                 <button id="btnSaveJson" onclick="saveJson(demo.scene, 'scene.json')">save JSON</button>
-                <button id="btnUpdateCam" onclick="updateCamera(demo.camera)">PUT camera</button>
             </div>
         </div>
           

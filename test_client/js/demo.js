@@ -147,6 +147,13 @@ function renderScene(scene, camera) {
 
     $("#btnRender").attr("disabled", true);
     $("#renderStatus").css("color", "gray");
+
+    // have session? just do it
+    if (window.demo.sessionGuid) {
+        postJob(window.demo.sessionGuid);
+        return;
+    }
+
     $("#renderStatus").text("Opening new session...");
 
     rfarm.createSession(function(newSession) {
@@ -165,52 +172,22 @@ function renderScene(scene, camera) {
             delete sceneJson.geometries;
         }
 
-        // rfarm.postGeometry(scene.)
-        console.log(geometriesJson);
+        console.log("Uploading geometries...");
+        $("#renderStatus").text("Uploading geometries...");
         rfarm.postGeometries(newSession.guid, geometriesJson, function(result) {
             console.log(result);
 
-            console.log(materialsJson);
+            console.log("Uploading materials...");
+            $("#renderStatus").text("Uploading materials...");
             rfarm.postMaterials(newSession.guid, materialsJson, function(result) {
                 console.log(result);
 
                 console.log("Uploading scene...");
+                $("#renderStatus").text("Uploading scene...");
                 rfarm.postScene(newSession.guid, sceneJson, function(result) {
                     console.log(result);
 
-                    /* $("#renderStatus").text("Starting render...");
-                    rfarm.createJob(newSession.guid, function(job) {
-
-                        $("#renderStatus").text(`Rendering...`);
-
-                        let t0 = new Date();
-
-                        let jobTimer = setInterval(function() {
-                            let t1 = new Date();
-        
-                            rfarm.getJob (job.guid, function(updatedJob) {
-                                $("#renderStatus").text(`Rendering... ${ ((t1 - t0) / 1000).toFixed(0) } sec.`);
-        
-                                if (updatedJob.closed) {
-                                    $("#renderStatus").text(`Render complete, downloading image...`);
-        
-                                    clearInterval(jobTimer);
-                                    console.log(updatedJob.urls);
-                                    $("#vray").attr("src", updatedJob.urls[0]); */
-        
-                                    setTimeout(function() {
-                                        rfarm.closeSession(newSession.guid, function(closedSession) {
-                                            $("#renderStatus").text(`Session closed.`);
-                                            $("#btnRender").attr("disabled", false);
-                                            console.log("closedSession: ", closedSession);
-                                        });
-
-                                    }, 30000); /*
-                                }
-                            });
-                        }, 1000);
-                    }); */
-
+                    postJob(newSession.guid);
                 });
 
             });
@@ -223,11 +200,47 @@ function renderScene(scene, camera) {
     })
 }
 
+function postJob(sessionGuid) {
+    $("#renderStatus").text("Starting render...");
+    rfarm.createJob(sessionGuid, function(job) {
+        $("#renderStatus").text(`Rendering... 0 sec.`);
+
+        let t0 = new Date();
+
+        let jobTimer = setInterval(function() {
+            let t1 = new Date();
+
+            rfarm.getJob (job.guid, function(updatedJob) {
+                $("#renderStatus").text(`Rendering... ${ ((t1 - t0) / 1000).toFixed(0) } sec.`);
+
+                if (updatedJob.closed) {
+                    $("#renderStatus").text(`Render complete, downloading image...`);
+
+                    clearInterval(jobTimer);
+                    console.log(updatedJob.urls);
+                    $("#vray").attr("src", updatedJob.urls[0]);
+                    $("#btnRender").attr("disabled", false);
+                }
+            });
+
+        }, 1000);
+    });
+}
+
 function updateCamera(camera) {
     var cameraJson = camera.toJSON();
 
     rfarm.putCamera(window.demo.sessionGuid, cameraJson, function(result) {
         console.log(result);
+    });
+}
+
+function closeSession(sessionGuid) {
+    if (!sessionGuid) return;
+
+    rfarm.closeSession(sessionGuid, function(closedSession) {
+        $("#renderStatus").text(`Session closed.`);
+        console.log("closedSession: ", closedSession);
     });
 }
 

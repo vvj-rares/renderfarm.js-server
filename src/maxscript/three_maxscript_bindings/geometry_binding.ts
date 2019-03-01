@@ -34,6 +34,9 @@ export class GeometryBinding implements IGeometryBinding {
             console.log(resd);
             let resi = await this._maxscriptClient.importMesh(`C:\\\\Temp\\\\${filename}`, maxName);
             console.log(resi);
+            let resm = await this._maxscriptClient.assignMaterial(maxName, "15 - Default");
+            console.log(resm);
+
             console.log(` >> tell 3dsmax to download from ${downloadUrl} into ${maxName}`);
         } else {
             console.log(` >> todo: // instantiate BufferGeometr as ${maxName} from existing 3dsmax node ${this._maxInstances[0]}`);

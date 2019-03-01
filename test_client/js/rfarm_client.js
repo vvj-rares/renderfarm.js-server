@@ -7,8 +7,8 @@ function pad(num, size) {
 var rfarm = {
     apiKey: "75f5-4d53-b0f4",
     workspace: "55a0bd33-9f15-4bc0-a482-17899eb67af3",
-    // baseUrl: "https://acc.renderfarmjs.com",
-    baseUrl: "https://localhost:8000",
+    baseUrl: "https://acc.renderfarmjs.com",
+    // baseUrl: "https://localhost:8000",
 
     geometries: {},  // here we map scene geometry uuid <==> backend geometry resource
     materials: {},   // here we map scene material uuid <==> backend material resource
@@ -42,6 +42,7 @@ rfarm.createSession = function(onCreated, onError) {
             if (onCreated) onCreated(result.data);
         }.bind(this),
         error: function(err) {
+            console.error(err.responseJSON);
             if (onError) onError(err.responseJSON);
         }.bind(this)
     });
@@ -60,6 +61,7 @@ rfarm.closeSession = function(sessionGuid, onClosed) {
             if (onClosed) onClosed(result);
         }.bind(this),
         error: function(err) {
+            console.error(err.responseJSON);
             console.error(err);
         }.bind(this)
     });
@@ -84,7 +86,7 @@ rfarm.createScene = function(sceneObj, onComplete) {
             if (onComplete) onComplete(result.id);
         }.bind(this),
         error: function(err) {
-            console.error(err);
+            console.error(err.responseJSON);
         }.bind(this)
     });
 }.bind(rfarm);
@@ -108,7 +110,7 @@ rfarm.openScene = function(sceneObj, maxSceneFilename, onComplete) {
             if (onComplete) onComplete(result.id);
         }.bind(this),
         error: function(err) {
-            console.error(err);
+            console.error(err.responseJSON);
         }.bind(this)
     });
 }.bind(rfarm);
@@ -159,7 +161,7 @@ rfarm.createCamera = function(camera, onCameraReady) {
             onCameraReady(result.id);
         }.bind(this),
         error: function(err) {
-            console.error(err);
+            console.error(err.responseJSON);
         }.bind(this)
     });
 
@@ -180,7 +182,7 @@ rfarm.createSkylight = function(onCreated) {
             if (onCreated) onCreated();
         }.bind(this),
         error: function(err) {
-            console.error(err);
+            console.error(err.responseJSON);
         }.bind(this)
     });
 }.bind(rfarm);
@@ -212,7 +214,7 @@ rfarm.createSpotlight = function(spotlight, spotlightTarget, onCreated) {
             if (onCreated) onCreated();
         }.bind(this),
         error: function(err) {
-            console.error(err);
+            console.error(err.responseJSON);
         }.bind(this)
     });
 }.bind(rfarm);
@@ -235,7 +237,7 @@ rfarm.createJob = function(sessionGuid, onStarted) {
             onStarted(result.data);
         }.bind(this),
         error: function(err) {
-            console.error(err);
+            console.error(err.responseJSON);
         }.bind(this)
     });
 }
@@ -251,7 +253,7 @@ rfarm.getJob = function(jobGuid, callback) {
             callback(result.data);
         }.bind(this),
         error: function(err) {
-            console.error(err);
+            console.error(err.responseJSON);
         }.bind(this)
     });
 }
@@ -280,7 +282,7 @@ rfarm.render = function(cameraName, width, height, onStarted, onProgress, onImag
                 }
             }.bind(this),
             error: function(err) {
-                console.error(err);
+                console.error(err.responseJSON);
             }.bind(this)
         });
     }.bind(this);
@@ -302,7 +304,7 @@ rfarm.render = function(cameraName, width, height, onStarted, onProgress, onImag
             checkJobStatus(result.guid);
         }.bind(this),
         error: function(err) {
-            console.error(err);
+            console.error(err.responseJSON);
         }.bind(this)
     });
 }.bind(rfarm);
@@ -322,7 +324,7 @@ rfarm.cancelRender = function(jobGuid, onCanceled) {
             onCanceled(result);
         }.bind(this),
         error: function(err) {
-            console.error(err);
+            console.error(err.responseJSON);
         }.bind(this)
     });
 }.bind(rfarm);
@@ -342,7 +344,7 @@ rfarm.postScene = function(sessionGuid, sceneJson, onComplete) {
             onComplete(result);
         },
         error: function(err) {
-            console.error(err);
+            console.error(err.responseJSON);
         }
     });
 
@@ -363,7 +365,7 @@ rfarm.putCamera = function(sessionGuid, cameraJson, onComplete) {
             onComplete(result);
         },
         error: function(err) {
-            console.error(err);
+            console.error(err.responseJSON);
         }
     });
 
@@ -387,7 +389,7 @@ rfarm.postGeometries = function(sessionGuid, geometryJson, onComplete) {
             if (onComplete) onComplete();
         }.bind(this),
         error: function(err) {
-            console.error(err);
+            console.error(err.responseJSON);
         }.bind(this)
     });
 
@@ -411,7 +413,7 @@ rfarm.postMaterials = function(sessionGuid, materialJson, onComplete) {
             if (onComplete) onComplete();
         }.bind(this),
         error: function(err) {
-            console.error(err);
+            console.error(err.responseJSON);
         }.bind(this)
     });
 }.bind(rfarm);
@@ -444,7 +446,7 @@ rfarm._postMesh = function(parentName, geometryName, materialName, matrixWorldAr
             if (onComplete) onComplete(result.id);
         }.bind(this),
         error: function(err) {
-            console.error(err);
+            console.error(err.responseJSON);
         }.bind(this)
     });
 }.bind(rfarm);
