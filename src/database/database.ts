@@ -207,19 +207,13 @@ export class Database implements IDatabase {
         return session;
     }
 
-    public touchSession(sessionGuid: string): Promise<any> {
-        return this.findOneAndUpdate<Session>(
-            "sessions",
+    public touchSession(sessionGuid: string): Promise<Session> {
+        return this.getSession(
+            sessionGuid,
             {
-                guid: sessionGuid,
-                closedAt: { $exists: false }
+                allowClosed: false,
+                readOnly: false,
             },
-            {
-                $set: {
-                    lastSeen: new Date()
-                }
-            },
-            null // no ctor
         );
     }
 

@@ -61,13 +61,7 @@ export class SessionService extends EventEmitter implements ISessionService {
     }
 
     public async KeepSessionAlive(sessionGuid: string): Promise<Session> {
-        let updatedSession = await this._database.getSession(
-            sessionGuid,
-            {
-                allowClosed: false,
-                readOnly: false,
-            },
-        );
+        let updatedSession = await this._database.touchSession(sessionGuid);
         this.emit(SessionServiceEvents.Updated, updatedSession);
         return updatedSession;
     }
