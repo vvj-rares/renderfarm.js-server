@@ -142,7 +142,7 @@ function initScene() {
     animate();
 }
 
-function renderScene(scene, camera) {
+function renderScene(scene, camera, onRenderComplete) {
     console.log(camera);
 
     $("#btnRender").attr("disabled", true);
@@ -151,7 +151,7 @@ function renderScene(scene, camera) {
     // have session? just do it
     if (window.demo.sessionGuid) {
         updateCamera(window.demo.camera);
-        postJob(window.demo.sessionGuid);
+        postJob(window.demo.sessionGuid, onRenderComplete);
         return;
     }
 
@@ -188,7 +188,7 @@ function renderScene(scene, camera) {
                 rfarm.postScene(newSession.guid, sceneJson, function(result) {
                     console.log(result);
 
-                    postJob(newSession.guid);
+                    postJob(newSession.guid, onRenderComplete);
                 });
 
             });
@@ -201,7 +201,7 @@ function renderScene(scene, camera) {
     })
 }
 
-function postJob(sessionGuid) {
+function postJob(sessionGuid, onRenderComplete) {
     $("#renderStatus").text("Starting render...");
     rfarm.createJob(sessionGuid, function(job) {
         $("#renderStatus").text(`Rendering... 0 sec.`);
@@ -221,6 +221,8 @@ function postJob(sessionGuid) {
                     console.log(updatedJob.urls);
                     $("#vray").attr("src", updatedJob.urls[0]);
                     $("#btnRender").attr("disabled", false);
+
+                    if (onRenderComplete) onRenderComplete( updatedJob.urls[0] );
                 }
             });
 

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
+<!--[if lt IE 7 ]> <html class="ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]>    <html class="ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]>    <html class="lt-ie9" lang="en"> <![endif]-->
+<!--[if IE 9 ]>    <html class="lt-ie10" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html lang="en"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <title>renderfarm.js - demo</title>
+
+        <meta name="robots" content="noindex, nofollow">
+        <meta name="googlebot" content="noindex, nofollow">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <script
+            src="https://code.jquery.com/jquery-3.2.1.js"
+            integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
+            crossorigin="anonymous"></script>
+
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/91/three.js"></script>
+        <script type="text/javascript" src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.debug.js"></script>
+
+        <script src="js/jquery.event.move.js"></script>
+        <script src="js/jquery.twentytwenty.js"></script>
+
+        <link href="css/foundation.css" rel="stylesheet" type="text/css" />
+        <link href="css/twentytwenty.css" rel="stylesheet" type="text/css" />
+        <link href="css/main.css" rel="stylesheet" type="text/css" />
+
+        <script src="js/rfarm_client.js"></script>
+    </head>
+    <body onload="initScene()" onbeforeunload="closeSession(demo.sessionGuid)" >
+        <div class="canvas-wrapper">
+            <div class="toolbar">
+                <button id="btnRender" onclick="renderScene(demo.scene, demo.camera, generatePdf)">Render</button>
+                <button id="btnUpdateCam" onclick="updateCamera(demo.camera)">Update Camera</button>
+                <div id="renderStatus" class="status"></div>
+            </div>
+        </div>
+
+        <div class="twentytwenty-container" style="float: left; width: 640px;">
+            <canvas id="viewport"></canvas>
+            <img id="vray" src="img/vray.png" />
+        </div>
+
+        <div style="position: fixed; width: calc((100vh - 96px) / (297 / 210)); height: calc(100vh - 96px); right: 32px;">
+            <iframe id="iframe-pdf" type="application/pdf" style="width: 100%; height: 100%;"></iframe>
+        </div>
+
+        <div class="canvas-wrapper" style="float: left; width: 100%;">
+            <div class="toolbar">
+                <button id="btnSaveJson" onclick="saveJson(demo.scene, 'scene.json')">save JSON</button>
+            </div>
+        </div>
+          
+        <script>
+            $(function(){
+                $(".twentytwenty-container[data-orientation!='vertical']").twentytwenty({default_offset_pct: 0.7});
+                $(".twentytwenty-handle").each(function(i, el) {
+                    el.addEventListener("mouseenter", function(e) {
+                        demo.controls.enabled = false;
+                    });
+                    el.addEventListener("mouseleave", function(e) {
+                        demo.controls.enabled = true;
+                    });
+                });
+            });
+        </script>
+
+        <script>
+            module = {};
+        </script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/eligrey/FileSaver.js@cf70d125b048349fb084d8c8395ee790b83c685c/src/FileSaver.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+
+        <script src="js/demo.js"></script>
+
+        <script>
+
+function getDataUri(url, cb)
+{
+        var image = new Image();
+        image.setAttribute('crossOrigin', 'anonymous'); //getting images from external domain
+
+        image.onload = function () {
+            var canvas = document.createElement('canvas');
+            canvas.width = this.naturalWidth;
+            canvas.height = this.naturalHeight; 
+
+            //next three lines for white background in case png has a transparent background
+            var ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#fff';  /// set white fill style
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            canvas.getContext('2d').drawImage(this, 0, 0);
+
+            cb(canvas.toDataURL('image/png'));
+        };
+
+        image.src = url;
+}
+
+function generatePdf(imgUrl) {
+    getDataUri(imgUrl, function(imgDataUri) {
+
+        var doc = new jsPDF();
+
+        doc.setFontSize(16);
+        doc.text(20, 25, 'Generated with renderfarm.js');
+        doc.addImage(imgDataUri, 'PNG', 15, 40, 640/3.55, 480/3.55);
+
+        setTimeout(function(){
+            var data = doc.output('datauri')
+            $('#iframe-pdf').attr('src', data);
+            doc.output('dataurlnewwindow');
+        }, 10);
+
+    });
+}
+
+        </script>
+    </body>
+</html>
