@@ -152,11 +152,11 @@ function renderScene(scene, camera) {
     rfarm.createSession(function(newSession) {
         console.log("newSession: ", newSession);
 
+        window.demo.sessionGuid = newSession.guid;
+
         var sceneJson = scene.toJSON();
         var geometriesJson = sceneJson.geometries;
         var materialsJson = sceneJson.materials;
-
-        var cameraJson = camera.toJSON();
 
         if (sceneJson.materials) {
             delete sceneJson.materials;
@@ -177,10 +177,6 @@ function renderScene(scene, camera) {
                 console.log("Uploading scene...");
                 rfarm.postScene(newSession.guid, sceneJson, function(result) {
                     console.log(result);
-
-                    rfarm.putCamera(newSession.guid, cameraJson, function(result) {
-                        console.log(result);
-                    });
 
                     /* $("#renderStatus").text("Starting render...");
                     rfarm.createJob(newSession.guid, function(job) {
@@ -209,7 +205,7 @@ function renderScene(scene, camera) {
                                             console.log("closedSession: ", closedSession);
                                         });
 
-                                    }, 2500); /*
+                                    }, 30000); /*
                                 }
                             });
                         }, 1000);
@@ -227,11 +223,19 @@ function renderScene(scene, camera) {
     })
 }
 
-function saveJson(jsonObj, filename) {
-                var sceneText = JSON.stringify(jsonObj);
+function updateCamera(camera) {
+    var cameraJson = camera.toJSON();
 
-                var blob = new Blob([sceneText], {
-                    type: "text/plain;charset=utf-8"
-                });
-                saveAs(blob, filename);
-            }
+    rfarm.putCamera(window.demo.sessionGuid, cameraJson, function(result) {
+        console.log(result);
+    });
+}
+
+function saveJson(jsonObj, filename) {
+    var sceneText = JSON.stringify(jsonObj);
+
+    var blob = new Blob([sceneText], {
+        type: "text/plain;charset=utf-8"
+    });
+    saveAs(blob, filename);
+}

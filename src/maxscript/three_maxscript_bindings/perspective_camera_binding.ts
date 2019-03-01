@@ -24,8 +24,8 @@ export class PerspectiveCameraBinding extends SceneObjectBindingBase {
     }
 
     public async Put(objectJson: any): Promise<any> {
-        await this._maxscriptClient.updateTargetCamera(this._maxName, objectJson);
-        await this._maxscriptClient.setObjectMatrix(this._maxName, objectJson.matrix);
+        await this._maxscriptClient.updateTargetCamera(this._maxName, objectJson.object);
+        await this._maxscriptClient.setObjectMatrix(this._maxName, objectJson.object.matrix);
 
         return this._maxName;
     }
