@@ -150,6 +150,7 @@ function renderScene(scene, camera) {
 
     // have session? just do it
     if (window.demo.sessionGuid) {
+        updateCamera(window.demo.camera);
         postJob(window.demo.sessionGuid);
         return;
     }
@@ -214,7 +215,7 @@ function postJob(sessionGuid) {
                 $("#renderStatus").text(`Rendering... ${ ((t1 - t0) / 1000).toFixed(0) } sec.`);
 
                 if (updatedJob.closed) {
-                    $("#renderStatus").text(`Render complete, downloading image...`);
+                    $("#renderStatus").text(`Render complete!`);
 
                     clearInterval(jobTimer);
                     console.log(updatedJob.urls);

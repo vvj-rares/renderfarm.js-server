@@ -64,6 +64,8 @@ rfarm.closeSession = function(sessionGuid, onClosed) {
             console.error(err.responseJSON);
             console.error(err);
         }.bind(this)
+    }).done(function(data) {                
+        console.log("complete");
     });
 }.bind(rfarm);
 
