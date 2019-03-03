@@ -77,6 +77,11 @@ class JobEndpoint implements IEndpoint {
                 return;
             }
 
+            let renderSettings = req.body.render_settings;
+            if (!renderSettings) {
+                renderSettings = {};
+            }
+
             let renderWidth = req.body.render_width;
             if (!renderWidth) {
                 res.status(400);
@@ -104,7 +109,7 @@ class JobEndpoint implements IEndpoint {
                 return;
             }
 
-            let job = await this._database.createJob(session.apiKey, session.workerGuid, cameraName, renderWidth, renderHeight);
+            let job = await this._database.createJob(session.apiKey, session.workerGuid, cameraName, renderWidth, renderHeight, renderSettings);
 
             this._jobService.Start(session, job);
 

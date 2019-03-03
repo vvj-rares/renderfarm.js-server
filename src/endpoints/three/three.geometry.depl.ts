@@ -38,7 +38,7 @@ describe(`REST API /three/geometry endpoint`, function() {
     //response: TODO
     it("should accept array of geometries POST on /three/geometry and return single geometry by uuid", async function(done) {
 
-        let sceneJsonText = fs.readFileSync("./testdata/scene1.json").toString();
+        let sceneJsonText = fs.readFileSync("./test_data/scene1.json").toString();
         let sceneJson = JSON.parse(sceneJsonText);
 
         let geometries = sceneJson.geometries;

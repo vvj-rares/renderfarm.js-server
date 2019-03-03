@@ -47,7 +47,7 @@ export interface IDatabase {
     //jobs
     getJob(jobGuid: string): Promise<Job>;
     getActiveJobs(workgroup: string): Promise<Job[]>;
-    createJob(apiKey: string, workerGuid: string, cameraName: string, renderWidth: number, renderHeight: number): Promise<Job>;
+    createJob(apiKey: string, workerGuid: string, cameraName: string, renderWidth: number, renderHeight: number, renderSettings: any): Promise<Job>;
     updateJob(job: Job, setter: any): Promise<Job>;
     completeJob(job: Job, urls: string[]): Promise<Job>;
     cancelJob(job: Job): Promise<Job>;
@@ -102,7 +102,7 @@ export interface IMaxscriptClient {
 
     assignMaterial(nodeName: string, materialName: string): Promise<boolean>;
 
-    renderScene(camera: string, size: number[], filename: string, vraySettings: any): Promise<boolean>;
+    renderScene(camera: string, size: number[], filename: string, renderSettings: any): Promise<boolean>;
 }
 
 export interface IFactory<T> {

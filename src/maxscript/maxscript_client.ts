@@ -296,15 +296,19 @@ class MaxscriptClient implements IMaxscriptClient {
         return this.execMaxscript(maxscript, "assignMaterial");
     }
 
-    renderScene(camera: string, size: number[], filename: string, vraySettings: any): Promise<boolean> {
+    renderScene(camera: string, size: number[], filename: string, renderSettings: any): Promise<boolean> {
 
         let escapedFilename = filename.replace(/\\/g, "\\\\");
 
         let maxscript =   ` pngio.settype(#true24) ;\r\n`  // enums: {#paletted|#true24|#true48|#gray8|#gray16} 
                         + ` pngio.setAlpha false ;\r\n`
-                        + ` vr = renderers.current ;\r\n`
-                        //+ ` vr.progressive_max_render_time = ${vraySettings.progressiveMaxRenderTime} ; `
-                        //+ ` vr.progressive_noise_threshold = ${vraySettings.progressiveNoiseThreshold} ; `
+                        + ` vr = renderers.current ;\r\n`;
+
+        for (let k in renderSettings) {
+            maxscript = maxscript + ` vr.${k} = ${renderSettings[k]} ; \r\n`
+        }
+
+        maxscript = maxscript 
                         + ` viewport.setLayout #layout_1 ;\r\n`
                         + ` viewport.setCamera $${camera} ;\r\n`
                         + ` renderWidth  = ${size[0]} ;\r\n`
@@ -318,7 +322,7 @@ class MaxscriptClient implements IMaxscriptClient {
         // see here: http://help.autodesk.com/view/3DSMAX/2018/ENU/?guid=__files_GUID_9175301C_13E6_488B_ABA6_D27CD804B205_htm
         // can also use: JPEG.setQuality(5); JPEG.setSmoothing(1);
 
-        // todo: renderScene POST file to /renderoutput
+        console.log(" >> maxscript: " + maxscript);
 
         return this.execMaxscript(maxscript, "renderScene");
     }

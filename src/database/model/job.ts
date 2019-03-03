@@ -9,6 +9,7 @@ export class Job extends IDbEntity {
     public cameraName: string;
     public renderWidth: number;
     public renderHeight: number;
+    public renderSettings: any;
 
     public createdAt: Date;
     public updatedAt: Date;
@@ -36,9 +37,10 @@ export class Job extends IDbEntity {
         this.guid       = obj.guid;
         this.apiKey     = obj.apiKey;
 
-        this.cameraName = obj.cameraName;
-        this.renderWidth = obj.renderWidth;
-        this.renderHeight = obj.renderHeight;
+        this.cameraName     = obj.cameraName;
+        this.renderWidth    = obj.renderWidth;
+        this.renderHeight   = obj.renderHeight;
+        this.renderSettings = obj.renderSettings;
 
         this.createdAt  = obj.createdAt ? new Date(obj.createdAt) : undefined;
         this.updatedAt  = obj.updatedAt ? new Date(obj.updatedAt) : undefined;
@@ -57,9 +59,10 @@ export class Job extends IDbEntity {
             guid:       this.guid,
             apiKey:     this.apiKey,
 
-            cameraName:   this.cameraName,
-            renderWidth:  this.renderWidth,
-            renderHeight: this.renderHeight,
+            cameraName:     this.cameraName,
+            renderWidth:    this.renderWidth,
+            renderHeight:   this.renderHeight,
+            renderSettings: this.renderSettings,
 
             createdAt:  this.createdAt,
             updatedAt:  this.updatedAt,

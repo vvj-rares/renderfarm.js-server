@@ -29,6 +29,7 @@ function initScene() {
         camera.position.z = 9.45;
         camera.lookAt(0, 0.5, 0);
         camera.updateProjectionMatrix();
+        camera.userData = { vr: { camera_overrideFOV: true, camera_type: 1 } };
         scene.add(camera);
         window.demo.camera = camera;
 
