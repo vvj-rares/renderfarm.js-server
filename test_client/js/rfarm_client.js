@@ -222,16 +222,17 @@ rfarm.createSpotlight = function(spotlight, spotlightTarget, onCreated) {
 }.bind(rfarm);
 
 //public
-rfarm.createJob = function(sessionGuid, onStarted) {
+rfarm.createJob = function(sessionGuid, cameraName, width, height, renderSettings, onStarted) {
     console.log("Creating new render job...");
 
     $.ajax({
         url: rfarm.baseUrl  + "/v1/job",
         data: { 
             session_guid: sessionGuid,
-            camera_name: "Camera001",
-            render_width: 640,
-            render_height: 480,
+            camera_name: cameraName,
+            render_width: width,
+            render_height: height,
+            render_settings: renderSettings,
         },
         type: 'POST',
         success: function(result) {

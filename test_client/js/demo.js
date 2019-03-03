@@ -29,7 +29,6 @@ function initScene() {
         camera.position.z = 9.45;
         camera.lookAt(0, 0.5, 0);
         camera.updateProjectionMatrix();
-        camera.userData = { vr: { camera_overrideFOV: true, camera_type: 1 } };
         scene.add(camera);
         window.demo.camera = camera;
 
@@ -152,7 +151,7 @@ function renderScene(scene, camera, onRenderComplete) {
     // have session? just do it
     if (window.demo.sessionGuid) {
         updateCamera(window.demo.camera);
-        postJob(window.demo.sessionGuid, onRenderComplete);
+        postJob(window.demo.sessionGuid, window.demo.camera.name, onRenderComplete);
         return;
     }
 
@@ -189,7 +188,7 @@ function renderScene(scene, camera, onRenderComplete) {
                 rfarm.postScene(newSession.guid, sceneJson, function(result) {
                     console.log(result);
 
-                    postJob(newSession.guid, onRenderComplete);
+                    postJob(newSession.guid, window.demo.camera.name, onRenderComplete);
                 });
 
             });
@@ -202,9 +201,9 @@ function renderScene(scene, camera, onRenderComplete) {
     })
 }
 
-function postJob(sessionGuid, onRenderComplete) {
+function postJob(sessionGuid, cameraName, onRenderComplete) {
     $("#renderStatus").text("Starting render...");
-    rfarm.createJob(sessionGuid, function(job) {
+    rfarm.createJob(sessionGuid, cameraName, 3000, 1500, { camera_type: 1, camera_overrideFOV: true, camera_fov: 360 }, function(job) {
         $("#renderStatus").text(`Rendering... 0 sec.`);
 
         let t0 = new Date();

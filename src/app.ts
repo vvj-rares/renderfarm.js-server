@@ -27,11 +27,14 @@ class App implements IApp {
 
     private config(): void{
         // to support JSON-encoded bodies
-        this._express.use(express.json());
+        this._express.use(express.json({
+            limit: '50mb'
+        }));
 
         // to support URL-encoded bodies
         this._express.use(bodyParser.urlencoded({
-          extended: true
+            extended: true,
+            limit: '50mb'
         }));
         
         this._express.use(function(req, res, next) {
