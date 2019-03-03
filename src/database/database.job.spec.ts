@@ -105,7 +105,7 @@ describe("Database Job", function() {
         })
 
         async function createSomeJob() {
-            let jobAdded = await database.createJob(helpers.existingApiKey, helpers.existingWorkerGuid, "someCameraName", 100, 200);
+            let jobAdded = await database.createJob(helpers.existingApiKey, helpers.existingWorkerGuid, "someCameraName", 100, 200, {});
             expect(jobAdded).toBeTruthy();
 
             return jobAdded;
