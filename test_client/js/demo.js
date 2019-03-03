@@ -116,6 +116,23 @@ function initScene() {
     cubey.add(cubez);
     // =============
 
+    var roomGeometry = new THREE.BoxGeometry( 100, 80, 100 );
+    // invert the geometry on the x-axis so that all of the faces point inward
+    roomGeometry.scale( - 1, 1, 1 );
+    roomGeometry = new THREE.BufferGeometry().fromGeometry(roomGeometry);
+
+    var roomMaterial = new THREE.MeshBasicMaterial( {
+        color: 0xA9A0A2
+    } );
+
+    let roomMesh = new THREE.Mesh( roomGeometry, roomMaterial );
+    roomMesh.name = "Room001";
+    roomMesh.applyMatrix(new THREE.Matrix4().makeTranslation(0,39.9,0));
+    roomMesh.castShadow = false;
+    roomMesh.receiveShadow = true;
+    scene.add( roomMesh );
+
+
     var planeGeometry = new THREE.PlaneGeometry( 15, 15, 1 );
         planeGeometry = new THREE.BufferGeometry().fromGeometry(planeGeometry);
     var material = new THREE.MeshPhongMaterial({
@@ -142,16 +159,17 @@ function initScene() {
     animate();
 }
 
-function renderScene(scene, camera, onRenderComplete) {
+function renderScene(scene, camera, width, height, renderSettings, onRenderComplete) {
     console.log(camera);
 
-    $("#btnRender").attr("disabled", true);
+    $("#btnRenderImg").attr("disabled", true);
+    $("#btnRenderEnv").attr("disabled", true);
     $("#renderStatus").css("color", "gray");
 
     // have session? just do it
     if (window.demo.sessionGuid) {
         updateCamera(window.demo.camera);
-        postJob(window.demo.sessionGuid, window.demo.camera.name, onRenderComplete);
+        postJob(window.demo.sessionGuid, window.demo.camera.name, width, height, renderSettings, onRenderComplete);
         return;
     }
 
@@ -188,7 +206,7 @@ function renderScene(scene, camera, onRenderComplete) {
                 rfarm.postScene(newSession.guid, sceneJson, function(result) {
                     console.log(result);
 
-                    postJob(newSession.guid, window.demo.camera.name, onRenderComplete);
+                    postJob(newSession.guid, window.demo.camera.name, width, height, renderSettings, onRenderComplete);
                 });
 
             });
@@ -197,13 +215,14 @@ function renderScene(scene, camera, onRenderComplete) {
     }, function(sessionError) {
         $("#renderStatus").text(`${sessionError.message} - ${sessionError.error}`);
         $("#renderStatus").css("color", "red");
-        $("#btnRender").attr("disabled", false);
+        $("#btnRenderImg").attr("disabled", false);
+        $("#btnRenderEnv").attr("disabled", false);
     })
 }
 
-function postJob(sessionGuid, cameraName, onRenderComplete) {
+function postJob(sessionGuid, cameraName, width, height, renderSettings, onRenderComplete) {
     $("#renderStatus").text("Starting render...");
-    rfarm.createJob(sessionGuid, cameraName, 3000, 1500, { camera_type: 1, camera_overrideFOV: true, camera_fov: 360 }, function(job) {
+    rfarm.createJob(sessionGuid, cameraName, width, height, renderSettings, function(job) {
         $("#renderStatus").text(`Rendering... 0 sec.`);
 
         let t0 = new Date();
@@ -219,8 +238,9 @@ function postJob(sessionGuid, cameraName, onRenderComplete) {
 
                     clearInterval(jobTimer);
                     console.log(updatedJob.urls);
-                    $("#vray").attr("src", updatedJob.urls[0]);
-                    $("#btnRender").attr("disabled", false);
+
+                    $("#btnRenderImg").attr("disabled", false);
+                    $("#btnRenderEnv").attr("disabled", false);
 
                     if (onRenderComplete) onRenderComplete( updatedJob.urls[0] );
                 }
@@ -254,4 +274,14 @@ function saveJson(jsonObj, filename) {
         type: "text/plain;charset=utf-8"
     });
     saveAs(blob, filename);
+}
+
+function updateImg(url) {
+    $("#vray").attr("src", url);
+}
+
+function openEnvmapViewer(url) {
+    console.log(" >> openEnvmapViewer: ", url)
+    var win = window.open(`http://renderfarmjs.com/envmap-viewer?url[0]=${url}`, '_blank');
+    win.focus();
 }

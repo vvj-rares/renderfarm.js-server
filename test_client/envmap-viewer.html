@@ -28,15 +28,15 @@
 			}
 		</style>
 
-                <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/91/three.js"></script>
-                <script type="text/javascript" src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/91/three.js"></script>
+		<script type="text/javascript" src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
 		<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 		
 		<script>
 			var urlString = window.location.href;
 			var url = new URL(urlString);
-			var envmapGuid = url.searchParams.get("guid");
-			console.log(envmapGuid);
+			var envmapUrl = url.searchParams.get("url[0]");
+			console.log(envmapUrl);
 		</script>
 
 	</head>
@@ -73,7 +73,7 @@
 				geometry.scale( - 1, 1, 1 );
 
 				var material = new THREE.MeshBasicMaterial( {
-					map: new THREE.TextureLoader().load( `https://acc.renderfarmjs.com/v1/renderoutput/${envmapGuid}.png` )
+					map: new THREE.TextureLoader().load( envmapUrl )
 				} );
 
 				mesh = new THREE.Mesh( geometry, material );

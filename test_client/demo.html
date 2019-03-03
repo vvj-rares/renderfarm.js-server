@@ -35,7 +35,8 @@
     <body onload="initScene()" onbeforeunload="closeSession(demo.sessionGuid)" >
         <div class="canvas-wrapper">
             <div class="toolbar">
-                <button id="btnRender" onclick="renderScene(demo.scene, demo.camera)">Render</button>
+                <button id="btnRenderImg" onclick="renderScene(demo.scene, demo.camera, 640, 480, { camera_type: 0, camera_overrideFOV: false }, updateImg)">Render to Slider</button>
+                <button id="btnRenderEnv" onclick="renderScene(demo.scene, demo.camera, 1000, 500, { camera_type: 1, camera_overrideFOV: true, camera_fov: 360 }, openEnvmapViewer)">Render Environment</button>
                 <button id="btnUpdateCam" onclick="updateCamera(demo.camera)">Update Camera</button>
                 <div id="renderStatus" class="status"></div>
             </div>

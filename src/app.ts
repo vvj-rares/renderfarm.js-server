@@ -26,6 +26,7 @@ class App implements IApp {
     }
 
     private config(): void{
+
         // to support JSON-encoded bodies
         this._express.use(express.json({
             limit: '50mb'
