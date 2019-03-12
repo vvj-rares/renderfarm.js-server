@@ -81,6 +81,9 @@ class ThreeGeometryEndpoint implements IEndpoint {
             let geometryJsonText = LZString.decompressFromBase64(compressedJson);
             let geometryJson: any = JSON.parse(geometryJsonText);
 
+            let generateUv2 = req.body.generate_uv2;
+            // todo: handle uv2 generation
+
             let makeDownloadUrl = function(this: ThreeGeometryEndpoint, geometryJson: any) {
                 return `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/three/geometry/${geometryJson.uuid}`;
             }.bind(this);
