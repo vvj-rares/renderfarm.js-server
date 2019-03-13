@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, ISettings, ISessionService, SessionServiceEvents, ISessionPool, IThreeMaxscriptBridge } from "../../interfaces";
+import { IEndpoint, IDatabase, ISettings, ISessionService, SessionServiceEvents, ISessionPool, IThreeMaxscriptBridge, PostSceneResult } from "../../interfaces";
 import { TYPES } from "../../types";
 import { Session } from "../../database/model/session";
 
@@ -89,8 +89,9 @@ class ThreeObjectEndpoint implements IEndpoint {
             }
 
             let bridge = await this._threeMaxscriptBridgePool.Get(session);
+            let postSceneResult: PostSceneResult;
             try {
-                await bridge.PostScene(session, sceneJson);
+                postSceneResult = await bridge.PostScene(session, sceneJson);
             } catch (err) {
                 console.log(" >> bridge.PostScene failed: ", err);
 
@@ -100,7 +101,7 @@ class ThreeObjectEndpoint implements IEndpoint {
             }
 
             res.status(201);
-            res.end(JSON.stringify({ ok: true, type: "three", data: { uuid: sceneJson.object.uuid } }));
+            res.end(JSON.stringify({ ok: true, type: "three", data: { uuid: sceneJson.object.uuid, unwrapped_geometry: {} } }));
         }.bind(this));
 
         express.put(`/v${this._settings.majorVersion}/three/:uuid`, async function (this: ThreeObjectEndpoint, req, res) {

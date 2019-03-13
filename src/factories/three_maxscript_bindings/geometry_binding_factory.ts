@@ -21,7 +21,8 @@ export class GeometryBindingFactory implements IFactory<IGeometryBinding> {
     {
         let maxscript: IMaxscriptClient = await this._maxscriptClientPool.Get(session);
         let geometryJson = args[0];
+        let generateUv2 = args.length >= 2 ? args[1] : undefined;
 
-        return new GeometryBinding(this._settings, maxscript, geometryJson);
+        return new GeometryBinding(this._settings, maxscript, geometryJson, generateUv2);
     }
 }

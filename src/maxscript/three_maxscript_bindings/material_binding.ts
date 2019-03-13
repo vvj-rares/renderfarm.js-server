@@ -1,4 +1,4 @@
-import { IMaterialBinding, IMaxscriptClient } from "../../interfaces";
+import { IMaterialBinding, IMaxscriptClient, PostResult } from "../../interfaces";
 
 export class MaterialBinding implements IMaterialBinding {
     private _maxscriptClient: IMaxscriptClient;
@@ -17,10 +17,10 @@ export class MaterialBinding implements IMaterialBinding {
         throw new Error("Method not implemented.");
     }
 
-    public async Post(materialJson: any): Promise<string> {
+    public async Post(materialJson: any): Promise<PostResult> {
         this._materialJson = materialJson;
         console.log(" >> MaterialBinding takes json, and sends it to remote maxscript");
-        return JSON.stringify(materialJson);
+        return {};
     }
 
     public async Put(materialJson: any): Promise<any> {

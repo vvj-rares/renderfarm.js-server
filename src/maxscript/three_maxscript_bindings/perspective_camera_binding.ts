@@ -1,4 +1,5 @@
 import { SceneObjectBindingBase } from "./scene_object_binding_base";
+import { PostResult } from "../../interfaces";
 
 export class PerspectiveCameraBinding extends SceneObjectBindingBase {
     public static SrcType: string = "PerspectiveCamera";
@@ -8,7 +9,7 @@ export class PerspectiveCameraBinding extends SceneObjectBindingBase {
         throw new Error("Method not implemented.");
     }
 
-    public async Post(objectJson: any, parentJson: any): Promise<string> {
+    public async Post(objectJson: any, parentJson: any): Promise<PostResult> {
         let cameraName = this.getObjectName(objectJson);
         let parentName = this.getObjectName(parentJson);
 
@@ -20,7 +21,7 @@ export class PerspectiveCameraBinding extends SceneObjectBindingBase {
         this._maxName = cameraName;
         this._maxParentName = parentName;
 
-        return cameraName;
+        return {};
     }
 
     public async Put(objectJson: any): Promise<any> {

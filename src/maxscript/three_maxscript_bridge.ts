@@ -1,4 +1,4 @@
-import { IThreeMaxscriptBridge, ISceneObjectBinding, ISceneObjectBindingFactory } from "../interfaces";
+import { IThreeMaxscriptBridge, ISceneObjectBinding, ISceneObjectBindingFactory, PostSceneResult } from "../interfaces";
 import { isArray } from "util";
 import { Session } from "../database/model/session";
 
@@ -24,17 +24,24 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
         }
     }
 
-    public async PostScene(session: Session, sceneJson: any): Promise<any> {
+    public async PostScene(session: Session, sceneJson: any): Promise<PostSceneResult> {
         let queue: any[] = [ {
             object: sceneJson.object,
             parent: null,
             level: 0
         } ];
 
+        let result: PostSceneResult = {
+            UnwrappedGeometry: {}
+        };
+
         while (queue.length > 0) {
             let el: any = queue.shift();
 
-            await this._createObjectBinding(session, el.object, el.parent);
+            let postResult = await this._createObjectBinding(session, el.object, el.parent);
+            if (postResult.fbxUrl) {
+                console.log(" >> TODO: // store fbx url for ", el.object.geometry);
+            }
 
             let obj = el.object;
             if (isArray(obj.children)) {
@@ -47,6 +54,8 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
                 }
             }
         }
+
+        return result;
     }
 
     public async PutObject(objectJson: any): Promise<any> {

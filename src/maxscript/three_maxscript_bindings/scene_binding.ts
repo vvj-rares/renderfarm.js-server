@@ -1,4 +1,5 @@
 import { SceneObjectBindingBase } from "./scene_object_binding_base";
+import { PostResult } from "../../interfaces";
 
 export class SceneBinding extends SceneObjectBindingBase {
     public static SrcType: string = "Scene";
@@ -8,12 +9,12 @@ export class SceneBinding extends SceneObjectBindingBase {
         throw new Error("Method not implemented.");
     }
 
-    public async Post(objectJson: any, parentJson: any): Promise<string> {
+    public async Post(objectJson: any, parentJson: any): Promise<PostResult> {
         this._maxName = super.getObjectName(objectJson);
         this._maxParentName = undefined;
 
         let res = await this._maxscriptClient.createSceneRoot(this._maxName);
-        return this._maxName;
+        return {};
     }
 
     public async Put(objectJson: any): Promise<any> {

@@ -82,7 +82,6 @@ class ThreeGeometryEndpoint implements IEndpoint {
             let geometryJson: any = JSON.parse(geometryJsonText);
 
             let generateUv2 = req.body.generate_uv2;
-            // todo: handle uv2 generation
 
             let makeDownloadUrl = function(this: ThreeGeometryEndpoint, geometryJson: any) {
                 return `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/three/geometry/${geometryJson.uuid}`;
@@ -93,9 +92,8 @@ class ThreeGeometryEndpoint implements IEndpoint {
             if (isArray(geometryJson)) {
                 let data = [];
                 for (let i in geometryJson) {
-                    let newGeomBinding = await this._geometryBindingFactory.Create(session, geometryJson[i]);
+                    let newGeomBinding = await this._geometryBindingFactory.Create(session, geometryJson[i], generateUv2);
                     geometryCache.Geometries[geometryJson[i].uuid] = newGeomBinding;
-                    // await newGeomBinding.Post(geometryJson, null);
                     let downloadUrl = makeDownloadUrl(geometryJson[i]);
                     data.push(downloadUrl);
                 }
@@ -103,9 +101,8 @@ class ThreeGeometryEndpoint implements IEndpoint {
                 res.status(201);
                 res.end(JSON.stringify({ ok: true, type: "url", data: data }));
             } else {
-                let newGeomBinding = await this._geometryBindingFactory.Create(session, geometryJson);
+                let newGeomBinding = await this._geometryBindingFactory.Create(session, geometryJson, generateUv2);
                 geometryCache.Geometries[geometryJson.uuid] = newGeomBinding;
-                // await newGeomBinding.Post(geometryJson, null);
                 let downloadUrl = makeDownloadUrl(geometryJson);
     
                 res.status(201);

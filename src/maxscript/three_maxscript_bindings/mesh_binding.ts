@@ -1,4 +1,5 @@
 import { SceneObjectBindingBase } from "./scene_object_binding_base";
+import { PostResult } from "../../interfaces";
 
 export class MeshBinding extends SceneObjectBindingBase {
     public static SrcType: string = "Mesh";
@@ -8,7 +9,7 @@ export class MeshBinding extends SceneObjectBindingBase {
         throw new Error("Method not implemented.");
     }
 
-    public async Post(objectJson: any, parentJson: any): Promise<string> {
+    public async Post(objectJson: any, parentJson: any): Promise<PostResult> {
         console.log(" >> MeshBinding:\r\nobjectJson=", objectJson, "\r\nparentJson=", parentJson, "\r\n");
         let geometry = this._geometryCache.Geometries[objectJson.geometry];
         let material = this._materialCache.Materials[objectJson.material];
@@ -32,7 +33,7 @@ export class MeshBinding extends SceneObjectBindingBase {
         this._maxName = meshName;
         this._maxParentName = parentName;
 
-        return meshName;
+        return {};
     }
 
     public async Put(objectJson: any): Promise<any> {

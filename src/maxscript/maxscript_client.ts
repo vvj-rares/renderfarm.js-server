@@ -281,10 +281,47 @@ class MaxscriptClient implements IMaxscriptClient {
         return this.execMaxscript(maxscript, "downloadJson");
     }
 
+    downloadBinaryFile(url: string, path: string): Promise<boolean> {
+        console.log(" >> Downloading file from:\n" + url);
+
+        const curlPath = "C:\\\\bin\\\\curl";
+        let maxscript = `cmdexRun "${curlPath} -k -s -H \\\"Accept: application/octet-stream\\\" \\\"${url}\\\" -o \\\"${path}\\\" "`;
+
+        console.log(" >> maxscript: " + maxscript);
+
+        return this.execMaxscript(maxscript, "downloadBinaryFile");
+    }
+
+    uploadBinaryFile(url: string, path: string): Promise<boolean> {
+        console.log(" >> Uploading file to:\n" + url);
+
+        let escapedFilename = path.replace(/\\/g, "\\\\");
+
+        const curlPath = "C:\\\\bin\\\\curl";
+        let maxscript = `cmdexRun "${curlPath} -F file=@${escapedFilename} https://acc.renderfarmjs.com/v1/renderoutput" `;
+
+        console.log(" >> maxscript: " + maxscript);
+
+        return this.execMaxscript(maxscript, "uploadBinaryFile");
+    }
+
     importMesh(path: string, nodeName: string): Promise<boolean> {
         console.log(" >> importing mesh from ", path);
         let maxscript = `threejsImportBufferGeometry \"${path}\" \"${nodeName}\"`;
+
+        console.log(" >> maxscript: " + maxscript);
+
         return this.execMaxscript(maxscript, "importMesh");
+    }
+
+    exportMesh(path: string, nodeName: string): Promise<boolean> {
+        console.log(" >> exporting mesh to ", path);
+        let maxscript = `select $${nodeName} ; \r\n`
+                      + `exportFile \"${path}\" #noPrompt selectedOnly:true using:FBXEXP `;
+
+        console.log(" >> maxscript: " + maxscript);
+
+        return this.execMaxscript(maxscript, "exportMesh");
     }
 
     assignMaterial(nodeName: string, materialName: string): Promise<boolean> {
@@ -294,6 +331,14 @@ class MaxscriptClient implements IMaxscriptClient {
                         + `) `;
 
         return this.execMaxscript(maxscript, "assignMaterial");
+    }
+
+    unwrapUV2(nodeName: string): Promise<boolean> {
+        let maxscript = `rayysFlattenUV2 $${nodeName}`;
+
+        console.log(" >> maxscript: " + maxscript);
+
+        return this.execMaxscript(maxscript, "unwrapUv2");
     }
 
     renderScene(camera: string, size: number[], filename: string, renderSettings: any): Promise<boolean> {

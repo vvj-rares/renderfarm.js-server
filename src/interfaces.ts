@@ -98,9 +98,16 @@ export interface IMaxscriptClient {
     createMaterial(materialJson: any): Promise<boolean>;
 
     downloadJson(url: string, path: string): Promise<boolean>;
+
     importMesh(path: string, nodeName: string): Promise<boolean>;
+    exportMesh(path: string, nodeName: string): Promise<boolean>; // exports given mesh to FBX format
+
+    downloadBinaryFile(url: string, path: string): Promise<boolean>;
+    uploadBinaryFile(url: string, path: string): Promise<boolean>;
 
     assignMaterial(nodeName: string, materialName: string): Promise<boolean>;
+
+    unwrapUV2(nodeName: string): Promise<boolean>;
 
     renderScene(camera: string, size: number[], filename: string, renderSettings: any): Promise<boolean>;
 }
@@ -145,15 +152,25 @@ export enum SessionServiceEvents {
 }
 
 export interface IThreeMaxscriptBridge {
-    PostScene(session: Session, sceneJson: any): Promise<any>;
+    PostScene(session: Session, sceneJson: any): Promise<PostSceneResult>;
     PutObject(objectJson: any): Promise<any>;
+}
+
+export interface PostSceneResult {
+    readonly UnwrappedGeometry: {
+        [uuid: string]: string; // map geometry uuid => fbx download url
+    }
 }
 
 export interface ISceneObjectBinding {
     Get(): Promise<any>;
-    Post(objectJson: any, parent: any): Promise<any>;
+    Post(objectJson: any, parent: any): Promise<PostResult>;
     Put(objectJson: any): Promise<any>;
     Delete(): Promise<any>;
+}
+
+export interface PostResult {
+    fbxUrl?: string; // is set when posted geometry was unwrapped
 }
 
 export interface ISceneObjectBindingFactory extends IFactory<ISceneObjectBinding> {
