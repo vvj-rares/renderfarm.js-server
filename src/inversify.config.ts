@@ -28,6 +28,7 @@ myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(endpoints.JobEndpoint
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(endpoints.WorkerEndpoint).inSingletonScope();
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(endpoints.WorkspaceFileEndpoint).inSingletonScope();
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(endpoints.RenderOutputEndpoint).inSingletonScope();
+myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(endpoints.FbxGeometryEndpoint).inSingletonScope();
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(endpoints.ThreeObjectEndpoint).inSingletonScope();
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(endpoints.ThreeGeometryEndpoint).inSingletonScope();
 myContainer.bind<interfaces.IEndpoint>(TYPES.IEndpoint).to(endpoints.ThreeMaterialEndpoint).inSingletonScope();
