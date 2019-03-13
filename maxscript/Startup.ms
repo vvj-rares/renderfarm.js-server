@@ -60,14 +60,17 @@ fn rayysBakeVrayLightShadowMaps obj outputDir outputName size =
 
 fn rayysFlattenUV2 curObj =
 (
+		select curObj
+		setCommandPanelTaskMode mode:#modify
+
 		bakeChannel_Obj = 2
-		flattenAngle = 45
-		flattenSpacing = 0.01
+		flattenAngle = 45.0
+		flattenSpacing = 0.005
 		flattenRotate = true
 		flattenFillHoles = true
 		
 		unwrapMod = unwrap_UVW()
-							
+
 		unwrapMod.setAlwaysEdit false
 		unwrapMod.setMapChannel bakeChannel_Obj
 		unwrapMod.setFlattenAngle flattenAngle 
@@ -80,15 +83,13 @@ fn rayysFlattenUV2 curObj =
 		unwrapMod.setDebugLevel 0
 		
 		-- add it to the object
+		unwrapMod.setApplyToWholeObject true
 		addModifier curObj unwrapMod
-		
+
 		-- & flatten things
-		unwrapMod.flattenMapByMatID \
-				flattenAngle  \
-				flattenSpacing  \
-				true \
-				2 \
-				flattenRotate  \
-				flattenFillHoles 
+		-- unwrapMod.flattenMapByMatID flattenAngle flattenSpacing true 2 flattenRotate flattenFillHoles 
+		unwrapMod.flattenMap flattenAngle #([1,0,0], [-1,0,0], [0,1,0], [0,-1,0], [0,0,1], [0,0,-1]) flattenSpacing true bakeChannel_Obj flattenRotate flattenFillHoles
+
+		subobjectlevel = 0
 		-- or use instead of true: autoUnwrapMappingProps.cNormalize.checked \
 )
