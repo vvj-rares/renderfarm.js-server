@@ -1,12 +1,3 @@
-for current in geometry do
-(
-    select current
-    newFileName = current.name
-    newFilePath = pathConfig.GetDir #export
-    completeFilePath = (newFilePath + "/" + newFileName)
-    
-    exportFile completeFilePath #noPrompt selectedOnly:true using:FBXEXP
-)
-
-clearSelection()
-
+select $Box001
+completeFilePath = "C:\\Temp\\Box001.FBX"
+exportFile completeFilePath #noPrompt selectedOnly:true using:FBXEXP
