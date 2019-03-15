@@ -40,7 +40,7 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
 
             let postResult = await this._createObjectBinding(session, el.object, el.parent);
             if (postResult.fbxUrl) {
-                console.log(" >> TODO: // store fbx url for ", el.object.geometry);
+                result.UnwrappedGeometry[ el.object.uuid ] = postResult.fbxUrl;
             }
 
             let obj = el.object;

@@ -298,7 +298,7 @@ class MaxscriptClient implements IMaxscriptClient {
         let escapedFilename = path.replace(/\\/g, "\\\\");
 
         const curlPath = "C:\\\\bin\\\\curl";
-        let maxscript = `cmdexRun "${curlPath} -F file=@${escapedFilename} https://acc.renderfarmjs.com/v1/renderoutput" `;
+        let maxscript = `cmdexRun "${curlPath} -F file=@${escapedFilename} https://acc.renderfarmjs.com/v1/fbxgeometry" `;
 
         console.log(" >> maxscript: " + maxscript);
 
