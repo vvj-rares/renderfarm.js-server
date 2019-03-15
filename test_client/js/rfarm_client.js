@@ -384,7 +384,8 @@ rfarm.postGeometries = function(sessionGuid, geometryJson, onComplete) {
         url: this.baseUrl  + "/v1/three/geometry",
         data: { 
             session_guid: sessionGuid,
-            compressed_json: compressedGeometryData
+            compressed_json: compressedGeometryData,
+            generate_uv2: true
         },
         type: 'POST',
         success: function(result) {

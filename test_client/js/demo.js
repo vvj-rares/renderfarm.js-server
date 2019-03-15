@@ -116,6 +116,14 @@ function initScene() {
     cubey.add(cubez);
     // =============
 
+
+    $.get( "http://mbnsay.com/rayys/assets/box_uv2.json", function( data ) {
+        var bufferGeometryLoader = new THREE.BufferGeometryLoader();
+        let loadedGeometry = bufferGeometryLoader.parse(data);
+        var cubel = new THREE.Mesh(loadedGeometry, materialBlue);
+        scene.add(cubel);
+    });
+
     var roomGeometry = new THREE.BoxGeometry( 100, 80, 100 );
     // invert the geometry on the x-axis so that all of the faces point inward
     roomGeometry.scale( - 1, 1, 1 );
