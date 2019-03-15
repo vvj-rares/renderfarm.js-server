@@ -50,7 +50,7 @@ export class GeometryBinding implements IGeometryBinding {
 
                 let fbxUrl = `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/fbxgeometry`;
                 await this._maxscriptClient.uploadBinaryFile(fbxUrl, fbxFilename);
-                result.fbxUrl = fbxUrl;
+                result.fbxUrl = `${fbxUrl}/${this._geometryJson.uuid}.FBX`;
             }
 
             let resm = await this._maxscriptClient.assignMaterial(maxName, "15 - Default"); // todo: what default material to assign?
