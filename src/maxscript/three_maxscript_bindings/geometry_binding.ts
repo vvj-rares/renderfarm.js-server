@@ -50,7 +50,7 @@ export class GeometryBinding implements IGeometryBinding {
 
                 let bufferGeometryUrl = `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/three/geometry/upload`;
                 await this._maxscriptClient.uploadFile(bufferGeometryUrl, jsonFilename);
-                result.url = `${bufferGeometryUrl}/${this._geometryJson.uuid}.json`;
+                result.url = `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/three/geometry/${this._geometryJson.uuid}`;
             }
 
             let resm = await this._maxscriptClient.assignMaterial(maxName, "15 - Default"); // todo: what default material to assign?
