@@ -144,12 +144,13 @@ class ThreeGeometryEndpoint implements IEndpoint {
             path: 'C:\\Temp\\2bfa6fb80365cb8c0ceeaef158b4f99a',
             size: 3233 } */
 
-            let oldFilename = `${this._settings.current.renderOutputDir}/${req.file.filename}`;
+            let oldFilename = `${this._settings.current.geometryUploadDir}/${req.file.filename}`;
+            let exists = fs.existsSync(oldFilename);
             // let newFilename = `${this._settings.current.renderOutputDir}/${req.file.originalname}`;
 
             //fs.renameSync(oldFilename, newFilename);
 
-            console.log(" >> TODO: now parse BufferGeometry from: ", oldFilename);
+            console.log(" >> TODO: now parse BufferGeometry from: ", oldFilename, ", file exists: ", exists);
 
             // let fileUrl = `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/fbxgeometry/${req.file.originalname}`;
 
