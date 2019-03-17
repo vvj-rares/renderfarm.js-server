@@ -6,4 +6,3 @@ export { RenderOutputEndpoint } from "./renderoutput";
 export { ThreeObjectEndpoint } from "./three/three.object";
 export { ThreeGeometryEndpoint } from "./three/three.geometry";
 export { ThreeMaterialEndpoint } from "./three/three.material";
-export { FbxGeometryEndpoint } from "./fbxgeometry";

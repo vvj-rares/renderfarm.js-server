@@ -1,11 +1,13 @@
 import { injectable, inject } from "inversify";
 import * as express from "express";
-import { IEndpoint, IDatabase, ISettings, IFactory, IMaxscriptClient, IGeometryCache, ISessionPool, ISessionService, IGeometryBinding } from "../../interfaces";
+import { IEndpoint, ISettings, IFactory, IGeometryCache, ISessionPool, ISessionService, IGeometryBinding } from "../../interfaces";
 import { TYPES } from "../../types";
 import { isArray } from "util";
 import { Session } from "../../database/model/session";
 
-const LZString = require("lz-string");
+import multer = require('multer');
+import fs = require('fs');
+import LZString = require("lz-string");
 
 @injectable()
 class ThreeGeometryEndpoint implements IEndpoint {
@@ -13,6 +15,7 @@ class ThreeGeometryEndpoint implements IEndpoint {
     private _sessionService: ISessionService;
     private _geometryBindingFactory: IFactory<IGeometryBinding>;
     private _geometryCachePool: ISessionPool<IGeometryCache>;
+    private _upload: any;
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
                 @inject(TYPES.ISessionService) sessionService: ISessionService,
@@ -23,6 +26,8 @@ class ThreeGeometryEndpoint implements IEndpoint {
         this._sessionService = sessionService;
         this._geometryBindingFactory = geometryBindingFactory;
         this._geometryCachePool = geometryCachePool;
+
+        this._upload = multer({ dest: this._settings.current.renderOutputDir });
     }
 
     bind(express: express.Application) {
@@ -120,6 +125,37 @@ class ThreeGeometryEndpoint implements IEndpoint {
             res.status(200);
             res.end(JSON.stringify({}));
         }.bind(this));
+
+        express.post(`/v${this._settings.majorVersion}/three/geometry/upload`, this._upload.single('file'), async function (this: ThreeGeometryEndpoint, req, res) {
+            console.log(`POST on ${req.path} with: `, req.file ? req.file : "undefined");
+
+            if (!req.file) {
+                res.status(400);
+                res.end(JSON.stringify({ ok: false, message: "missing file", error: null }, null, 2));
+                return;
+            }
+
+            /* for example: { fieldname: 'file',
+            originalname: 'GUID-0B096929-58A7-4DE1-A0FD-776BEE5E3CB5.png',
+            encoding: '7bit',
+            mimetype: 'image/png',
+            destination: 'C:\\Temp',
+            filename: '2bfa6fb80365cb8c0ceeaef158b4f99a',
+            path: 'C:\\Temp\\2bfa6fb80365cb8c0ceeaef158b4f99a',
+            size: 3233 } */
+
+            let oldFilename = `${this._settings.current.renderOutputDir}/${req.file.filename}`;
+            // let newFilename = `${this._settings.current.renderOutputDir}/${req.file.originalname}`;
+
+            //fs.renameSync(oldFilename, newFilename);
+
+            console.log(" >> TODO: now parse BufferGeometry from: ", oldFilename);
+
+            // let fileUrl = `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/fbxgeometry/${req.file.originalname}`;
+
+            res.status(201);
+            res.end(JSON.stringify({ ok: true, type: "url", data: {} }));
+        }.bind(this))
 
         express.delete(`/v${this._settings.majorVersion}/three/geometry/:uuid`, async function (this: ThreeGeometryEndpoint, req, res) {
             let sessionGuid = req.body.session;
