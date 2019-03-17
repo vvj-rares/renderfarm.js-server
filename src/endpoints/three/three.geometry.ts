@@ -144,18 +144,22 @@ class ThreeGeometryEndpoint implements IEndpoint {
             path: 'C:\\Temp\\2bfa6fb80365cb8c0ceeaef158b4f99a',
             size: 3233 } */
 
-            let oldFilename = `${this._settings.current.geometryUploadDir}/${req.file.filename}`;
-            let exists = fs.existsSync(oldFilename);
+            let filename = `${this._settings.current.geometryUploadDir}/${req.file.filename}`;
+            let exists = fs.existsSync(filename);
             // let newFilename = `${this._settings.current.renderOutputDir}/${req.file.originalname}`;
 
             //fs.renameSync(oldFilename, newFilename);
 
-            console.log(" >> TODO: now parse BufferGeometry from: ", oldFilename, ", file exists: ", exists);
+            console.log(" >> TODO: now parse BufferGeometry from: ", filename, ", file exists: ", exists);
+            let uploadedData = fs.readFileSync(filename);
+            let json = JSON.parse(uploadedData.toString());
+
+            console.log(" >> Parsed BufferGeometry: ", json);
 
             // let fileUrl = `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/fbxgeometry/${req.file.originalname}`;
 
             res.status(201);
-            res.end(JSON.stringify({ ok: true, type: "url", data: {} }));
+            res.end(JSON.stringify({ ok: true, type: "url", data: {  } }));
         }.bind(this))
 
         express.delete(`/v${this._settings.majorVersion}/three/geometry/:uuid`, async function (this: ThreeGeometryEndpoint, req, res) {
