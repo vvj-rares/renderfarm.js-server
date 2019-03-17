@@ -11,6 +11,7 @@ module.exports = function() { return {
         sslKey: "ssl/key.pem",
         sslCert: "ssl/cert.pem",
         renderOutputDir: "/home/rfarm-api/renderoutput", // this is where /renderoutput serves files
+        geometryUploadDir: "/home/rfarm-api/geometry/upload", // this is where /geometry/upload stores files
         apiKeyCheck: true,
         workspaceCheck: true,
         expireSessions: true,
@@ -53,6 +54,7 @@ module.exports = function() { return {
         sslCert: "ssl/cert.pem",
         renderOutputDir: "C:\\Temp",
         renderOutputLocal: "C:\\Temp",
+        geometryUploadDir: "C:\\Temp",
         apiKeyCheck: true,
         workspaceCheck: true,
         deleteDeadWorkers: true,

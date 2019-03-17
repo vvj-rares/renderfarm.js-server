@@ -27,7 +27,7 @@ class ThreeGeometryEndpoint implements IEndpoint {
         this._geometryBindingFactory = geometryBindingFactory;
         this._geometryCachePool = geometryCachePool;
 
-        this._upload = multer({ dest: this._settings.current.renderOutputDir });
+        this._upload = multer({ dest: this._settings.current.geometryUploadDir });
     }
 
     bind(express: express.Application) {
