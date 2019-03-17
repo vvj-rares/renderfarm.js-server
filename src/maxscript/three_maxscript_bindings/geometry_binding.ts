@@ -45,12 +45,12 @@ export class GeometryBinding implements IGeometryBinding {
             console.log(resi);
             if (this._generateUv2) {
                 await this._maxscriptClient.unwrapUV2(maxName);
-                let fbxFilename = `C:\\\\Temp\\\\${this._geometryJson.uuid}.FBX`;
-                await this._maxscriptClient.exportMesh(fbxFilename, maxName);
+                let jsonFilename = `C:\\\\Temp\\\\${this._geometryJson.uuid}.json`;
+                await this._maxscriptClient.exportMesh(jsonFilename, maxName, this._geometryJson.uuid);
 
-                let fbxUrl = `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/fbxgeometry`;
-                await this._maxscriptClient.uploadBinaryFile(fbxUrl, fbxFilename);
-                result.fbxUrl = `${fbxUrl}/${this._geometryJson.uuid}.FBX`;
+                let bufferGeometryUrl = `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/three/geometry/upload`;
+                await this._maxscriptClient.uploadFile(bufferGeometryUrl, jsonFilename);
+                result.url = `${bufferGeometryUrl}/${this._geometryJson.uuid}.json`;
             }
 
             let resm = await this._maxscriptClient.assignMaterial(maxName, "15 - Default"); // todo: what default material to assign?

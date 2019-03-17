@@ -100,10 +100,10 @@ export interface IMaxscriptClient {
     downloadJson(url: string, path: string): Promise<boolean>;
 
     importMesh(path: string, nodeName: string): Promise<boolean>;
-    exportMesh(path: string, nodeName: string): Promise<boolean>; // exports given mesh to FBX format
+    exportMesh(path: string, nodeName: string, uuid: string): Promise<boolean>;
 
-    downloadBinaryFile(url: string, path: string): Promise<boolean>;
-    uploadBinaryFile(url: string, path: string): Promise<boolean>;
+    downloadFile(url: string, path: string): Promise<boolean>;
+    uploadFile(url: string, path: string): Promise<boolean>;
 
     assignMaterial(nodeName: string, materialName: string): Promise<boolean>;
 
@@ -170,7 +170,7 @@ export interface ISceneObjectBinding {
 }
 
 export interface PostResult {
-    fbxUrl?: string; // is set when posted geometry was unwrapped
+    url?: string; // is set when posted geometry was unwrapped
 }
 
 export interface ISceneObjectBindingFactory extends IFactory<ISceneObjectBinding> {

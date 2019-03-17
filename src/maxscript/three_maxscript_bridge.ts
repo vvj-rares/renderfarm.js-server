@@ -39,8 +39,8 @@ export class ThreeMaxscriptBridge implements IThreeMaxscriptBridge {
             let el: any = queue.shift();
 
             let postResult = await this._createObjectBinding(session, el.object, el.parent);
-            if (postResult.fbxUrl) {
-                result.UnwrappedGeometry[ el.object.geometry ] = postResult.fbxUrl;
+            if (postResult.url) {
+                result.UnwrappedGeometry[ el.object.geometry ] = postResult.url;
             }
 
             let obj = el.object;

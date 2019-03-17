@@ -281,7 +281,7 @@ class MaxscriptClient implements IMaxscriptClient {
         return this.execMaxscript(maxscript, "downloadJson");
     }
 
-    downloadBinaryFile(url: string, path: string): Promise<boolean> {
+    downloadFile(url: string, path: string): Promise<boolean> {
         console.log(" >> Downloading file from:\n" + url);
 
         const curlPath = "C:\\\\bin\\\\curl";
@@ -289,20 +289,20 @@ class MaxscriptClient implements IMaxscriptClient {
 
         console.log(" >> maxscript: " + maxscript);
 
-        return this.execMaxscript(maxscript, "downloadBinaryFile");
+        return this.execMaxscript(maxscript, "downloadFile");
     }
 
-    uploadBinaryFile(url: string, path: string): Promise<boolean> {
+    uploadFile(url: string, path: string): Promise<boolean> {
         console.log(" >> Uploading file to:\n" + url);
 
         let escapedFilename = path.replace(/\\/g, "\\\\");
 
         const curlPath = "C:\\\\bin\\\\curl";
-        let maxscript = `cmdexRun "${curlPath} -F file=@${escapedFilename} https://acc.renderfarmjs.com/v1/three/geometry/upload" `;
+        let maxscript = `cmdexRun "${curlPath} -F file=@${escapedFilename} ${url}" `;
 
         console.log(" >> maxscript: " + maxscript);
 
-        return this.execMaxscript(maxscript, "uploadBinaryFile");
+        return this.execMaxscript(maxscript, "uploadFile");
     }
 
     importMesh(path: string, nodeName: string): Promise<boolean> {
@@ -314,10 +314,9 @@ class MaxscriptClient implements IMaxscriptClient {
         return this.execMaxscript(maxscript, "importMesh");
     }
 
-    exportMesh(path: string, nodeName: string): Promise<boolean> {
+    exportMesh(path: string, nodeName: string, uuid: string): Promise<boolean> {
         console.log(" >> exporting mesh to ", path);
-        let maxscript = `select $${nodeName} ; \r\n`
-                      + `exportFile \"${path}\" #noPrompt selectedOnly:true using:FBXEXP `;
+        let maxscript = `threejsExportBufferGeometry \"${path}\" \"${nodeName}\" \"${uuid}\"`;
 
         console.log(" >> maxscript: " + maxscript);
 
