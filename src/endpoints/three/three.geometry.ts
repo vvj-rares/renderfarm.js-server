@@ -156,6 +156,13 @@ class ThreeGeometryEndpoint implements IEndpoint {
 
             console.log(" >> Parsed BufferGeometry: ", json);
 
+            let geometryCache = await this._geometryCachePool.FindOne( 
+                cacheItem => Object.keys(cacheItem.Geometries).find(key => key === json.uuid) !== undefined 
+            );
+
+            console.log(" >> Updating BufferGeometry in cache: ", json.uuid);
+            await geometryCache.Geometries[json.uuid].Put(json, false);
+
             // let fileUrl = `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/fbxgeometry/${req.file.originalname}`;
 
             res.status(201);

@@ -48,8 +48,8 @@ export class GeometryBinding implements IGeometryBinding {
                 let jsonFilename = `C:\\\\Temp\\\\${this._geometryJson.uuid}.json`;
                 await this._maxscriptClient.exportMesh(jsonFilename, maxName, this._geometryJson.uuid);
 
-                let bufferGeometryUrl = `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/three/geometry/upload`;
-                await this._maxscriptClient.uploadFile(bufferGeometryUrl, jsonFilename);
+                let uploadUrl = `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/three/geometry/upload`;
+                await this._maxscriptClient.uploadFile(uploadUrl, jsonFilename);
                 result.url = `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/three/geometry/${this._geometryJson.uuid}`;
             }
 
@@ -64,8 +64,13 @@ export class GeometryBinding implements IGeometryBinding {
         return result;
     }
 
-    public async Put(geometryJson: any): Promise<any> {
-        throw new Error("Method not implemented.");
+    public async Put(geometryJson: any, upload: boolean): Promise<any> {
+        this._geometryJson = geometryJson;
+        if (upload) {
+            throw new Error("Method not implemented.");
+        } else {
+            return true;
+        }
     }
 
     public async Delete(): Promise<any> {

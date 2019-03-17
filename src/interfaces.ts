@@ -182,7 +182,7 @@ export interface IGeometryBinding {
     readonly ThreeJson: any;
     Get(): Promise<any>;
     Post(maxName: string): Promise<any>;
-    Put(geometryJson: any): Promise<any>;
+    Put(geometryJson: any, upload: boolean): Promise<any>;
     Delete(): Promise<any>;
 }
 
