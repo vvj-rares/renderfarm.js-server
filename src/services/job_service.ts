@@ -87,7 +87,7 @@ export class JobService extends EventEmitter implements IJobService {
             let maxInstanceInfo: IMaxInstanceInfo;
             let keys = Object.keys(cache.Geometries);
             console.log(" >> geometry cache keys: " + JSON.stringify(keys));
-            for (let key in keys) {
+            for (let key of keys) {
                 let geomBinding = cache.Geometries[key];
                 if (geomBinding) {
                     maxInstanceInfo = geomBinding.MaxInstances.find(el => el.MeshUuid === job.bakeMeshUuid);
