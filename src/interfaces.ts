@@ -115,7 +115,6 @@ export interface IMaxscriptClient {
 
 export interface IBakeTexturesFilenames {
     lightmap: string;
-    shadowmap: string;
 }
 
 export interface IFactory<T> {

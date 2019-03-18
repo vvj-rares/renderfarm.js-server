@@ -100,8 +100,7 @@ export class JobService extends EventEmitter implements IJobService {
             }
 
             let filenames: IBakeTexturesFilenames = {
-                lightmap: job.guid + "_VRayLightingMap.png",
-                shadowmap: job.guid + "_VRayRawShadowMap.png"
+                lightmap: job.guid + "_VRayLightingMap.png"
             };
 
             client.bakeTextures(maxInstanceInfo.MaxName, job.renderWidth, filenames, job.renderSettings)
@@ -110,8 +109,7 @@ export class JobService extends EventEmitter implements IJobService {
                     let completedJob = await this._database.completeJob(
                         job, 
                         [
-                            `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/renderoutput/${filenames.lightmap}`,
-                            `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/renderoutput/${filenames.shadowmap}`
+                            `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/renderoutput/${filenames.lightmap}`
                         ]);
                     this.emit("job:completed", completedJob);
                 }.bind(this))

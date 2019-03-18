@@ -373,7 +373,6 @@ class MaxscriptClient implements IMaxscriptClient {
 
     bakeTextures(bakeObjectName: string, size: number, filenames: IBakeTexturesFilenames, renderSettings: any): Promise<boolean> {
         let escapedLightmap  = filenames.lightmap.replace(/\\/g, "\\\\");
-        let escapedShadowmap = filenames.shadowmap.replace(/\\/g, "\\\\");
 
         let maxscript =   ` pngio.settype(#true24) ;\r\n`  // enums: {#paletted|#true24|#true48|#gray8|#gray16} 
                         + ` pngio.setAlpha false ;\r\n`
@@ -386,19 +385,18 @@ class MaxscriptClient implements IMaxscriptClient {
         maxscript = maxscript 
                         + ` viewport.setLayout #layout_1 ;\r\n`
                         + ` size = ${size} ;\r\n`
-                        + ` outputNames = #(\"${escapedLightmap}\", \"${escapedShadowmap}\") ;\r\n`
+                        + ` outputNames = #( \"${escapedLightmap}\" ) ;\r\n`
                         + ` rayysBakeVrayLightShadowMaps $${bakeObjectName} "C:\\\\Temp" outputNames size ;\r\n`
                         + ` select $${bakeObjectName} ; \r\n`
                         + ` render rendertype:#bakeSelected vfb:on progressBar:true outputSize:[size,size] ;\r\n`
-                        + ` cmdexRun "C:\\\\bin\\\\curl.exe -F file=@${escapedLightmap} https://acc.renderfarmjs.com/v1/renderoutput" ;\r\n`
-                        + ` cmdexRun "C:\\\\bin\\\\curl.exe -F file=@${escapedShadowmap} https://acc.renderfarmjs.com/v1/renderoutput" `;
+                        + ` cmdexRun "C:\\\\bin\\\\curl.exe -F file=@${escapedLightmap} https://acc.renderfarmjs.com/v1/renderoutput" `
 
         // see here: http://help.autodesk.com/view/3DSMAX/2018/ENU/?guid=__files_GUID_9175301C_13E6_488B_ABA6_D27CD804B205_htm
         // can also use: JPEG.setQuality(5); JPEG.setSmoothing(1);
 
         console.log(" >> maxscript: " + maxscript);
 
-        return this.execMaxscript(maxscript, "renderScene");
+        return this.execMaxscript(maxscript, "bakeTextures");
     }
 }
 
