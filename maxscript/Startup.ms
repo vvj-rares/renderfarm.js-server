@@ -41,8 +41,10 @@ fn rayysBakeVrayLightShadowMaps obj outputNames size =
     be1.outputSzX = be1.outputSzY = size --set the size of the baked map --specifythe full file path, name and type:
     be1.fileType = outputNames[1]
     be1.fileName = filenameFromPath be1.fileType
-    be1.filterOn = true --enable filtering
-    be1.enabled = true --enable baking
+	be1.filterOn = false --enable filtering
+	be1.backgroundColor = color 0.5 0.5 0.5
+	be1.enabled = true --enable baking
+	be1.vrayVFB = true;
 
     --be2 = VRayLightingMap() -- instance of the bake element class
     --be2.outputSzX =be2.outputSzY = size --set the size of the baked map --specifythe full file path, name and type:
@@ -66,7 +68,7 @@ fn rayysFlattenUV2 curObj =
 		bakeChannel_Obj = 2
 		flattenAngle = 45.0
 		flattenSpacing = 0.005
-		flattenRotate = true
+		flattenRotate = false
 		flattenFillHoles = true
 		
 		unwrapMod = unwrap_UVW()

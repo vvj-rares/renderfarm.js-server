@@ -41,7 +41,7 @@ function initScene() {
     spotLight.name = "SpotLight1";
     spotLight.position.set( 10, 40, 10 );
     spotLight.target.position.set( 0, 0, 0 );
-    spotLight.angle = Math.PI / 20;
+    spotLight.angle = Math.PI / 10;
 
     spotLight.castShadow = true;
     spotLight.shadow.bias = 1e-6;
@@ -53,9 +53,10 @@ function initScene() {
     spotLight.shadow.camera.fov = 360 * spotLight.angle / Math.PI;
 
     scene.add(spotLight);
+    window.demo.spotLight = spotLight;
 
     var helper = new THREE.CameraHelper( spotLight.shadow.camera );
-    scene.add( helper );
+    // scene.add( helper );
 
     var gridHelper = new THREE.GridHelper(4, 4);
     scene.add(gridHelper);
@@ -130,8 +131,7 @@ function initScene() {
     roomMesh.applyMatrix(new THREE.Matrix4().makeTranslation(0,39.9,0));
     roomMesh.castShadow = false;
     roomMesh.receiveShadow = true;
-    scene.add( roomMesh );
-
+    // scene.add( roomMesh );
 
     var planeGeometry = new THREE.PlaneGeometry( 15, 15, 1 );
         planeGeometry = new THREE.BufferGeometry().fromGeometry(planeGeometry);
@@ -226,7 +226,7 @@ function renderScene(scene, camera, width, height, renderSettings, onRenderCompl
 
                                     // traverse the scene now
                                     let queue = [ window.demo.scene ];
-                                    let uuid0; // dirty hack
+                                    let toBake = [];
                                     while (queue.length > 0) {
                                         let obj = queue.shift();
                                         if (obj.children) {
@@ -238,9 +238,7 @@ function renderScene(scene, camera, width, height, renderSettings, onRenderCompl
                                         if (obj.type === "Mesh") {
                                             if (unwrappedGeometries[obj.geometry.uuid]) {
                                                 obj.geometry = unwrappedGeometries[obj.geometry.uuid];
-                                                if (!uuid0) {
-                                                    uuid0 = obj.uuid; // dirty hack here
-                                                }
+                                                toBake.push(obj);
                                             } else {
                                                 console.warn("geometry.uuid not found in unwrappedGeometries: " + obj.geometry.uuid);
                                             }
@@ -250,7 +248,21 @@ function renderScene(scene, camera, width, height, renderSettings, onRenderCompl
                                     console.log(window.demo.scene);
 
                                     // postJob(newSession.guid, window.demo.camera.name, width, height, renderSettings, onRenderComplete);
-                                    postJob(newSession.guid, undefined, uuid0, width, height, renderSettings, onRenderComplete);
+                                    let bake = function(q) {
+                                        if (q.length === 0) return;
+                                        let mesh = q.shift();
+
+                                        postJob(newSession.guid, undefined, mesh.uuid, 512, 512, renderSettings, function(urls) {
+                                            var lightmap = new THREE.TextureLoader().load( urls[0] );
+                                            mesh.material.lightMap = lightmap;
+                                            mesh.material.needsUpdate = true;
+                                            bake(q);
+                                        });
+                                    }
+
+                                    let l = scene.children.indexOf(window.demo.spotLight);
+                                    scene.children.splice(l, 1);
+                                    bake(toBake);
                                 }
                             });
                         }
