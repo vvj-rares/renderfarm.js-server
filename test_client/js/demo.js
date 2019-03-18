@@ -116,14 +116,6 @@ function initScene() {
     cubey.add(cubez);
     // =============
 
-
-    $.get( "http://mbnsay.com/rayys/assets/box_uv2.json", function( data ) {
-        var bufferGeometryLoader = new THREE.BufferGeometryLoader();
-        let loadedGeometry = bufferGeometryLoader.parse(data);
-        var cubel = new THREE.Mesh(loadedGeometry, materialBlue);
-        scene.add(cubel);
-    });
-
     var roomGeometry = new THREE.BoxGeometry( 100, 80, 100 );
     // invert the geometry on the x-axis so that all of the faces point inward
     roomGeometry.scale( - 1, 1, 1 );
@@ -214,7 +206,54 @@ function renderScene(scene, camera, width, height, renderSettings, onRenderCompl
                 rfarm.postScene(newSession.guid, sceneJson, function(result) {
                     console.log(result);
 
-                    postJob(newSession.guid, window.demo.camera.name, width, height, renderSettings, onRenderComplete);
+                    if (result.data.unwrapped_geometry) {
+                        // let queue = [ window.demo.scene ];
+                        // type: "Mesh"
+                        let unwrappedGeometries = {};
+                        let responses = [];
+                        for (let uuid in result.data.unwrapped_geometry) {
+                            $.get(result.data.unwrapped_geometry[uuid], function(json) {
+                                responses.push(json);
+
+                                var bufferGeometryLoader = new THREE.BufferGeometryLoader();
+                                let loadedGeometry = bufferGeometryLoader.parse(json);
+                                loadedGeometry.uuid = json.uuid;
+                                unwrappedGeometries[json.uuid] = loadedGeometry;
+
+                                if (responses.length === Object.keys(result.data.unwrapped_geometry).length ) {
+                                    console.log("all complete: ", responses);
+                                    console.log("unwrappedGeometries: ", unwrappedGeometries);
+
+                                    // traverse the scene now
+                                    let queue = [ window.demo.scene ];
+                                    while (queue.length > 0) {
+                                        let obj = queue.shift();
+                                        if (obj.children) {
+                                            for (let c in obj.children) {
+                                                queue.push( obj.children[c] );
+                                            }
+                                        }
+        
+                                        if (obj.type === "Mesh") {
+                                            if (unwrappedGeometries[obj.geometry.uuid]) {
+                                                obj.geometry = unwrappedGeometries[obj.geometry.uuid];
+                                            } else {
+                                                console.warn("geometry.uuid not found in unwrappedGeometries: " + obj.geometry.uuid);
+                                            }
+                                        }
+                                    }
+
+                                    console.log(window.demo.scene);
+                                }
+                            });
+                        }
+                    }
+
+                    setTimeout(function() {
+                        closeSession(newSession.guid);
+                    }, 15000);
+
+                    // postJob(newSession.guid, window.demo.camera.name, width, height, renderSettings, onRenderComplete);
                 });
 
             });
