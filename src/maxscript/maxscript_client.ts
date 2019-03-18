@@ -386,7 +386,7 @@ class MaxscriptClient implements IMaxscriptClient {
                         + ` viewport.setLayout #layout_1 ;\r\n`
                         + ` size = ${size} ;\r\n`
                         + ` outputNames = #( \"${escapedLightmap}\" ) ;\r\n`
-                        + ` rayysBakeVrayLightShadowMaps $${bakeObjectName} "C:\\\\Temp" outputNames size ;\r\n`
+                        + ` rayysBakeVrayLightShadowMaps $${bakeObjectName} outputNames size ;\r\n`
                         + ` select $${bakeObjectName} ; \r\n`
                         + ` render rendertype:#bakeSelected vfb:on progressBar:true outputSize:[size,size] ;\r\n`
                         + ` cmdexRun "C:\\\\bin\\\\curl.exe -F file=@${escapedLightmap} https://acc.renderfarmjs.com/v1/renderoutput" `

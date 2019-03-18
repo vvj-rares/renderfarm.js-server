@@ -109,7 +109,7 @@ export class JobService extends EventEmitter implements IJobService {
                     let completedJob = await this._database.completeJob(
                         job, 
                         [
-                            `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/renderoutput/${filenames.lightmap}`
+                            `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/renderoutput/${job.guid}_VRayLightingMap.png`
                         ]);
                     this.emit("job:completed", completedJob);
                 }.bind(this))

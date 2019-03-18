@@ -31,7 +31,7 @@ fn rayysGetAllMaterialNames = (
     return json
 )
 
-fn rayysBakeVrayLightShadowMaps obj outputDir outputNames size =
+fn rayysBakeVrayLightShadowMaps obj outputNames size =
 (
     --Clear all render elements 
     obj.iNodeBakeProperties.removeAllBakeElements() 
@@ -39,14 +39,14 @@ fn rayysBakeVrayLightShadowMaps obj outputDir outputNames size =
     --Preparing the Bake Elements:
     be1 = VRayLightingMap() --instance of the bake element class
     be1.outputSzX = be1.outputSzY = size --set the size of the baked map --specifythe full file path, name and type:
-    be1.fileType = outputDir + "\\" + outputNames[1]
+    be1.fileType = outputNames[1]
     be1.fileName = filenameFromPath be1.fileType
     be1.filterOn = true --enable filtering
     be1.enabled = true --enable baking
 
     --be2 = VRayLightingMap() -- instance of the bake element class
     --be2.outputSzX =be2.outputSzY = size --set the size of the baked map --specifythe full file path, name and type:
-    --be2.fileType = outputDir + "\\" + outputNames[2]
+    --be2.fileType = outputNames[2]
     --be2.fileName = filenameFromPath be2.fileType
     --be2.filterOn = true --enable filtering
     --be2.enabled = true --enable baking --Preparing theobjectfor baking:
