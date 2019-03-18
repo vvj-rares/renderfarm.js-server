@@ -83,6 +83,8 @@ export class JobService extends EventEmitter implements IJobService {
         } else if (job.bakeMeshUuid) {
 
             let cache = await this._geometryCachePool.Get(session);
+            console.log(" >> geometry cache dump: " + JSON.stringify(cache));
+
             let maxInstanceInfo: IMaxInstanceInfo;
             for (let key in Object.keys(cache.Geometries)) {
                 let geomBinding = cache.Geometries[key];

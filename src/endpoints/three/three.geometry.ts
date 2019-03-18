@@ -32,8 +32,7 @@ class ThreeGeometryEndpoint implements IEndpoint {
 
     bind(express: express.Application) {
         express.get(`/v${this._settings.majorVersion}/three/geometry/:uuid`, async function (this: ThreeGeometryEndpoint, req, res) {
-            let sessionGuid = req.body.session;
-            console.log(`GET on ${req.path} with session: ${sessionGuid}`);
+            console.log(`GET on ${req.path}`);
 
             let uuid = req.params.uuid;
             console.log(`todo: // retrieve geometry ${uuid}`);
