@@ -83,14 +83,17 @@ export class JobService extends EventEmitter implements IJobService {
         } else if (job.bakeMeshUuid) {
 
             let cache = await this._geometryCachePool.Get(session);
-            console.log(" >> geometry cache dump: " + JSON.stringify(cache));
 
             let maxInstanceInfo: IMaxInstanceInfo;
-            for (let key in Object.keys(cache.Geometries)) {
+            let keys = Object.keys(cache.Geometries);
+            console.log(" >> geometry cache keys: " + JSON.stringify(keys));
+            for (let key in keys) {
                 let geomBinding = cache.Geometries[key];
                 if (geomBinding) {
                     maxInstanceInfo = geomBinding.MaxInstances.find(el => el.MeshUuid === job.bakeMeshUuid);
                     if (maxInstanceInfo) break;
+                } else {
+                    console.log(`    WARN! cache.Geometries[${key}] is not truthy`);
                 }
             }
             if (!maxInstanceInfo) {
