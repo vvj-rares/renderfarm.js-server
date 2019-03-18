@@ -9,19 +9,16 @@ const LZString = require("lz-string");
 @injectable()
 class ThreeObjectEndpoint implements IEndpoint {
     private _settings: ISettings;
-    private _database: IDatabase;
     private _sessionService: ISessionService;
     private _threeMaxscriptBridgePool: ISessionPool<IThreeMaxscriptBridge>;
 
     private _objects: { [sessionGuid: string] : any; } = {};
 
     constructor(@inject(TYPES.ISettings) settings: ISettings,
-                @inject(TYPES.IDatabase) database: IDatabase,
                 @inject(TYPES.ISessionService) sessionService: ISessionService,
                 @inject(TYPES.IThreeMaxscriptBridgePool) threeMaxscriptBridgePool: ISessionPool<IThreeMaxscriptBridge>,
     ) {
         this._settings = settings;
-        this._database = database;
         this._sessionService = sessionService;
         this._threeMaxscriptBridgePool = threeMaxscriptBridgePool;
 

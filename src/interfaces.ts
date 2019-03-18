@@ -47,7 +47,7 @@ export interface IDatabase {
     //jobs
     getJob(jobGuid: string): Promise<Job>;
     getActiveJobs(workgroup: string): Promise<Job[]>;
-    createJob(apiKey: string, workerGuid: string, cameraName: string, bakeObjectName: string, renderWidth: number, renderHeight: number, renderSettings: any): Promise<Job>;
+    createJob(apiKey: string, workerGuid: string, cameraName: string, bakeMeshUuid: string, renderWidth: number, renderHeight: number, renderSettings: any): Promise<Job>;
     updateJob(job: Job, setter: any): Promise<Job>;
     completeJob(job: Job, urls: string[]): Promise<Job>;
     cancelJob(job: Job): Promise<Job>;
@@ -186,10 +186,17 @@ export interface ISceneObjectBindingFactory extends IFactory<ISceneObjectBinding
 
 export interface IGeometryBinding {
     readonly ThreeJson: any;
+    readonly MaxInstances: IMaxInstanceInfo[];
+
     Get(): Promise<any>;
-    Post(maxName: string): Promise<any>;
+    Post(meshUuid: string, maxName: string): Promise<any>;
     Put(geometryJson: any, upload: boolean): Promise<any>;
     Delete(): Promise<any>;
+}
+
+export interface IMaxInstanceInfo {
+    MeshUuid: string; // uuid of Mesh object, not BufferGeometry
+    MaxName: string;
 }
 
 export interface IGeometryCache {

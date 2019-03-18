@@ -1,4 +1,4 @@
-import { IGeometryBinding, IMaxscriptClient, ISettings, PostResult } from "../../interfaces";
+import { IGeometryBinding, IMaxscriptClient, ISettings, PostResult, IMaxInstanceInfo } from "../../interfaces";
 
 export class GeometryBinding implements IGeometryBinding {
     private _settings: ISettings;
@@ -6,7 +6,7 @@ export class GeometryBinding implements IGeometryBinding {
     private _geometryJson: any;
     private _generateUv2: boolean;
 
-    private _maxInstances: string[] = [];
+    private _maxInstances: IMaxInstanceInfo[] = [];
 
     public constructor(
         settings: ISettings,
@@ -24,11 +24,15 @@ export class GeometryBinding implements IGeometryBinding {
         return this._geometryJson;
     }
 
+    public get MaxInstances(): IMaxInstanceInfo[] {
+        return this._maxInstances;
+    }
+
     public async Get(): Promise<any> {
         throw new Error("Method not implemented.");
     }
 
-    public async Post(maxName: string): Promise<PostResult> {
+    public async Post(meshUuid: string, maxName: string): Promise<PostResult> {
         let result: PostResult = {};
 
         console.log(" >> GeometryBinding takes json, and sends it to remote maxscript");
@@ -57,9 +61,12 @@ export class GeometryBinding implements IGeometryBinding {
             console.log(resm);
         } else {
             console.log(` >> todo: // instantiate BufferGeometr as ${maxName} from existing 3dsmax node ${this._maxInstances[0]}`);
-            let resc = await this._maxscriptClient.cloneInstance(this._maxInstances[0], maxName);
+            let resc = await this._maxscriptClient.cloneInstance(this._maxInstances[0].MaxName, maxName);
         }
-        this._maxInstances.push(maxName);
+        this._maxInstances.push({
+            MeshUuid: meshUuid,
+            MaxName: maxName,
+        });
 
         return result;
     }

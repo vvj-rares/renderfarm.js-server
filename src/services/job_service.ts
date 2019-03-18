@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../types";
-import { ISettings, IDatabase, IJobService, ISessionPool, IMaxscriptClient, IBakeTexturesFilenames } from "../interfaces";
+import { ISettings, IDatabase, IJobService, ISessionPool, IMaxscriptClient, IBakeTexturesFilenames, IGeometryCache, IMaxInstanceInfo } from "../interfaces";
 import { Job } from "../database/model/job";
 
 ///<reference path="./typings/node/node.d.ts" />
@@ -12,6 +12,7 @@ export class JobService extends EventEmitter implements IJobService {
     private _settings: ISettings;
     private _database: IDatabase;
     private _maxscriptClientPool: ISessionPool<IMaxscriptClient>;
+    private _geometryCachePool: ISessionPool<IGeometryCache>;
 
     private _jobs: Job[] = [];
 
@@ -19,12 +20,14 @@ export class JobService extends EventEmitter implements IJobService {
         @inject(TYPES.ISettings) settings: ISettings,
         @inject(TYPES.IDatabase) database: IDatabase,
         @inject(TYPES.IMaxscriptClientPool) maxscriptClientPool: ISessionPool<IMaxscriptClient>,
+        @inject(TYPES.IGeometryCachePool) geometryCachePool: ISessionPool<IGeometryCache>,
     ) {
         super();
 
         this._settings = settings;
         this._database = database;
         this._maxscriptClientPool = maxscriptClientPool;
+        this._geometryCachePool = geometryCachePool;
 
         this.id = Math.random();
         console.log(" >> JobService: ", this.id);
@@ -77,13 +80,25 @@ export class JobService extends EventEmitter implements IJobService {
                     let failedJob = await this._database.failJob(job, err.message);
                     this.emit("job:failed", failedJob);
                 }.bind(this));
-        } else if (job.bakeObjectName) {
+        } else if (job.bakeMeshUuid) {
+
+            let cache = await this._geometryCachePool.Get(session);
+            let maxInstanceInfo: IMaxInstanceInfo;
+            for (let key in Object.keys(cache.Geometries)) {
+                let geomBinding = cache.Geometries[key];
+                maxInstanceInfo = geomBinding.MaxInstances.find(el => el.MeshUuid === job.bakeMeshUuid);
+                if (maxInstanceInfo) break;
+            }
+            if (!maxInstanceInfo) {
+                throw Error("unable to find max object name for mesh with uuid: " + job.bakeMeshUuid);
+            }
+
             let filenames: IBakeTexturesFilenames = {
                 lightmap: job.guid + "_VRayLightingMap.png",
                 shadowmap: job.guid + "_VRayRawShadowMap.png"
             };
 
-            client.bakeTextures(job.bakeObjectName, job.renderWidth, filenames, job.renderSettings)
+            client.bakeTextures(maxInstanceInfo.MaxName, job.renderWidth, filenames, job.renderSettings)
                 .then(async function(this: JobService, result) {
                     console.log(" >> completeJob, ", result);
                     let completedJob = await this._database.completeJob(

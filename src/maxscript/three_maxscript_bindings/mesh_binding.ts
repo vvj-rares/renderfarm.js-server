@@ -25,7 +25,7 @@ export class MeshBinding extends SceneObjectBindingBase {
         let meshName = this.getObjectName(objectJson);
         let parentName = this.getObjectName(parentJson);
 
-        let postResult = await geometry.Post(meshName);
+        let postResult = await geometry.Post(objectJson.uuid, meshName);
 
         await this._maxscriptClient.linkToParent(meshName, parentName);
         await this._maxscriptClient.setObjectMatrix(meshName, objectJson.matrix);

@@ -226,6 +226,7 @@ function renderScene(scene, camera, width, height, renderSettings, onRenderCompl
 
                                     // traverse the scene now
                                     let queue = [ window.demo.scene ];
+                                    let uuid0; // dirty hack
                                     while (queue.length > 0) {
                                         let obj = queue.shift();
                                         if (obj.children) {
@@ -237,6 +238,9 @@ function renderScene(scene, camera, width, height, renderSettings, onRenderCompl
                                         if (obj.type === "Mesh") {
                                             if (unwrappedGeometries[obj.geometry.uuid]) {
                                                 obj.geometry = unwrappedGeometries[obj.geometry.uuid];
+                                                if (!uuid0) {
+                                                    uuid0 = obj.uuid; // dirty hack here
+                                                }
                                             } else {
                                                 console.warn("geometry.uuid not found in unwrappedGeometries: " + obj.geometry.uuid);
                                             }
@@ -244,6 +248,9 @@ function renderScene(scene, camera, width, height, renderSettings, onRenderCompl
                                     }
 
                                     console.log(window.demo.scene);
+
+                                    // postJob(newSession.guid, window.demo.camera.name, width, height, renderSettings, onRenderComplete);
+                                    postJob(newSession.guid, undefined, uuid0, width, height, renderSettings, onRenderComplete);
                                 }
                             });
                         }
@@ -252,8 +259,6 @@ function renderScene(scene, camera, width, height, renderSettings, onRenderCompl
                     setTimeout(function() {
                         closeSession(newSession.guid);
                     }, 15000);
-
-                    // postJob(newSession.guid, window.demo.camera.name, width, height, renderSettings, onRenderComplete);
                 });
 
             });
@@ -267,9 +272,9 @@ function renderScene(scene, camera, width, height, renderSettings, onRenderCompl
     })
 }
 
-function postJob(sessionGuid, cameraName, width, height, renderSettings, onRenderComplete) {
+function postJob(sessionGuid, cameraName, bakeObjectName, width, height, renderSettings, onRenderComplete) {
     $("#renderStatus").text("Starting render...");
-    rfarm.createJob(sessionGuid, cameraName, width, height, renderSettings, function(job) {
+    rfarm.createJob(sessionGuid, cameraName, bakeObjectName, width, height, renderSettings, function(job) {
         $("#renderStatus").text(`Rendering... 0 sec.`);
 
         let t0 = new Date();
@@ -289,7 +294,7 @@ function postJob(sessionGuid, cameraName, width, height, renderSettings, onRende
                     $("#btnRenderImg").attr("disabled", false);
                     $("#btnRenderEnv").attr("disabled", false);
 
-                    if (onRenderComplete) onRenderComplete( updatedJob.urls[0] );
+                    if (onRenderComplete) onRenderComplete( updatedJob.urls );
                 }
             });
 

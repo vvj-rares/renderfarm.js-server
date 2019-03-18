@@ -7,7 +7,7 @@ export class Job extends IDbEntity {
     public apiKey: string;
 
     public cameraName: string;
-    public bakeObjectName: string;
+    public bakeMeshUuid: string;
 
     public renderWidth: number;
     public renderHeight: number;
@@ -40,7 +40,7 @@ export class Job extends IDbEntity {
         this.apiKey     = obj.apiKey;
 
         this.cameraName     = obj.cameraName;
-        this.bakeObjectName = obj.bakeObjectName;
+        this.bakeMeshUuid = obj.bakeMeshUuid;
 
         this.renderWidth    = obj.renderWidth;
         this.renderHeight   = obj.renderHeight;
@@ -64,7 +64,7 @@ export class Job extends IDbEntity {
             apiKey:     this.apiKey,
 
             cameraName:     this.cameraName,
-            bakeObjectName: this.bakeObjectName,
+            bakeMeshUuid: this.bakeMeshUuid,
 
             renderWidth:    this.renderWidth,
             renderHeight:   this.renderHeight,
