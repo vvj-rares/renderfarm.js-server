@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../types";
-import { ISettings, IDatabase, IJobService, ISessionPool, IMaxscriptClient } from "../interfaces";
+import { ISettings, IDatabase, IJobService, ISessionPool, IMaxscriptClient, IBakeTexturesFilenames } from "../interfaces";
 import { Job } from "../database/model/job";
 
 ///<reference path="./typings/node/node.d.ts" />
@@ -63,18 +63,44 @@ export class JobService extends EventEmitter implements IJobService {
         let renderingJob = await this._database.updateJob(job, { $set: { state: "rendering" } });
         this.emit("job:updated", renderingJob);
 
-        let filename = job.guid + ".png";
-        // todo: don't hardcode worker local temp directory, workers must report it by heartbeat
-        client.renderScene(job.cameraName, [job.renderWidth, job.renderHeight], "C:\\Temp\\" + filename, job.renderSettings)
-            .then(async function(this: JobService, result) {
-                console.log(" >> completeJob, ", result);
-                let completedJob = await this._database.completeJob(job, [ `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/renderoutput/${filename}` ]);
-                this.emit("job:completed", completedJob);
-            }.bind(this))
-            .catch(async function(this: JobService, err) {
-                console.log(" >> failJob: ", err);
-                let failedJob = await this._database.failJob(job, err.message);
-                this.emit("job:failed", failedJob);
-            }.bind(this));
+        if (job.cameraName) {
+            let filename = job.guid + ".png";
+            // todo: don't hardcode worker local temp directory, workers must report it by heartbeat
+            client.renderScene(job.cameraName, [job.renderWidth, job.renderHeight], "C:\\Temp\\" + filename, job.renderSettings)
+                .then(async function(this: JobService, result) {
+                    console.log(" >> completeJob, ", result);
+                    let completedJob = await this._database.completeJob(job, [ `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/renderoutput/${filename}` ]);
+                    this.emit("job:completed", completedJob);
+                }.bind(this))
+                .catch(async function(this: JobService, err) {
+                    console.log(" >> failJob: ", err);
+                    let failedJob = await this._database.failJob(job, err.message);
+                    this.emit("job:failed", failedJob);
+                }.bind(this));
+        } else if (job.bakeObjectName) {
+            let filenames: IBakeTexturesFilenames = {
+                lightmap: job.guid + "_VRayLightingMap.png",
+                shadowmap: job.guid + "_VRayRawShadowMap.png"
+            };
+
+            client.bakeTextures(job.bakeObjectName, job.renderWidth, filenames, job.renderSettings)
+                .then(async function(this: JobService, result) {
+                    console.log(" >> completeJob, ", result);
+                    let completedJob = await this._database.completeJob(
+                        job, 
+                        [
+                            `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/renderoutput/${filenames.lightmap}`,
+                            `${this._settings.current.publicUrl}/v${this._settings.majorVersion}/renderoutput/${filenames.shadowmap}`
+                        ]);
+                    this.emit("job:completed", completedJob);
+                }.bind(this))
+                .catch(async function(this: JobService, err) {
+                    console.log(" >> failJob: ", err);
+                    let failedJob = await this._database.failJob(job, err.message);
+                    this.emit("job:failed", failedJob);
+                }.bind(this));
+        } else {
+            throw Error("job must have either .cameraName or .bakeObjectName");
+        }
     }
 }

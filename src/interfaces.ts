@@ -47,7 +47,7 @@ export interface IDatabase {
     //jobs
     getJob(jobGuid: string): Promise<Job>;
     getActiveJobs(workgroup: string): Promise<Job[]>;
-    createJob(apiKey: string, workerGuid: string, cameraName: string, renderWidth: number, renderHeight: number, renderSettings: any): Promise<Job>;
+    createJob(apiKey: string, workerGuid: string, cameraName: string, bakeObjectName: string, renderWidth: number, renderHeight: number, renderSettings: any): Promise<Job>;
     updateJob(job: Job, setter: any): Promise<Job>;
     completeJob(job: Job, urls: string[]): Promise<Job>;
     cancelJob(job: Job): Promise<Job>;
@@ -110,6 +110,12 @@ export interface IMaxscriptClient {
     unwrapUV2(nodeName: string): Promise<boolean>;
 
     renderScene(camera: string, size: number[], filename: string, renderSettings: any): Promise<boolean>;
+    bakeTextures(bakeObjectName: string, size: number, filenames: IBakeTexturesFilenames, renderSettings: any): Promise<boolean>;
+}
+
+export interface IBakeTexturesFilenames {
+    lightmap: string;
+    shadowmap: string;
 }
 
 export interface IFactory<T> {

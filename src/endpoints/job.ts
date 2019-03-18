@@ -71,9 +71,17 @@ class JobEndpoint implements IEndpoint {
             console.log(`POST on ${req.path} with session: ${sessionGuid}`);
 
             let cameraName = req.body.camera_name;
-            if (!cameraName) {
+            let bakeObjectName = req.body.bake_object_name;
+
+            if (cameraName && bakeObjectName) {
                 res.status(400);
-                res.end(JSON.stringify({ ok: false, message: "missing camera_name", error: null }, null, 2));
+                res.end(JSON.stringify({ ok: false, message: "defined both camera_name and bake_object_name", error: null }, null, 2));
+                return;
+            }
+
+            if (!cameraName && !bakeObjectName) {
+                res.status(400);
+                res.end(JSON.stringify({ ok: false, message: "missing camera_name or bake_object_name", error: null }, null, 2));
                 return;
             }
 
@@ -109,7 +117,7 @@ class JobEndpoint implements IEndpoint {
                 return;
             }
 
-            let job = await this._database.createJob(session.apiKey, session.workerGuid, cameraName, renderWidth, renderHeight, renderSettings);
+            let job = await this._database.createJob(session.apiKey, session.workerGuid, cameraName, bakeObjectName, renderWidth, renderHeight, renderSettings);
 
             this._jobService.Start(session, job);
 
