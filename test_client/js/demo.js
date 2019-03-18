@@ -255,12 +255,7 @@ function renderScene(scene, camera, width, height, renderSettings, onRenderCompl
                             });
                         }
                     }
-
-                    setTimeout(function() {
-                        closeSession(newSession.guid);
-                    }, 15000);
                 });
-
             });
         });
 

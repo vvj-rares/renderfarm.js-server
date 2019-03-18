@@ -46,7 +46,7 @@ fn rayysBakeVrayLightShadowMaps obj outputDir outputNames size =
 
     be2 = VRayLightingMap() -- instance of the bake element class
     be2.outputSzX =be2.outputSzY = size --set the size of the baked map --specifythe full file path, name and type:
-    be2.fileType = outputDir + "\\" + outputName[2]
+    be2.fileType = outputDir + "\\" + outputNames[2]
     be2.fileName = filenameFromPath be2.fileType
     be2.filterOn = true --enable filtering
     be2.enabled = true --enable baking --Preparing theobjectfor baking:
@@ -55,7 +55,7 @@ fn rayysBakeVrayLightShadowMaps obj outputDir outputNames size =
     obj.INodeBakeProperties.addBakeElement be2 --add second element
     obj.INodeBakeProperties.bakeEnabled = true --enabling baking
     obj.INodeBakeProperties.bakeChannel = 2 --channel to bake
-		obj.INodeBakeProperties.nDilations = 1 --expand the texturea bit
+    obj.INodeBakeProperties.nDilations = 1 --expand the texturea bit
 )
 
 fn rayysFlattenUV2 curObj =
@@ -91,5 +91,5 @@ fn rayysFlattenUV2 curObj =
 		unwrapMod.flattenMap flattenAngle #([1,0,0], [-1,0,0], [0,1,0], [0,-1,0], [0,0,1], [0,0,-1]) flattenSpacing true bakeChannel_Obj flattenRotate flattenFillHoles
 
 		subobjectlevel = 0
-		-- or use instead of true: autoUnwrapMappingProps.cNormalize.checked \
+		-- or use instead of true: autoUnwrapMappingProps.cNormalize.checked
 )
