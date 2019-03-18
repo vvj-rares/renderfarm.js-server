@@ -100,7 +100,7 @@ export class JobService extends EventEmitter implements IJobService {
             }
 
             let filenames: IBakeTexturesFilenames = {
-                lightmap: job.guid + "_VRayLightingMap.png"
+                lightmap: "C:\\Temp\\" + job.guid + "_VRayLightingMap.png"
             };
 
             client.bakeTextures(maxInstanceInfo.MaxName, job.renderWidth, filenames, job.renderSettings)
