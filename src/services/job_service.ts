@@ -86,8 +86,10 @@ export class JobService extends EventEmitter implements IJobService {
             let maxInstanceInfo: IMaxInstanceInfo;
             for (let key in Object.keys(cache.Geometries)) {
                 let geomBinding = cache.Geometries[key];
-                maxInstanceInfo = geomBinding.MaxInstances.find(el => el.MeshUuid === job.bakeMeshUuid);
-                if (maxInstanceInfo) break;
+                if (geomBinding) {
+                    maxInstanceInfo = geomBinding.MaxInstances.find(el => el.MeshUuid === job.bakeMeshUuid);
+                    if (maxInstanceInfo) break;
+                }
             }
             if (!maxInstanceInfo) {
                 throw Error("unable to find max object name for mesh with uuid: " + job.bakeMeshUuid);
