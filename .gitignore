@@ -5,3 +5,10 @@ package-lock.json
 
 app.settings.ts
 ftp_settings.js
+
+*.suo
+*.VC.db
+*.VC.opendb
+*.vcxproj.user
+**/x64/Debug/
+**/x64/Release/
