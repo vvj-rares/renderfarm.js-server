@@ -88,19 +88,27 @@ function initScene() {
         opacity: 0.95
     });
 
-    var cube = new THREE.Mesh(geometry, materialWhite);
+    /* var cube = new THREE.Mesh(geometry, materialWhite);
     cube.name = "Box0";
     cube.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
     cube.castShadow = true;
     cube.receiveShadow = false;
-    scene.add(cube);
+    scene.add(cube); */
+
+    var knotGeometry = new THREE.TorusKnotGeometry( 1, 0.2, 50, 12 );
+        knotGeometry = new THREE.BufferGeometry().fromGeometry( knotGeometry );
+    var torusKnot = new THREE.Mesh( knotGeometry, materialWhite );
+    torusKnot.castShadow = true;
+    torusKnot.receiveShadow = false;
+    torusKnot.position.y += 1.5;
+    scene.add( torusKnot );
 
     var cubex = new THREE.Mesh(geometry, materialRed);
     cubex.name = "BoxX";
     cubex.applyMatrix(new THREE.Matrix4().makeTranslation(3, 0, 0));
     cubex.castShadow = true;
     cubex.receiveShadow = false;
-    cube.add(cubex);
+    torusKnot.add(cubex);
 
     var cubey = new THREE.Mesh(geometry, materialGreen);
     cubey.name = "BoxY";
@@ -252,9 +260,11 @@ function renderScene(scene, camera, width, height, renderSettings, onRenderCompl
                                         if (q.length === 0) return;
                                         let mesh = q.shift();
 
-                                        postJob(newSession.guid, undefined, mesh.uuid, 512, 512, renderSettings, function(urls) {
+                                        postJob(newSession.guid, undefined, mesh.uuid, 1024, 1024, renderSettings, function(urls) {
                                             var lightmap = new THREE.TextureLoader().load( urls[0] );
                                             mesh.material.lightMap = lightmap;
+                                            mesh.material.lightMap.magFilter = THREE.NearestFilter;
+                                            mesh.material.lightMap.minFilter = THREE.NearestFilter;
                                             mesh.material.needsUpdate = true;
                                             bake(q);
                                         });

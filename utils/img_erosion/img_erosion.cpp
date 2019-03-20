@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 			return 3;
 		}
 
-		int erosion_size = 3;
+		int erosion_size = 1;
 
 		Mat element = getStructuringElement(MORPH_ELLIPSE,
 			Size(2 * erosion_size + 1, 2 * erosion_size + 1),
