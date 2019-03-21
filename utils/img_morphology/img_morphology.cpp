@@ -12,16 +12,21 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-	if (argc != 3)
+	if (argc != 6)
 	{
-		cout << " Usage: img_erosion.exe <input> <output>" << endl;
+		cout << " Usage: img_morphology.exe <size> <shape> <type> <input> <output>" << endl;
+		cout << "  size: 1, 2.. in pixels" << endl;
+		cout << " shape: MORPH_RECT = 0, MORPH_CROSS = 1, MORPH_ELLIPSE = 2" << endl;
+		cout << "  type: dilate = 0, erode = 1" << endl;
 		return -1;
 	}
 
 	try {
-		Mat image;
+		int size = atoi(argv[1]);
+		int shape = atoi(argv[2]);
+		int type = atoi(argv[3]);
 
-		image = imread(argv[1], IMREAD_COLOR); // Read the file
+		Mat image = imread(argv[4], IMREAD_COLOR); // Read the file
 		if (image.empty()) // Check for invalid input
 		{
 			cout << "Could not open or find the image" << std::endl;
@@ -34,17 +39,22 @@ int main(int argc, char** argv)
 			return 3;
 		}
 
-		int erosion_size = 1;
+		int erosion_size = size;
 
-		Mat element = getStructuringElement(MORPH_ELLIPSE,
+		Mat element = getStructuringElement(shape, // MORPH_ELLIPSE,
 			Size(2 * erosion_size + 1, 2 * erosion_size + 1),
 			Point(erosion_size, erosion_size));
 
 		Mat erosion_dst;
 
-		dilate(image, erosion_dst, element);
+		if (type == 0) {
+			dilate(image, erosion_dst, element);
+		}
+		else {
+			erode(image, erosion_dst, element);
+		}
 
-		imwrite(argv[2], erosion_dst);
+		imwrite(argv[5], erosion_dst);
 
 		return 0;
 	}

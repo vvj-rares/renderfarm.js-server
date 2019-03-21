@@ -67,7 +67,7 @@ fn rayysFlattenUV2 curObj =
 
 		bakeChannel_Obj = 2
 		flattenAngle = 45.0
-		flattenSpacing = 0.005
+		flattenSpacing = 0.01
 		flattenRotate = false
 		flattenFillHoles = true
 		

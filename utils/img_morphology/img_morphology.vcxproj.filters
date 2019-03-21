@@ -29,7 +29,7 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="img_erosion.cpp">
+    <ClCompile Include="img_morphology.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
