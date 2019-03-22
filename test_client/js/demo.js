@@ -88,27 +88,44 @@ function initScene() {
         opacity: 0.95
     });
 
-    /* var cube = new THREE.Mesh(geometry, materialWhite);
+    var cube = new THREE.Mesh(geometry, materialWhite);
     cube.name = "Box0";
     cube.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
     cube.castShadow = true;
     cube.receiveShadow = false;
-    scene.add(cube); */
+    scene.add(cube);
 
-    var knotGeometry = new THREE.TorusKnotGeometry( 1, 0.2, 50, 12 );
-        knotGeometry = new THREE.BufferGeometry().fromGeometry( knotGeometry );
-    var torusKnot = new THREE.Mesh( knotGeometry, materialWhite );
-    torusKnot.castShadow = true;
-    torusKnot.receiveShadow = false;
-    torusKnot.position.y += 1.5;
-    scene.add( torusKnot );
+    var loader = new THREE.FontLoader();
+
+    loader.load( 'http://mbnsay.com/rayys/assets/fonts/helvetiker_regular.typeface.json', function ( font ) {
+    
+        let textGeometry = new THREE.TextGeometry( 'Hello three.js!', {
+            font: font,
+            size: 1.5,
+            height: 0.5,
+            curveSegments: 1,
+            bevelEnabled: true,
+            bevelThickness: 0.02,
+            bevelSize: 0.01,
+            bevelSegments: 1
+        });
+        textGeometry = new THREE.BufferGeometry().fromGeometry(textGeometry);
+
+        var text = new THREE.Mesh(textGeometry, materialWhite);
+        text.name = "Text";
+        text.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
+        text.applyMatrix(new THREE.Matrix4().makeTranslation(-5.5, 0, 2.1));
+        text.castShadow = true;
+        text.receiveShadow = false;
+        scene.add(text);
+    });
 
     var cubex = new THREE.Mesh(geometry, materialRed);
     cubex.name = "BoxX";
     cubex.applyMatrix(new THREE.Matrix4().makeTranslation(3, 0, 0));
     cubex.castShadow = true;
     cubex.receiveShadow = false;
-    torusKnot.add(cubex);
+    cube.add(cubex);
 
     var cubey = new THREE.Mesh(geometry, materialGreen);
     cubey.name = "BoxY";
@@ -272,7 +289,7 @@ function renderScene(scene, camera, width, height, renderSettings, onRenderCompl
 
                                     let l = scene.children.indexOf(window.demo.spotLight);
                                     scene.children.splice(l, 1);
-                                    bake(toBake);
+                                    // bake(toBake);
                                 }
                             });
                         }

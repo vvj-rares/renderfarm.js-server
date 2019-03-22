@@ -386,7 +386,7 @@ rfarm.postGeometries = function(sessionGuid, geometryJson, onComplete) {
         data: { 
             session_guid: sessionGuid,
             compressed_json: compressedGeometryData,
-            generate_uv2: true
+            generate_uv2: false
         },
         type: 'POST',
         success: function(result) {
